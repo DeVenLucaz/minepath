@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { gameStore } from '../store/gameStore';
 import { audio } from '../audio/engine';
 
-export default function HomeScreen({ onPlay, onShop, onLeaderboard }) {
+export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings }) {
   const [seeds, setSeeds] = useState(0);
   const [bounce, setBounce] = useState(false);
 

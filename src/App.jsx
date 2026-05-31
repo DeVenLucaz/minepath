@@ -59,7 +59,11 @@ export default function App() {
           key={currentLevel}
           startLevel={currentLevel}
           onGameOver={handleGameOver}
-          onLevelComplete={() => {}}
+          onLevelComplete={(data) => {
+            gameStore.addSeeds(data.seeds);
+            gameStore.updateBestLevel(data.level);
+            setCurrentLevel(data.level + 1);
+          }}
         />
       )}
       {screen === 'gameover' && (

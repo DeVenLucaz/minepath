@@ -31,7 +31,6 @@ function safeSet(key, val) {
 }
 
 export const gameStore = {
-  // ... (rest of methods)
   getSettings() {
     return safeGet(STORAGE_KEYS.SETTINGS, { bgm: true, sfx: true });
   },
