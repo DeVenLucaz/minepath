@@ -184,9 +184,10 @@ function Pet({ petId, position, cellW, cellH }) {
   const centerX = position.c * (cellW + 2) + cellW / 2;
   const centerY = position.r * (cellH + 2) + cellH / 2;
 
-  // Final pet position with fixed offsets (50px right, 50px up)
+  // Final pet position with fixed offsets
+  const isNearTop = position.r < 2;
   const petX = centerX + 50;
-  const petY = centerY - 50;
+  const petY = isNearTop ? centerY + 50 : centerY - 50;
 
   return (
     <div
