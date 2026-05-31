@@ -2,14 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { gameStore } from '../store/gameStore';
 import { audio } from '../audio/engine';
 
-export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings }) {
+export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, onDaily }) {
   const [seeds, setSeeds] = useState(0);
   const [bounce, setBounce] = useState(false);
+  const [daily, setDaily] = useState(gameStore.getDailyChallenge());
+  const [ach, setAch] = useState(gameStore.getAchievements());
 
   useEffect(() => {
     setSeeds(gameStore.getSeeds());
+    setDaily(gameStore.getDailyChallenge());
+    setAch(gameStore.getAchievements());
     audio.startBackground();
-    return () => {};
   }, []);
 
   useEffect(() => {
@@ -18,6 +21,7 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings }
   }, []);
 
   const bestLevel = gameStore.getBestLevel();
+  const unlockedFeathers = Object.values(ach).filter(v => v === true || v >= 20 || (typeof v === 'number' && v >= 500)).length;
 
   return (
     <div className="home-screen">
@@ -57,12 +61,26 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings }
           </div>
         </div>
 
-        <div className="seeds-display">
-          🌾 {seeds} Seeds
-          {bestLevel > 0 && <span className="best-level"> | Best: Level {bestLevel}</span>}
+        <div className="home-stats-bar">
+          <div className="home-stat-chip">
+            <span className="stat-icon">🌾</span>
+            <span className="stat-val">{seeds}</span>
+          </div>
+          <div className="home-stat-chip" onClick={onAchievements} style={{ cursor: 'pointer' }}>
+            <span className="stat-icon">🪶</span>
+            <span className="stat-val">{unlockedFeathers}</span>
+          </div>
         </div>
 
         <div className="home-buttons">
+          {!daily.played ? (
+            <button className="btn-daily-challenge" onClick={onDaily}>
+              📅 DAILY CHALLENGE
+            </button>
+          ) : (
+            <div className="daily-done">✅ Daily: {daily.score}🌾</div>
+          )}
+
           <button
             className="btn-primary btn-play"
             onTouchStart={(e) => { e.preventDefault(); audio.init(); onPlay(); }}

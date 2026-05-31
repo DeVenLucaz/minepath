@@ -12,6 +12,8 @@ const STORAGE_KEYS = {
   LEADERBOARD: 'minepath_leaderboard',
   SETTINGS: 'minepath_settings',
   TUTORIAL_COMPLETE: 'minepath_tutorial_complete',
+  ACHIEVEMENTS: 'minepath_achievements',
+  DAILY_CHALLENGE: 'minepath_daily_challenge',
 };
 
 function safeGet(key, defaultVal) {
@@ -45,6 +47,34 @@ export const gameStore = {
     safeSet(STORAGE_KEYS.TUTORIAL_COMPLETE, complete);
   },
 
+  getAchievements() {
+    return safeGet(STORAGE_KEYS.ACHIEVEMENTS, {
+      earlyBird: false,
+      seedHoarder: 0,
+      survivor: 0,
+      perfectionist: false,
+    });
+  },
+  updateAchievement(key, val) {
+    const ach = this.getAchievements();
+    if (typeof val === 'boolean') ach[key] = val;
+    else ach[key] += val;
+    safeSet(STORAGE_KEYS.ACHIEVEMENTS, ach);
+  },
+
+  getDailyChallenge() {
+    const today = new Date().toDateString();
+    const data = safeGet(STORAGE_KEYS.DAILY_CHALLENGE, { date: '', played: false, score: 0 });
+    if (data.date !== today) {
+      return { date: today, played: false, score: 0 };
+    }
+    return data;
+  },
+  setDailyPlayed(score) {
+    const today = new Date().toDateString();
+    safeSet(STORAGE_KEYS.DAILY_CHALLENGE, { date: today, played: true, score });
+  },
+
   getSeeds() {
     return safeGet(STORAGE_KEYS.SEEDS, 0);
   },
@@ -54,6 +84,7 @@ export const gameStore = {
   addSeeds(amount) {
     const current = this.getSeeds();
     safeSet(STORAGE_KEYS.SEEDS, current + amount);
+    this.updateAchievement('seedHoarder', amount);
     return current + amount;
   },
   spendSeeds(amount) {
@@ -125,6 +156,7 @@ export const gameStore = {
     if (level > best) {
       safeSet(STORAGE_KEYS.BEST_LEVEL, level);
     }
+    if (level >= 5) this.updateAchievement('earlyBird', true);
   },
 
   getLeaderboard() {
@@ -136,6 +168,7 @@ export const gameStore = {
     board.sort((a, b) => b.level - a.level);
     const top10 = board.slice(0, 10);
     safeSet(STORAGE_KEYS.LEADERBOARD, top10);
+    this.updateAchievement('survivor', 1);
     return top10;
   },
 };

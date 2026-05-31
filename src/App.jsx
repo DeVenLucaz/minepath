@@ -14,9 +14,11 @@ export default function App() {
   const [gameOverData, setGameOverData] = useState({ level: 1, seeds: 0 });
   const [currentLevel, setCurrentLevel] = useState(1);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [isDaily, setIsDaily] = useState(false);
 
   const goHome = useCallback(() => {
     setCurrentLevel(1);
+    setIsDaily(false);
     setScreen('home');
   }, []);
 
@@ -25,6 +27,16 @@ export default function App() {
       setShowTutorial(true);
     } else {
       setCurrentLevel(1);
+      setIsDaily(false);
+      setScreen('game');
+    }
+  }, []);
+
+  const goDaily = useCallback(() => {
+    const daily = gameStore.getDailyChallenge();
+    if (!daily.played) {
+      setIsDaily(true);
+      setCurrentLevel(10); // Daily is fixed at Level 10
       setScreen('game');
     }
   }, []);
@@ -35,12 +47,16 @@ export default function App() {
 
   const handleGameOver = useCallback((data) => {
     setGameOverData(data);
+    if (isDaily) {
+      gameStore.setDailyPlayed(data.seeds);
+    }
     setScreen('gameover');
-  }, []);
+  }, [isDaily]);
 
   const handleTutorialComplete = () => {
     setShowTutorial(false);
     setCurrentLevel(1);
+    setIsDaily(false);
     setScreen('game');
   };
 
@@ -52,17 +68,26 @@ export default function App() {
           onShop={goShop}
           onLeaderboard={goLeaderboard}
           onSettings={goSettings}
+          onDaily={goDaily}
         />
       )}
       {screen === 'game' && (
         <GameplayScreen
-          key={currentLevel}
+          key={isDaily ? `daily-${new Date().toDateString()}` : currentLevel}
           startLevel={currentLevel}
+          isDaily={isDaily}
           onGameOver={handleGameOver}
           onLevelComplete={(data) => {
-            gameStore.addSeeds(data.seeds);
-            gameStore.updateBestLevel(data.level);
-            setCurrentLevel(data.level + 1);
+            if (isDaily) {
+              gameStore.addSeeds(data.seeds);
+              gameStore.setDailyPlayed(data.seeds);
+              setGameOverData({ level: data.level, seeds: data.seeds });
+              setScreen('gameover');
+            } else {
+              gameStore.addSeeds(data.seeds);
+              gameStore.updateBestLevel(data.level);
+              setCurrentLevel(data.level + 1);
+            }
           }}
         />
       )}
@@ -86,6 +111,9 @@ export default function App() {
       )}
       {screen === 'settings' && (
         <SettingsScreen onBack={() => setScreen('home')} />
+      )}
+      {screen === 'achievements' && (
+        <AchievementsScreen onBack={() => setScreen('home')} />
       )}
 
       {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete} />}

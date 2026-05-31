@@ -18,7 +18,19 @@ function getDifficultyConfig(level) {
 }
 
 // ─── GRID GENERATION ─────────────────────────────────────────────
-function generateGrid(rows, cols, mineRate, level) {
+function generateGrid(rows, cols, mineRate, level, isDaily) {
+  // Simple Seeded Random for Daily Challenge
+  let seed = 12345;
+  if (isDaily) {
+    const today = new Date().toDateString();
+    seed = today.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
+  }
+
+  const sRandom = () => {
+    if (!isDaily) return Math.random();
+    const x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+  };
   const tiles = [];
   const checkpointR = 0, checkpointC = cols - 1;
   const startR = rows - 1, startC = 0;
@@ -49,7 +61,7 @@ function generateGrid(rows, cols, mineRate, level) {
   );
 
   // Shuffle and place mines
-  const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+  const shuffled = [...candidates].sort(() => sRandom() - 0.5);
   const mineCount = Math.floor((rows * cols - 2) * mineRate);
   let minesPlaced = 0;
 
@@ -75,14 +87,14 @@ function generateGrid(rows, cols, mineRate, level) {
 
   // Place powerups on safe tiles
   const safeTilesForPowerup = tiles.filter(t => !t.isMine && !t.isCheckpoint && !t.isStart);
-  safeTilesForPowerup.sort(() => Math.random() - 0.5).slice(0, powerupCount).forEach((t, i) => {
+  safeTilesForPowerup.sort(() => sRandom() - 0.5).slice(0, powerupCount).forEach((t, i) => {
     const tile = tiles.find(x => x.r === t.r && x.c === t.c);
     if (tile) tile.powerup = powerupTypes[i % powerupTypes.length];
   });
 
   // Place seeds on remaining safe tiles
   const remainingSafe = tiles.filter(t => !t.isMine && !t.isCheckpoint && !t.isStart && !t.powerup);
-  remainingSafe.sort(() => Math.random() - 0.5).slice(0, seedCount).forEach(t => {
+  remainingSafe.sort(() => sRandom() - 0.5).slice(0, seedCount).forEach(t => {
     const tile = tiles.find(x => x.r === t.r && x.c === t.c);
     if (tile) tile.hasSeed = true;
   });
@@ -361,7 +373,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const initLevel = useCallback((lvl) => {
     const diff = getDifficultyConfig(lvl);
     diffRef.current = diff;
-    const newTiles = generateGrid(diff.rows, diff.cols, diff.mineRate, lvl);
+    const newTiles = generateGrid(diff.rows, diff.cols, diff.mineRate, lvl, isDaily);
     const startR = diff.rows - 1, startC = 0;
 
     setRows(diff.rows);
@@ -725,6 +737,13 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     const earned = Math.floor((baseSeeds + timeBonus) * (doubleScore ? 2 : 1) * comboMultiplier);
     gameStore.addSeeds(earned);
     gameStore.updateBestLevel(lvl);
+
+    // Achievement: Perfectionist (No peeking)
+    const peekCount = tiles.filter(t => t.state === 'peeked').length;
+    if (peekCount === 0) {
+      gameStore.updateAchievement('perfectionist', true);
+    }
+
     gameStore.addLeaderboardEntry({ level: lvl, seeds: earned });
     setLevelSeeds(earned);
     setSeeds(gameStore.getSeeds());
