@@ -18,31 +18,32 @@ function getCtx() {
 }
 
 function playTone(freq, duration, type = 'sine', gainVal = 0.3, delay = 0) {
+  const settings = safeGet('minepath_settings', { bgm: true, sfx: true });
+  if (!settings.sfx) return;
   const c = getCtx();
   const osc = c.createOscillator();
-  const g = c.createGain();
-  osc.connect(g);
-  g.connect(masterGain);
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, c.currentTime + delay);
-  g.gain.setValueAtTime(gainVal, c.currentTime + delay);
-  g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + delay + duration);
-  osc.start(c.currentTime + delay);
+// ... (rest of function)
   osc.stop(c.currentTime + delay + duration);
 }
 
 function playFreqSeq(freqs, noteDuration, type = 'square', gainVal = 0.2) {
+  const settings = safeGet('minepath_settings', { bgm: true, sfx: true });
+  if (!settings.sfx) return;
   freqs.forEach((freq, i) => {
     if (freq > 0) playTone(freq, noteDuration, type, gainVal, i * noteDuration);
   });
 }
 
 export const audio = {
-  init() {
-    getCtx();
-  },
+// ...
+  startBackground() {
+    if (bgPlaying) return;
+    const settings = safeGet('minepath_settings', { bgm: true, sfx: true });
+    if (!settings.bgm) return;
+    const c = getCtx();
+    bgPlaying = true;
+// ... (rest of startBackground)
 
-  safeTap() {
     const c = getCtx();
     playTone(520, 0.08, 'sine', 0.25);
     playTone(780, 0.06, 'sine', 0.15, 0.07);

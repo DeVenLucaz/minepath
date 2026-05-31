@@ -85,6 +85,14 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard }) {
             >
               🏆 SCORES
             </button>
+            <button
+              className="btn-secondary btn-settings"
+              style={{ flex: '0 0 55px' }}
+              onTouchStart={(e) => { e.preventDefault(); onSettings(); }}
+              onClick={onSettings}
+            >
+              ⚙️
+            </button>
           </div>
         </div>
 

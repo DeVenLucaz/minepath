@@ -10,6 +10,8 @@ const STORAGE_KEYS = {
   EQUIPPED_TRAIL: 'minepath_equipped_trail',
   BEST_LEVEL: 'minepath_best_level',
   LEADERBOARD: 'minepath_leaderboard',
+  SETTINGS: 'minepath_settings',
+  TUTORIAL_COMPLETE: 'minepath_tutorial_complete',
 };
 
 function safeGet(key, defaultVal) {
@@ -29,6 +31,21 @@ function safeSet(key, val) {
 }
 
 export const gameStore = {
+  // ... (rest of methods)
+  getSettings() {
+    return safeGet(STORAGE_KEYS.SETTINGS, { bgm: true, sfx: true });
+  },
+  setSettings(settings) {
+    safeSet(STORAGE_KEYS.SETTINGS, settings);
+  },
+
+  isTutorialComplete() {
+    return safeGet(STORAGE_KEYS.TUTORIAL_COMPLETE, false);
+  },
+  setTutorialComplete(complete) {
+    safeSet(STORAGE_KEYS.TUTORIAL_COMPLETE, complete);
+  },
+
   getSeeds() {
     return safeGet(STORAGE_KEYS.SEEDS, 0);
   },

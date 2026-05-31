@@ -4,6 +4,8 @@ import GameplayScreen from './components/GameplayScreen';
 import GameOverScreen from './components/GameOverScreen';
 import ShopScreen from './components/ShopScreen';
 import LeaderboardScreen from './components/LeaderboardScreen';
+import SettingsScreen from './components/SettingsScreen';
+import TutorialOverlay from './components/TutorialOverlay';
 import { gameStore } from './store/gameStore';
 import './styles/game.css';
 
@@ -11,6 +13,7 @@ export default function App() {
   const [screen, setScreen] = useState('home');
   const [gameOverData, setGameOverData] = useState({ level: 1, seeds: 0 });
   const [currentLevel, setCurrentLevel] = useState(1);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const goHome = useCallback(() => {
     setCurrentLevel(1);
@@ -18,17 +21,28 @@ export default function App() {
   }, []);
 
   const goPlay = useCallback(() => {
-    setCurrentLevel(1);
-    setScreen('game');
+    if (!gameStore.isTutorialComplete()) {
+      setShowTutorial(true);
+    } else {
+      setCurrentLevel(1);
+      setScreen('game');
+    }
   }, []);
 
   const goShop = useCallback(() => setScreen('shop'), []);
   const goLeaderboard = useCallback(() => setScreen('leaderboard'), []);
+  const goSettings = useCallback(() => setScreen('settings'), []);
 
   const handleGameOver = useCallback((data) => {
     setGameOverData(data);
     setScreen('gameover');
   }, []);
+
+  const handleTutorialComplete = () => {
+    setShowTutorial(false);
+    setCurrentLevel(1);
+    setScreen('game');
+  };
 
   return (
     <div className="app-root">
@@ -37,6 +51,7 @@ export default function App() {
           onPlay={goPlay}
           onShop={goShop}
           onLeaderboard={goLeaderboard}
+          onSettings={goSettings}
         />
       )}
       {screen === 'game' && (
@@ -65,6 +80,11 @@ export default function App() {
       {screen === 'leaderboard' && (
         <LeaderboardScreen onBack={() => setScreen('home')} />
       )}
+      {screen === 'settings' && (
+        <SettingsScreen onBack={() => setScreen('home')} />
+      )}
+
+      {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete} />}
     </div>
   );
 }
