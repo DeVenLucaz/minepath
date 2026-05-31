@@ -180,22 +180,26 @@ function Pet({ petId, position, cellW, cellH }) {
   const pet = PETS.find(p => p.id === petId);
   if (!pet) return null;
 
-  // Follow chicken with a slight offset
-  const pixelX = position.c * (cellW + 2) + cellW / 2;
-  const pixelY = position.r * (cellH + 2) + cellH / 2;
+  // Center of chicken tile
+  const centerX = position.c * (cellW + 2) + cellW / 2;
+  const centerY = position.r * (cellH + 2) + cellH / 2;
+
+  // Final pet position with fixed offsets (50px right, 50px up)
+  const petX = centerX + 50;
+  const petY = centerY - 50;
 
   return (
     <div
       className="pet-entity"
       style={{
         position: 'absolute',
-        left: pixelX,
-        top: pixelY,
-        transform: 'translate(45%, -130%)', // Increased offset away from chicken
-        fontSize: '18px',
+        left: petX,
+        top: petY,
+        fontSize: '20px',
         zIndex: 19,
-        transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        transition: 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         pointerEvents: 'none',
+        transform: 'translate(-50%, -50%)', // Just center the pet sprite on its point
       }}
     >
       {pet.emoji}
