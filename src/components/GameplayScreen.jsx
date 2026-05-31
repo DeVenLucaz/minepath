@@ -181,8 +181,8 @@ function Pet({ petId, position, cellW, cellH }) {
   if (!pet) return null;
 
   // Follow chicken with a slight offset
-  const pixelX = position.c * (cellW + 2) + cellW / 2 - 12;
-  const pixelY = position.r * (cellH + 2) + cellH / 2 - 12;
+  const pixelX = position.c * (cellW + 2) + cellW / 2;
+  const pixelY = position.r * (cellH + 2) + cellH / 2;
 
   return (
     <div
@@ -191,9 +191,10 @@ function Pet({ petId, position, cellW, cellH }) {
         position: 'absolute',
         left: pixelX,
         top: pixelY,
-        fontSize: '16px',
+        transform: 'translate(-80%, -80%)', // Offset from chicken center
+        fontSize: '18px',
         zIndex: 19,
-        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         pointerEvents: 'none',
       }}
     >
@@ -374,6 +375,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [comboMultiplier, setComboMultiplier] = useState(1);
   const [lastMoveTime, setLastMoveTime] = useState(0);
   const [gamePhase, setGamePhase] = useState('playing'); // playing | levelcomplete | gameover
+  const [visitedTiles, setVisitedTiles] = useState([]); // [{r, c}]
   const [levelSeeds, setLevelSeeds] = useState(0);
   const [rows, setRows] = useState(6);
   const [cols, setCols] = useState(8);
@@ -413,8 +415,11 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     const newTiles = generateGrid(diff.rows, diff.cols, diff.mineRate, lvl, isDaily);
     const startR = diff.rows - 1, startC = 0;
 
+    // --- REFRESH EQUIPPED ITEMS ---
+    setEquippedPetId(gameStore.getEquippedPet());
+
     // --- PET BONUSES ---
-    const pet = PETS.find(p => p.id === equippedPetId);
+    const pet = PETS.find(p => p.id === gameStore.getEquippedPet());
     let startTime = diff.timerMax;
     if (pet?.bonus === 'time_bonus') startTime += pet.bonusVal;
 
@@ -434,6 +439,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     setCombo(0);
     setComboMultiplier(1);
     setLastMoveTime(0);
+    setVisitedTiles([{ r: startR, c: startC }]);
     setRevealAllActive(false);
     setSlowMoActive(false);
     slowMoRef.current = false;
@@ -565,6 +571,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     }
     if (tile.state === 'revealed') {
       setChicken({ r: tile.r, c: tile.c });
+      setVisitedTiles(prev => [...prev, { r: tile.r, c: tile.c }]);
       setChickenAnim('walk');
       setTimeout(() => setChickenAnim('idle'), 300);
       return;
@@ -574,6 +581,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         handleMineHit(tile);
       } else {
         setChicken({ r: tile.r, c: tile.c });
+        setVisitedTiles(prev => [...prev, { r: tile.r, c: tile.c }]);
         setChickenAnim('walk');
         setTimeout(() => setChickenAnim('idle'), 300);
       }
@@ -602,6 +610,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed' } : t));
       audio.safeTap();
       setChicken({ r: tile.r, c: tile.c });
+      setVisitedTiles(prev => [...prev, { r: tile.r, c: tile.c }]);
       setChickenAnim('walk');
       setTimeout(() => setChickenAnim('idle'), 300);
 
@@ -973,6 +982,32 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
                 cellW={cellSize.w}
                 cellH={cellSize.h}
                 isFoggy={isFoggy}
+              />
+            );
+          })}
+        </div>
+
+        {/* Trail overlay */}
+        <div
+          className="trail-overlay"
+          style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            pointerEvents: 'none',
+            zIndex: 15,
+          }}
+        >
+          {visitedTiles.slice(-15).map((pos, i) => {
+            if (equippedTrail === 'none') return null;
+            // Center of tile
+            const x = (pos.c * (cellSize.w + 2) + cellSize.w / 2) / (cols * (cellSize.w + 2)) * 100;
+            const y = (pos.r * (cellSize.h + 2) + cellSize.h / 2) / (rows * (cellSize.h + 2)) * 100;
+            return (
+              <TrailParticle
+                key={`trail-${i}`}
+                x={x}
+                y={y}
+                trailId={equippedTrail}
               />
             );
           })}
