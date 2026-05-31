@@ -326,7 +326,7 @@ function Confetti() {
 }
 
 // ─── MAIN GAMEPLAY SCREEN ─────────────────────────────────────────
-export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComplete }) {
+export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComplete, isDaily = false }) {
   const [level, setLevel] = useState(startLevel);
   const [tiles, setTiles] = useState([]);
   const [chicken, setChicken] = useState({ r: 0, c: 0 });
