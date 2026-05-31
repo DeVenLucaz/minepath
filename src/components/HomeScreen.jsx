@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { gameStore } from '../store/gameStore';
 import { audio } from '../audio/engine';
 
-export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, onDaily }) {
+export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, onDaily, onAchievements }) {
   const [seeds, setSeeds] = useState(0);
   const [bounce, setBounce] = useState(false);
   const [daily, setDaily] = useState(gameStore.getDailyChallenge());

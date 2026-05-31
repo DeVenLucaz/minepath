@@ -69,6 +69,7 @@ export default function App() {
           onLeaderboard={goLeaderboard}
           onSettings={goSettings}
           onDaily={goDaily}
+          onAchievements={goAchievements}
         />
       )}
       {screen === 'game' && (
