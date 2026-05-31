@@ -348,17 +348,17 @@ html, body {
 
 .trail-particle {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 20px; /* 2x size */
+  height: 20px; /* 2x size */
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  animation: trailFade 1.2s forwards ease-out;
-  box-shadow: 0 0 6px rgba(255,255,255,0.4);
+  animation: trailFade 1.3s forwards ease-out;
+  box-shadow: 0 0 10px rgba(255,255,255,0.6);
 }
 
 @keyframes trailFade {
-  0% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
 }
 
 /* Home Chicken */
