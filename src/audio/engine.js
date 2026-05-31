@@ -20,8 +20,9 @@ function getCtx() {
 function getSettings() {
   try {
     const val = localStorage.getItem('minepath_settings');
-    if (!val) return { bgm: true, sfx: true };
-    return JSON.parse(val);
+    if (!val || val === 'null' || val === 'undefined') return { bgm: true, sfx: true };
+    const parsed = JSON.parse(val);
+    return parsed !== null && typeof parsed === 'object' ? parsed : { bgm: true, sfx: true };
   } catch {
     return { bgm: true, sfx: true };
   }

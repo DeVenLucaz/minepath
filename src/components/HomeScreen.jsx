@@ -6,11 +6,17 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
   const [seeds, setSeeds] = useState(0);
   const [bounce, setBounce] = useState(false);
   const [daily, setDaily] = useState(() => {
-    try { return gameStore.getDailyChallenge(); }
+    try { 
+      const d = gameStore.getDailyChallenge();
+      return d || { date: '', played: false, score: 0 };
+    }
     catch (e) { return { date: '', played: false, score: 0 }; }
   });
   const [ach, setAch] = useState(() => {
-    try { return gameStore.getAchievements(); }
+    try { 
+      const a = gameStore.getAchievements();
+      return a || { earlyBird: false, seedHoarder: 0, survivor: 0, perfectionist: false };
+    }
     catch (e) { return { earlyBird: false, seedHoarder: 0, survivor: 0, perfectionist: false }; }
   });
 

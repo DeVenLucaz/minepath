@@ -19,8 +19,9 @@ const STORAGE_KEYS = {
 function safeGet(key, defaultVal) {
   try {
     const val = localStorage.getItem(key);
-    if (val === null) return defaultVal;
-    return JSON.parse(val);
+    if (val === null || val === 'undefined' || val === 'null') return defaultVal;
+    const parsed = JSON.parse(val);
+    return parsed !== null && parsed !== undefined ? parsed : defaultVal;
   } catch {
     return defaultVal;
   }
