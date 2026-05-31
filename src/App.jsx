@@ -5,6 +5,7 @@ import GameOverScreen from './components/GameOverScreen';
 import ShopScreen from './components/ShopScreen';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import SettingsScreen from './components/SettingsScreen';
+import AchievementsScreen from './components/AchievementsScreen';
 import TutorialOverlay from './components/TutorialOverlay';
 import { gameStore } from './store/gameStore';
 import './styles/game.css';
