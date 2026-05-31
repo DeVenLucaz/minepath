@@ -14,6 +14,8 @@ const STORAGE_KEYS = {
   TUTORIAL_COMPLETE: 'minepath_tutorial_complete',
   ACHIEVEMENTS: 'minepath_achievements',
   DAILY_CHALLENGE: 'minepath_daily_challenge',
+  UNLOCKED_PETS: 'minepath_unlocked_pets',
+  EQUIPPED_PET: 'minepath_equipped_pet',
 };
 
 function safeGet(key, defaultVal) {
@@ -74,6 +76,23 @@ export const gameStore = {
   setDailyPlayed(score) {
     const today = new Date().toDateString();
     safeSet(STORAGE_KEYS.DAILY_CHALLENGE, { date: today, played: true, score });
+  },
+
+  getUnlockedPets() {
+    return safeGet(STORAGE_KEYS.UNLOCKED_PETS, []);
+  },
+  unlockPet(id) {
+    const unlocked = this.getUnlockedPets();
+    if (!unlocked.includes(id)) {
+      unlocked.push(id);
+      safeSet(STORAGE_KEYS.UNLOCKED_PETS, unlocked);
+    }
+  },
+  getEquippedPet() {
+    return safeGet(STORAGE_KEYS.EQUIPPED_PET, null);
+  },
+  setEquippedPet(id) {
+    safeSet(STORAGE_KEYS.EQUIPPED_PET, id);
   },
 
   getSeeds() {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { gameStore } from '../store/gameStore';
 import { CHICKEN_SKINS, TILE_STYLES, TRAIL_EFFECTS } from '../data/skins';
+import { PETS } from '../data/pets';
 import { audio } from '../audio/engine';
 
 function SkinPreview({ skin, equipped, owned }) {
@@ -38,9 +39,11 @@ export default function ShopScreen({ onBack }) {
   const [unlockedSkins, setUnlockedSkins] = useState(gameStore.getUnlockedSkins());
   const [unlockedTiles, setUnlockedTiles] = useState(gameStore.getUnlockedTiles());
   const [unlockedTrails, setUnlockedTrails] = useState(gameStore.getUnlockedTrails());
+  const [unlockedPets, setUnlockedPets] = useState(gameStore.getUnlockedPets());
   const [equippedSkin, setEquippedSkin] = useState(gameStore.getEquippedSkin());
   const [equippedTile, setEquippedTile] = useState(gameStore.getEquippedTile());
   const [equippedTrail, setEquippedTrail] = useState(gameStore.getEquippedTrail());
+  const [equippedPet, setEquippedPet] = useState(gameStore.getEquippedPet());
   const [msg, setMsg] = useState('');
 
   const refresh = () => {
@@ -48,9 +51,11 @@ export default function ShopScreen({ onBack }) {
     setUnlockedSkins(gameStore.getUnlockedSkins());
     setUnlockedTiles(gameStore.getUnlockedTiles());
     setUnlockedTrails(gameStore.getUnlockedTrails());
+    setUnlockedPets(gameStore.getUnlockedPets());
     setEquippedSkin(gameStore.getEquippedSkin());
     setEquippedTile(gameStore.getEquippedTile());
     setEquippedTrail(gameStore.getEquippedTrail());
+    setEquippedPet(gameStore.getEquippedPet());
   };
 
   const showMsg = (text) => {
@@ -112,6 +117,26 @@ export default function ShopScreen({ onBack }) {
     }
   };
 
+  const buyPet = (pet) => {
+    if (unlockedPets.includes(pet.id)) {
+      const isUnequipping = equippedPet === pet.id;
+      const nextPet = isUnequipping ? null : pet.id;
+      gameStore.setEquippedPet(nextPet);
+      setEquippedPet(nextPet);
+      showMsg(isUnequipping ? 'Pet unequipped!' : `Equipped ${pet.name}!`);
+    } else {
+      if (gameStore.spendSeeds(pet.price)) {
+        gameStore.unlockPet(pet.id);
+        gameStore.setEquippedPet(pet.id);
+        refresh();
+        audio.powerupCollect();
+        showMsg(`Unlocked ${pet.name}!`);
+      } else {
+        showMsg('Not enough seeds! 🌾');
+      }
+    }
+  };
+
   return (
     <div className="shop-screen">
       <div className="shop-header">
@@ -129,14 +154,14 @@ export default function ShopScreen({ onBack }) {
       {msg && <div className="shop-msg">{msg}</div>}
 
       <div className="shop-tabs">
-        {['skins', 'tiles', 'trails'].map(t => (
+        {['skins', 'tiles', 'trails', 'pets'].map(t => (
           <button
             key={t}
             className={`shop-tab ${tab === t ? 'active' : ''}`}
             onTouchStart={(e) => { e.preventDefault(); setTab(t); }}
             onClick={() => setTab(t)}
           >
-            {t === 'skins' ? '🐔 Skins' : t === 'tiles' ? '🟦 Tiles' : '✨ Trails'}
+            {t === 'skins' ? '🐔 Skins' : t === 'tiles' ? '🟦 Tiles' : t === 'trails' ? '✨ Trails' : '🐤 Pets'}
           </button>
         ))}
       </div>
@@ -213,6 +238,30 @@ export default function ShopScreen({ onBack }) {
                 {owned
                   ? (isEquipped ? '✅' : '✨ Equip')
                   : `🌾 ${trail.price}`}
+              </button>
+            </div>
+          );
+        })}
+
+        {tab === 'pets' && PETS.map(pet => {
+          const owned = unlockedPets.includes(pet.id);
+          const isEquipped = equippedPet === pet.id;
+          return (
+            <div key={pet.id} className={`shop-item ${isEquipped ? 'equipped-item' : ''}`}>
+              <div className="pet-preview-icon">{pet.emoji}</div>
+              <div className="shop-item-info">
+                <div className="shop-item-name">{pet.name}</div>
+                <div className="shop-item-desc">{pet.description}</div>
+                {isEquipped && <div className="equipped-badge">✅ Equipped</div>}
+              </div>
+              <button
+                className={`shop-buy-btn ${owned ? 'btn-equip' : 'btn-buy'}`}
+                onTouchStart={(e) => { e.preventDefault(); buyPet(pet); }}
+                onClick={() => buyPet(pet)}
+              >
+                {owned
+                  ? (isEquipped ? '✅' : '🐤 Equip')
+                  : `🌾 ${pet.price}`}
               </button>
             </div>
           );

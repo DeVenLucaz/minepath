@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { gameStore } from '../store/gameStore';
 import { audio } from '../audio/engine';
 import { CHICKEN_SKINS, TILE_STYLES, TRAIL_EFFECTS } from '../data/skins';
+import { PETS } from '../data/pets';
 
 // ─── DIFFICULTY CONFIG ───────────────────────────────────────────
 function getDifficultyConfig(level) {
@@ -174,8 +175,35 @@ function Chicken({ skin, trail, animState, position, gridCols, gridRows, cellW, 
   );
 }
 
+// ─── PET COMPONENT ──────────────────────────────────────────────
+function Pet({ petId, position, cellW, cellH }) {
+  const pet = PETS.find(p => p.id === petId);
+  if (!pet) return null;
+
+  // Follow chicken with a slight offset
+  const pixelX = position.c * (cellW + 2) + cellW / 2 - 12;
+  const pixelY = position.r * (cellH + 2) + cellH / 2 - 12;
+
+  return (
+    <div
+      className="pet-entity"
+      style={{
+        position: 'absolute',
+        left: pixelX,
+        top: pixelY,
+        fontSize: '16px',
+        zIndex: 19,
+        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        pointerEvents: 'none',
+      }}
+    >
+      {pet.emoji}
+    </div>
+  );
+}
+
 // ─── TILE COMPONENT ──────────────────────────────────────────────
-function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH }) {
+function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, isFoggy }) {
   const styleData = TILE_STYLES.find(s => s.id === tileStyle) || TILE_STYLES[0];
   const pressTimer = useRef(null);
   const pressed = useRef(false);
@@ -226,13 +254,13 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH })
   let bg, content, extraClass = '';
 
   if (tile.state === 'checkpoint') {
-    bg = '#FFD700';
-    content = '🏁';
-    extraClass = 'tile-checkpoint';
+    bg = isFoggy ? styleData.hiddenColor : '#FFD700';
+    content = isFoggy ? '?' : '🏁';
+    extraClass = isFoggy ? 'tile-hidden' : 'tile-checkpoint';
   } else if (tile.state === 'hidden') {
     bg = styleData.hiddenColor;
-    content = tile.powerup ? '✨' : (tile.hasSeed ? '🌾' : '?');
-    extraClass = `tile-hidden ${tile.powerup ? 'tile-powerup-glow' : ''} ${isAdjacent ? 'tile-adjacent' : ''}`;
+    content = (tile.powerup && !isFoggy) ? '✨' : ((tile.hasSeed && !isFoggy) ? '🌾' : '?');
+    extraClass = `tile-hidden ${tile.powerup ? 'tile-powerup-glow' : ''} ${isAdjacent ? 'tile-adjacent' : ''} ${isFoggy ? 'tile-foggy' : ''}`;
   } else if (tile.state === 'revealed') {
     bg = styleData.safeColor;
     content = tile.powerup ? getPowerupIcon(tile.powerup) : (tile.hasSeed ? '🌾' : '✓');
@@ -351,6 +379,8 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [cols, setCols] = useState(8);
   const [revealAllActive, setRevealAllActive] = useState(false);
   const [slowMoActive, setSlowMoActive] = useState(false);
+  const [modifiers, setModifiers] = useState([]); // 'fog', 'speed'
+  const [equippedPetId, setEquippedPetId] = useState(gameStore.getEquippedPet());
   const [touchStart, setTouchStart] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -373,17 +403,29 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const initLevel = useCallback((lvl) => {
     const diff = getDifficultyConfig(lvl);
     diffRef.current = diff;
+
+    // --- MODIFIERS ---
+    const activeMods = [];
+    if (lvl >= 7 && Math.random() < 0.25) activeMods.push('fog');
+    if (lvl >= 12 && Math.random() < 0.25) activeMods.push('speed');
+    setModifiers(activeMods);
+
     const newTiles = generateGrid(diff.rows, diff.cols, diff.mineRate, lvl, isDaily);
     const startR = diff.rows - 1, startC = 0;
+
+    // --- PET BONUSES ---
+    const pet = PETS.find(p => p.id === equippedPetId);
+    let startTime = diff.timerMax;
+    if (pet?.bonus === 'time_bonus') startTime += pet.bonusVal;
 
     setRows(diff.rows);
     setCols(diff.cols);
     setTiles(newTiles);
     setChicken({ r: startR, c: startC });
-    setTimer(diff.timerMax);
-    setTimerMax(diff.timerMax);
-    timerVal.current = diff.timerMax;
-    timerMaxVal.current = diff.timerMax;
+    setTimer(startTime);
+    setTimerMax(startTime);
+    timerVal.current = startTime;
+    timerMaxVal.current = startTime;
     setActivePowerup(null);
     setPowerupTimer(0);
     setHasShield(false);
@@ -418,7 +460,8 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       const diff = diffRef.current;
       const drainRate = diff ? diff.timerSpeed : 1;
       const slowFactor = slowMoRef.current ? 0.5 : 1;
-      const drain = (drainRate * slowFactor) / 10; // per 100ms tick
+      const speedFactor = modifiers.includes('speed') ? 1.5 : 1;
+      const drain = (drainRate * slowFactor * speedFactor) / 10; // per 100ms tick
       timerVal.current = Math.max(0, timerVal.current - drain);
       setTimer(timerVal.current);
 
@@ -574,6 +617,17 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       setCombo(newCombo);
       setLastMoveTime(now);
 
+      // --- PET BONUSES ---
+      const pet = PETS.find(p => p.id === equippedPetId);
+      if (pet?.bonus === 'reveal_bonus' && Math.random() < pet.bonusVal) {
+        setTiles(ts => ts.map(t => {
+          if (isAdjacent(t, { r: tile.r, c: tile.c }) && t.state === 'hidden' && !t.isMine) {
+            return { ...t, state: 'revealed' };
+          }
+          return t;
+        }));
+      }
+
       let mult = 1;
       if (newCombo >= 10) mult = 2;
       else if (newCombo >= 6) mult = 1.5;
@@ -611,7 +665,10 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       }
       // Collect seed on current tile
       if (tile.hasSeed) {
-        setSeeds(s => s + 1);
+        const pet = PETS.find(p => p.id === equippedPetId);
+        let amt = 1;
+        if (pet?.bonus === 'seed_bonus' && Math.random() < 0.2) amt += 1;
+        setSeeds(s => s + amt);
         setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, hasSeed: false } : t));
       }
     }
@@ -880,6 +937,11 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           {hasShield && <div className="shield-indicator">🛡️ SHIELD</div>}
           {doubleScore && <div className="doublescore-indicator">⭐ 2X</div>}
           {slowMoActive && <div className="slowmo-indicator">⏱️ SLOW</div>}
+          {modifiers.map(m => (
+            <div key={m} className={`mod-indicator ${m}-mod`}>
+              {m === 'fog' ? '🌫️ FOG' : '⚡ SPEED'}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -895,18 +957,25 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             position: 'relative',
           }}
         >
-          {tiles.map(tile => (
-            <Tile
-              key={`${tile.r}-${tile.c}`}
-              tile={tile}
-              tileStyle={equippedTile}
-              isAdjacent={isAdjacent(tile, chicken)}
-              onTap={handleTileStep}
-              onLongPress={handleLongPress}
-              cellW={cellSize.w}
-              cellH={cellSize.h}
-            />
-          ))}
+          {tiles.map(tile => {
+            const dr = Math.abs(tile.r - chicken.r);
+            const dc = Math.abs(tile.c - chicken.c);
+            const isFoggy = modifiers.includes('fog') && (dr > 1 || dc > 1);
+            
+            return (
+              <Tile
+                key={`${tile.r}-${tile.c}`}
+                tile={tile}
+                tileStyle={equippedTile}
+                isAdjacent={isAdjacent(tile, chicken)}
+                onTap={handleTileStep}
+                onLongPress={handleLongPress}
+                cellW={cellSize.w}
+                cellH={cellSize.h}
+                isFoggy={isFoggy}
+              />
+            );
+          })}
         </div>
 
         {/* Chicken overlay */}
@@ -929,6 +998,14 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             cellH={cellSize.h}
             isMagnetActive={magnetActive}
           />
+          {equippedPetId && (
+            <Pet
+              petId={equippedPetId}
+              position={chicken}
+              cellW={cellSize.w}
+              cellH={cellSize.h}
+            />
+          )}
         </div>
       </div>
 
