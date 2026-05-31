@@ -5,14 +5,24 @@ import { audio } from '../audio/engine';
 export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, onDaily, onAchievements }) {
   const [seeds, setSeeds] = useState(0);
   const [bounce, setBounce] = useState(false);
-  const [daily, setDaily] = useState(gameStore.getDailyChallenge());
-  const [ach, setAch] = useState(gameStore.getAchievements());
+  const [daily, setDaily] = useState(() => {
+    try { return gameStore.getDailyChallenge(); }
+    catch (e) { return { date: '', played: false, score: 0 }; }
+  });
+  const [ach, setAch] = useState(() => {
+    try { return gameStore.getAchievements(); }
+    catch (e) { return { earlyBird: false, seedHoarder: 0, survivor: 0, perfectionist: false }; }
+  });
 
   useEffect(() => {
-    setSeeds(gameStore.getSeeds());
-    setDaily(gameStore.getDailyChallenge());
-    setAch(gameStore.getAchievements());
-    audio.startBackground();
+    try {
+      setSeeds(gameStore.getSeeds());
+      setDaily(gameStore.getDailyChallenge());
+      setAch(gameStore.getAchievements());
+      audio.startBackground();
+    } catch (e) {
+      console.error("Persistence error:", e);
+    }
   }, []);
 
   useEffect(() => {
