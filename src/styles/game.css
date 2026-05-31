@@ -397,6 +397,72 @@ html, body {
   text-align: right;
 }
 
+/* ===================================================
+   PHASE 2: COMBO & MAGNET
+   =================================================== */
+.hud-combo {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 80px;
+}
+
+.combo-badge {
+  background: rgba(255, 215, 0, 0.2);
+  border: 1px solid #FFD700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: comboPop 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+}
+
+@keyframes comboPop {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.combo-count {
+  font-size: 8px;
+  font-weight: 900;
+  color: #FFD700;
+}
+
+.combo-mult {
+  font-size: 12px;
+  font-weight: 900;
+  color: #FFF;
+}
+
+.magnet-pulse {
+  position: absolute;
+  inset: -15px;
+  border: 3px solid #00f2fe;
+  border-radius: 50%;
+  animation: magnetPulse 1s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes magnetPulse {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.tile-powerup-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(255,255,255,0.5);
+  animation: powerupPulse 1.5s infinite;
+}
+
+@keyframes powerupPulse {
+  0% { opacity: 0.2; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.2; }
+}
+
 .hud-bottom {
   display: flex;
   align-items: center;

@@ -23,8 +23,9 @@ function generateGrid(rows, cols, mineRate, level) {
   const checkpointR = 0, checkpointC = cols - 1;
   const startR = rows - 1, startC = 0;
   const powerupCount = Math.max(1, Math.floor(level / 3));
-  const powerupTypes = ['shield', 'slowmo', 'reveal', 'doublescore'];
+  const powerupTypes = ['shield', 'slowmo', 'reveal', 'doublescore', 'magnet'];
   const fakeSafeCount = level >= 8 ? Math.floor(level / 8) : 0;
+  const seedCount = Math.max(2, Math.floor(rows * cols * 0.1));
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -36,6 +37,7 @@ function generateGrid(rows, cols, mineRate, level) {
         isStart: r === startR && c === startC,
         state: 'hidden', // hidden | revealed | mine | checkpoint
         powerup: null,
+        hasSeed: false,
         isFakeSafe: false,
       });
     }
@@ -76,6 +78,13 @@ function generateGrid(rows, cols, mineRate, level) {
   safeTilesForPowerup.sort(() => Math.random() - 0.5).slice(0, powerupCount).forEach((t, i) => {
     const tile = tiles.find(x => x.r === t.r && x.c === t.c);
     if (tile) tile.powerup = powerupTypes[i % powerupTypes.length];
+  });
+
+  // Place seeds on remaining safe tiles
+  const remainingSafe = tiles.filter(t => !t.isMine && !t.isCheckpoint && !t.isStart && !t.powerup);
+  remainingSafe.sort(() => Math.random() - 0.5).slice(0, seedCount).forEach(t => {
+    const tile = tiles.find(x => x.r === t.r && x.c === t.c);
+    if (tile) tile.hasSeed = true;
   });
 
   // Set checkpoint visible
@@ -143,6 +152,7 @@ function Chicken({ skin, trail, animState, position, gridCols, gridRows, cellW, 
         <div className="chicken-wing left" style={{ background: skinData.color }} />
         <div className="chicken-wing right" style={{ background: skinData.color }} />
         {animState === 'shield' && <div className="shield-bubble" />}
+        {isMagnetActive && <div className="magnet-pulse" />}
       </div>
       <div className="chicken-legs">
         <div className="chicken-leg" style={{ background: skinData.color }} />
@@ -209,11 +219,11 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH })
     extraClass = 'tile-checkpoint';
   } else if (tile.state === 'hidden') {
     bg = styleData.hiddenColor;
-    content = tile.powerup ? '✨' : '?';
+    content = tile.powerup ? '✨' : (tile.hasSeed ? '🌾' : '?');
     extraClass = `tile-hidden ${tile.powerup ? 'tile-powerup-glow' : ''} ${isAdjacent ? 'tile-adjacent' : ''}`;
   } else if (tile.state === 'revealed') {
     bg = styleData.safeColor;
-    content = tile.powerup ? getPowerupIcon(tile.powerup) : '✓';
+    content = tile.powerup ? getPowerupIcon(tile.powerup) : (tile.hasSeed ? '🌾' : '✓');
     extraClass = 'tile-revealed tile-flip-anim';
   } else if (tile.state === 'mine') {
     bg = styleData.mineColor;
@@ -250,7 +260,7 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH })
 }
 
 function getPowerupIcon(type) {
-  const icons = { shield: '🛡️', slowmo: '⏱️', reveal: '👁️', doublescore: '⭐' };
+  const icons = { shield: '🛡️', slowmo: '⏱️', reveal: '👁️', doublescore: '⭐', magnet: '🧲' };
   return icons[type] || '✨';
 }
 
@@ -319,6 +329,10 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [showConfetti, setShowConfetti] = useState(false);
   const [obstacle, setObstacle] = useState(null);
   const [doubleScore, setDoubleScore] = useState(false);
+  const [magnetActive, setMagnetActive] = useState(false);
+  const [combo, setCombo] = useState(0);
+  const [comboMultiplier, setComboMultiplier] = useState(1);
+  const [lastMoveTime, setLastMoveTime] = useState(0);
   const [gamePhase, setGamePhase] = useState('playing'); // playing | levelcomplete | gameover
   const [levelSeeds, setLevelSeeds] = useState(0);
   const [rows, setRows] = useState(6);
@@ -362,6 +376,10 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     setPowerupTimer(0);
     setHasShield(false);
     setDoubleScore(false);
+    setMagnetActive(false);
+    setCombo(0);
+    setComboMultiplier(1);
+    setLastMoveTime(0);
     setRevealAllActive(false);
     setSlowMoActive(false);
     slowMoRef.current = false;
@@ -532,9 +550,49 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       setChickenAnim('walk');
       setTimeout(() => setChickenAnim('idle'), 300);
 
-      // Collect powerup
+      // --- COMBO LOGIC ---
+      const now = Date.now();
+      const timeDiff = now - lastMoveTime;
+      let newCombo = 0;
+      if (timeDiff < 1500) { // 1.5 second window
+        newCombo = combo + 1;
+      } else {
+        newCombo = 1;
+      }
+      setCombo(newCombo);
+      setLastMoveTime(now);
+
+      let mult = 1;
+      if (newCombo >= 10) mult = 2;
+      else if (newCombo >= 6) mult = 1.5;
+      else if (newCombo >= 3) mult = 1.2;
+      setComboMultiplier(mult);
+
+      // --- MAGNET LOGIC ---
+      if (magnetActive) {
+        setTiles(ts => ts.map(t => {
+          if (isAdjacent(t, { r: tile.r, c: tile.c })) {
+            if (t.hasSeed) {
+              setSeeds(s => s + 1); // Immediate seed gain
+              return { ...t, hasSeed: false, state: 'revealed' };
+            }
+            if (t.powerup && t.state === 'hidden') {
+              collectPowerup(t.powerup);
+              return { ...t, powerup: null, state: 'revealed' };
+            }
+          }
+          return t;
+        }));
+      }
+
+      // Collect powerup on current tile
       if (tile.powerup) {
         collectPowerup(tile.powerup);
+      }
+      // Collect seed on current tile
+      if (tile.hasSeed) {
+        setSeeds(s => s + 1);
+        setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, hasSeed: false } : t));
       }
     }
   }, [gamePhase, chicken, hasShield, tiles]);
@@ -542,6 +600,8 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const handleMineHit = (tile) => {
     setShaking(true);
     setChickenAnim('explode');
+    setCombo(0);
+    setComboMultiplier(1);
     audio.mineExplosion();
     setTimeout(() => setShaking(false), 600);
     gamePhaseRef.current = 'gameover';
@@ -561,6 +621,8 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     timerVal.current = Math.max(0, timerVal.current - 1);
     setTimer(timerVal.current);
     audio.peek();
+    setCombo(0);
+    setComboMultiplier(1);
 
     setTiles(ts => ts.map(t => {
       if (t.r === tile.r && t.c === tile.c) {
@@ -625,6 +687,20 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     } else if (type === 'doublescore') {
       setDoubleScore(true);
       setActivePowerup('doublescore');
+    } else if (type === 'magnet') {
+      setMagnetActive(true);
+      setActivePowerup('magnet');
+      setPowerupTimer(12);
+      let t = 12;
+      const interval = setInterval(() => {
+        t -= 1;
+        setPowerupTimer(t);
+        if (t <= 0) {
+          clearInterval(interval);
+          setMagnetActive(false);
+          setActivePowerup(null);
+        }
+      }, 1000);
     }
   };
 
@@ -638,7 +714,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     const lvl = levelRef.current;
     const baseSeeds = lvl * 10;
     const timeBonus = Math.floor(timerVal.current * 2);
-    const earned = (baseSeeds + timeBonus) * (doubleScore ? 2 : 1);
+    const earned = Math.floor((baseSeeds + timeBonus) * (doubleScore ? 2 : 1) * comboMultiplier);
     gameStore.addSeeds(earned);
     gameStore.updateBestLevel(lvl);
     gameStore.addLeaderboardEntry({ level: lvl, seeds: earned });
@@ -742,6 +818,14 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       <div className="hud">
         <div className="hud-top">
           <div className="hud-level">Lv.{level}</div>
+          <div className="hud-combo">
+            {combo > 1 && (
+              <div className="combo-badge">
+                <span className="combo-count">{combo} COMBO</span>
+                <span className="combo-mult">{comboMultiplier}x</span>
+              </div>
+            )}
+          </div>
           <div className={`timer-bar-container ${slowMoActive ? 'slowmo-glow' : ''}`}>
             <div
               className="timer-bar-fill"
@@ -816,6 +900,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             gridRows={rows}
             cellW={cellSize.w}
             cellH={cellSize.h}
+            isMagnetActive={magnetActive}
           />
         </div>
       </div>
