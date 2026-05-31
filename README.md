@@ -10,9 +10,9 @@ No hearts. No retries. One wrong tap and you're done.
 
 ## Play Now
 
-🌐 **[Play in Browser — No install needed](https://ypatole035-ai.github.io/minepath/)**
+🌐 **[Play in Browser — No install needed](https://DeVenLucaz.github.io/minepath/)**
 
-📲 **[Download APK — MINEPATH V1](https://github.com/ypatole035-ai/minepath/releases/latest/download/MINEPATH_V1.apk)**
+📲 **[Download APK — MINEPATH V1](https://github.com/DeVenLucaz/minepath/releases/latest/download/MINEPATH_V1.apk)**
 
 Works on any mobile browser. Just open and play.
 
@@ -41,31 +41,30 @@ It's raw. That rawness is what made it addictive.
 
 ---
 
-## Then Try V5
+## What's New in V2.0.0
 
-Five versions later, MINEPATH is a full Android game — 4 worlds, 40+ levels, skins with passive abilities, combo multiplier up to 10x, shop, achievements, boss levels, moving mines, lava tiles, gravity flips.
+V2 builds on the original core loop with four phases of additions:
 
-📲 **[Download MINEPATH V5 APK](https://github.com/ypatole035-ai/MinepathV5/releases/latest/download/MINEPATH.apk)**
-
-🔗 **[MINEPATH V5 Repository](https://github.com/ypatole035-ai/MinepathV5)**
-
-Play V1 first. Then see what five iterations look like.
+- **Settings & Tutorial** — audio toggles for BGM/SFX, First Flight onboarding for new players
+- **Tactical Depth** — combo multiplier up to 2x, Magnet power-up that pulls nearby seeds
+- **Retention** — Daily Challenge with seeded levels, Achievements (Feathers) system
+- **Expansion** — Pet companions (Lil Yeller, Bluey, Shadow) with passive abilities, Fog of War and Double Speed level modifiers, movement trails
 
 ---
 
-## Other Games
+## Other Projects
 
-| Game | Play |
+| Project | What it does |
 |---|---|
-| 🔓 WORD HEIST V1 — Vault cracking word game (original) | [Play](https://ypatole035-ai.github.io/word-heist/) |
-| 🔓 WORD HEIST V3 — Full polish, operative classes, run debrief | [Play](https://ypatole035-ai.github.io/Word-Heist-V3/) |
+| 🦙 **[llamdrop](https://github.com/DeVenLucaz/llamdrop)** — Run local AI on any device | Free, open-source tool that reads your hardware, picks the right AI model, and runs it. Android, Linux, Raspberry Pi, Windows, macOS. No PC required. |
+| 🟢 **[Vernux](https://github.com/DeVenLucaz/Vernux)** — Natural language interface for Termux | Type what you want in plain English. Vernux finds the command, checks it's safe, and runs it. 151+ patterns, 700+ commands, offline AI fallback. |
 
 ---
 
 ## Built By
 
-**DeVen — [DeVenLucaz](https://github.com/ypatole035-ai)**
+**DeVen — [DeVenLucaz](https://github.com/DeVenLucaz)**
 Independent creator. Pune, India.
-Building games, music, and interactive fiction entirely on Android with AI assistance.
+Building games, tools, music, and interactive fiction entirely on Android with AI assistance.
 
 ⭐ If this project is interesting to you — as a game, as an experiment, or as proof that the tools have changed — a star on the repo means something.
