@@ -44,6 +44,7 @@ export default function App() {
   const goShop = useCallback(() => setScreen('shop'), []);
   const goLeaderboard = useCallback(() => setScreen('leaderboard'), []);
   const goSettings = useCallback(() => setScreen('settings'), []);
+  const goAchievements = useCallback(() => setScreen('achievements'), []);
 
   const handleGameOver = useCallback((data) => {
     setGameOverData(data);
