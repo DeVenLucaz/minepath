@@ -17,40 +17,51 @@ function getCtx() {
   return ctx;
 }
 
+function getSettings() {
+  try {
+    const val = localStorage.getItem('minepath_settings');
+    if (!val) return { bgm: true, sfx: true };
+    return JSON.parse(val);
+  } catch {
+    return { bgm: true, sfx: true };
+  }
+}
+
 function playTone(freq, duration, type = 'sine', gainVal = 0.3, delay = 0) {
-  const settings = safeGet('minepath_settings', { bgm: true, sfx: true });
-  if (!settings.sfx) return;
+  if (!getSettings().sfx) return;
   const c = getCtx();
   const osc = c.createOscillator();
-// ... (rest of function)
+  const g = c.createGain();
+  osc.connect(g);
+  g.connect(masterGain);
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, c.currentTime + delay);
+  g.gain.setValueAtTime(gainVal, c.currentTime + delay);
+  g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + delay + duration);
+  osc.start(c.currentTime + delay);
   osc.stop(c.currentTime + delay + duration);
 }
 
 function playFreqSeq(freqs, noteDuration, type = 'square', gainVal = 0.2) {
-  const settings = safeGet('minepath_settings', { bgm: true, sfx: true });
-  if (!settings.sfx) return;
+  if (!getSettings().sfx) return;
   freqs.forEach((freq, i) => {
     if (freq > 0) playTone(freq, noteDuration, type, gainVal, i * noteDuration);
   });
 }
 
 export const audio = {
-// ...
-  startBackground() {
-    if (bgPlaying) return;
-    const settings = safeGet('minepath_settings', { bgm: true, sfx: true });
-    if (!settings.bgm) return;
-    const c = getCtx();
-    bgPlaying = true;
-// ... (rest of startBackground)
+  init() {
+    getCtx();
+  },
 
-    const c = getCtx();
+  safeTap() {
     playTone(520, 0.08, 'sine', 0.25);
     playTone(780, 0.06, 'sine', 0.15, 0.07);
   },
 
   mineExplosion() {
     const c = getCtx();
+    if (!getSettings().sfx) return;
     // Boom
     const buf = c.createBuffer(1, c.sampleRate * 0.5, c.sampleRate);
     const data = buf.getChannelData(0);
@@ -83,7 +94,6 @@ export const audio = {
   },
 
   timerLow() {
-    const c = getCtx();
     playTone(880, 0.05, 'square', 0.1);
   },
 
@@ -92,6 +102,7 @@ export const audio = {
   },
 
   windGust() {
+    if (!getSettings().sfx) return;
     const c = getCtx();
     const buf = c.createBuffer(1, c.sampleRate * 0.4, c.sampleRate);
     const data = buf.getChannelData(0);
@@ -115,6 +126,7 @@ export const audio = {
 
   startBackground() {
     if (bgPlaying) return;
+    if (!getSettings().bgm) return;
     const c = getCtx();
     bgPlaying = true;
 
