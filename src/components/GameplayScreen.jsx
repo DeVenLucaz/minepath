@@ -118,7 +118,7 @@ function TrailParticle({ x, y, trailId }) {
 }
 
 // ─── CHICKEN COMPONENT ───────────────────────────────────────────
-function Chicken({ skin, trail, animState, position, gridCols, gridRows, cellW, cellH }) {
+function Chicken({ skin, trail, animState, position, gridCols, gridRows, cellW, cellH, isMagnetActive }) {
   const skinData = CHICKEN_SKINS.find(s => s.id === skin) || CHICKEN_SKINS[0];
   const outfitClass = `chicken-outfit-${skinData.outfit || 'classic'}`;
 
@@ -570,19 +570,27 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
 
       // --- MAGNET LOGIC ---
       if (magnetActive) {
+        let attractedSeeds = 0;
+        let powerupsToCollect = [];
+        
         setTiles(ts => ts.map(t => {
           if (isAdjacent(t, { r: tile.r, c: tile.c })) {
             if (t.hasSeed) {
-              setSeeds(s => s + 1); // Immediate seed gain
+              attractedSeeds++;
               return { ...t, hasSeed: false, state: 'revealed' };
             }
             if (t.powerup && t.state === 'hidden') {
-              collectPowerup(t.powerup);
+              powerupsToCollect.push(t.powerup);
               return { ...t, powerup: null, state: 'revealed' };
             }
           }
           return t;
         }));
+
+        if (attractedSeeds > 0) {
+          setSeeds(s => s + attractedSeeds);
+        }
+        powerupsToCollect.forEach(p => collectPowerup(p));
       }
 
       // Collect powerup on current tile
