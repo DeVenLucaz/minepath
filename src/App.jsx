@@ -115,7 +115,7 @@ export default function App() {
         <SettingsScreen onBack={() => setScreen('home')} />
       )}
       {screen === 'achievements' && (
-        <AchievementsScreen onBack={() => setScreen('home')} />
+        <AchievementsScreen onBack={goHome} />
       )}
 
       {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete} />}
