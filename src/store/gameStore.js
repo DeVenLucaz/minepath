@@ -51,18 +51,46 @@ export const gameStore = {
   },
 
   getAchievements() {
-    return safeGet(STORAGE_KEYS.ACHIEVEMENTS, {
-      earlyBird: false,
-      seedHoarder: 0,
-      survivor: 0,
-      perfectionist: false,
-    });
+    const DEFAULT = {
+      firstSteps: false, seedSnatcher: false, bigHarvest: false,
+      mineMaster: false, deepDigger: false, speedyClucker: false,
+      survivor: 0, roadRunner: 0, dailyDevotee: 0,
+      shopOpener: false, petLover: false, fashionista: false,
+      trailBlazer: false, comboKing: 0, fearless: 0,
+      _claimed: {},
+    };
+    return safeGet(STORAGE_KEYS.ACHIEVEMENTS, DEFAULT);
+  },
+  setAchievement(key) {
+    const ach = this.getAchievements();
+    if (!ach[key]) { ach[key] = true; safeSet(STORAGE_KEYS.ACHIEVEMENTS, ach); }
+  },
+  incrementAchievement(key, amount = 1) {
+    const ach = this.getAchievements();
+    if (typeof ach[key] === 'number') {
+      ach[key] = (ach[key] || 0) + amount;
+      safeSet(STORAGE_KEYS.ACHIEVEMENTS, ach);
+    }
   },
   updateAchievement(key, val) {
+    if (typeof val === 'boolean') this.setAchievement(key);
+    else this.incrementAchievement(key, val);
+  },
+  claimFeat(key, reward) {
     const ach = this.getAchievements();
-    if (typeof val === 'boolean') ach[key] = val;
-    else ach[key] += val;
-    safeSet(STORAGE_KEYS.ACHIEVEMENTS, ach);
+    if (!ach._claimed) ach._claimed = {};
+    if (!ach._claimed[key]) {
+      ach._claimed[key] = true;
+      safeSet(STORAGE_KEYS.ACHIEVEMENTS, ach);
+      const cur = this.getSeeds();
+      safeSet(STORAGE_KEYS.SEEDS, cur + reward);
+      return true;
+    }
+    return false;
+  },
+  isFeatClaimed(key) {
+    const ach = this.getAchievements();
+    return !!(ach._claimed && ach._claimed[key]);
   },
 
   getDailyChallenge() {
