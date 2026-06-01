@@ -1,3 +1,4 @@
+// ─── PETS — v3 ────────────────────────────────────────────
 export const PETS = [
   {
     id: 'chick_yellow',
@@ -5,8 +6,10 @@ export const PETS = [
     emoji: '🐤',
     price: 150,
     bonus: 'seed_bonus',
-    bonusVal: 0.1, // +10% seeds
-    description: 'A tiny helper that pecks for extra seeds.'
+    bonusVal: 0.10,
+    description: 'Pecks for extra seeds',
+    bonusLabel: '+10% seeds per run',
+    cardAccent: '#FDD835',
   },
   {
     id: 'chick_blue',
@@ -14,8 +17,10 @@ export const PETS = [
     emoji: '🐦',
     price: 250,
     bonus: 'time_bonus',
-    bonusVal: 5, // +5s start time
-    description: 'Chirps to slow down the setting sun.'
+    bonusVal: 5,
+    description: 'Chirps to slow down the timer',
+    bonusLabel: '+5s start time',
+    cardAccent: '#29B6F6',
   },
   {
     id: 'chick_ninja',
@@ -23,7 +28,32 @@ export const PETS = [
     emoji: '🐧',
     price: 500,
     bonus: 'reveal_bonus',
-    bonusVal: 0.05, // 5% chance to reveal adjacent on move
-    description: 'A master of stealth that spots hidden dangers.'
-  }
+    bonusVal: 0.05,
+    description: 'Spots hidden dangers nearby',
+    bonusLabel: '5% chance to reveal adjacent tile',
+    cardAccent: '#546E7A',
+  },
+  {
+    id: 'sparky',
+    name: 'Sparky',
+    emoji: '🐶',
+    price: 1000,
+    bonus: 'safe_reveal',
+    bonusVal: 1,
+    description: 'Barks to reveal safe tiles',
+    bonusLabel: 'Reveals 1 random safe tile at level start',
+    cardAccent: '#FF8A65',
+  },
+  {
+    id: 'bunn_bunn',
+    name: 'Bunn-Bunn',
+    emoji: '🐰',
+    price: 1500,
+    bonus: 'mine_skip',
+    bonusVal: 5,
+    description: 'Saves you from one mine every 5 levels',
+    bonusLabel: '1 free mine hit per 5 levels',
+    cardAccent: '#F48FB1',
+  },
 ];
+    
