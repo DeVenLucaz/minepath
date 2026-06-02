@@ -1,70 +1,34 @@
-// Game Store - localStorage persistence layer
+// Game Store Facade - Delegating to modular stores for V4
 
-import { FEATS, DEFAULT_ACHIEVEMENTS } from '../data/achievements';
-
-const STORAGE_KEYS = {
-  SEEDS: 'minepath_seeds',
-  UNLOCKED_SKINS: 'minepath_unlocked_skins',
-  UNLOCKED_TILES: 'minepath_unlocked_tiles',
-  UNLOCKED_TRAILS: 'minepath_unlocked_trails',
-  EQUIPPED_SKIN: 'minepath_equipped_skin',
-  EQUIPPED_TILE: 'minepath_equipped_tile',
-  EQUIPPED_TRAIL: 'minepath_equipped_trail',
-  BEST_LEVEL: 'minepath_best_level',
-  LEADERBOARD: 'minepath_leaderboard',
-  SETTINGS: 'minepath_settings',
-  TUTORIAL_COMPLETE: 'minepath_tutorial_complete',
-  ACHIEVEMENTS: 'minepath_achievements',
-  DAILY_CHALLENGE: 'minepath_daily_challenge',
-  UNLOCKED_PETS: 'minepath_unlocked_pets',
-  EQUIPPED_PET: 'minepath_equipped_pet',
-  GOLDEN_MASCOT: 'minepath_golden_mascot',
-};
-
-function safeGet(key, defaultVal) {
-  try {
-    const val = localStorage.getItem(key);
-    if (val === null || val === 'undefined' || val === 'null') return defaultVal;
-    const parsed = JSON.parse(val);
-    return parsed !== null && parsed !== undefined ? parsed : defaultVal;
-  } catch {
-    return defaultVal;
-  }
-}
-
-function safeSet(key, val) {
-  try {
-    localStorage.setItem(key, JSON.stringify(val));
-  } catch {}
-}
+import { playerStore } from './playerStore';
+import { inventoryStore } from './inventoryStore';
+import { settingsStore } from './settingsStore';
+import { hubStore } from './hubStore';
+import { DEFAULT_ACHIEVEMENTS } from '../data/achievements';
 
 export const gameStore = {
-  getSettings() {
-    return safeGet(STORAGE_KEYS.SETTINGS, { bgm: true, sfx: true });
-  },
-  setSettings(settings) {
-    safeSet(STORAGE_KEYS.SETTINGS, settings);
-  },
+  // Settings
+  getSettings() { return settingsStore.getSettings(); },
+  setSettings(s) { settingsStore.setSettings(s); },
 
-  isTutorialComplete() {
-    return safeGet(STORAGE_KEYS.TUTORIAL_COMPLETE, false);
-  },
-  setTutorialComplete(complete) {
-    safeSet(STORAGE_KEYS.TUTORIAL_COMPLETE, complete);
-  },
+  // Tutorial
+  isTutorialComplete() { return playerStore.isTutorialComplete(); },
+  setTutorialComplete(c) { playerStore.setTutorialComplete(c); },
 
+  // Achievements
   getAchievements() {
-    return safeGet(STORAGE_KEYS.ACHIEVEMENTS, DEFAULT_ACHIEVEMENTS);
+    const ach = playerStore.getAchievements();
+    return Object.keys(ach).length === 0 ? DEFAULT_ACHIEVEMENTS : ach;
   },
   setAchievement(key) {
     const ach = this.getAchievements();
-    if (!ach[key]) { ach[key] = true; safeSet(STORAGE_KEYS.ACHIEVEMENTS, ach); }
+    if (!ach[key]) { ach[key] = true; playerStore.setAchievements(ach); }
   },
   incrementAchievement(key, amount = 1) {
     const ach = this.getAchievements();
     if (typeof ach[key] === 'number') {
       ach[key] = (ach[key] || 0) + amount;
-      safeSet(STORAGE_KEYS.ACHIEVEMENTS, ach);
+      playerStore.setAchievements(ach);
     }
   },
   updateAchievement(key, val) {
@@ -76,9 +40,8 @@ export const gameStore = {
     if (!ach._claimed) ach._claimed = {};
     if (!ach._claimed[key]) {
       ach._claimed[key] = true;
-      safeSet(STORAGE_KEYS.ACHIEVEMENTS, ach);
-      const cur = this.getSeeds();
-      safeSet(STORAGE_KEYS.SEEDS, cur + reward);
+      playerStore.setAchievements(ach);
+      playerStore.addSeeds(reward);
       return true;
     }
     return false;
@@ -88,137 +51,68 @@ export const gameStore = {
     return !!(ach._claimed && ach._claimed[key]);
   },
 
-  getDailyChallenge() {
-    const today = new Date().toDateString();
-    const data = safeGet(STORAGE_KEYS.DAILY_CHALLENGE, { date: '', played: false, score: 0 });
-    if (data.date !== today) {
-      return { date: today, played: false, score: 0 };
-    }
-    return data;
+  // Daily Challenge
+  getDailyChallenge() { return playerStore.getDailyChallenge(); },
+  setDailyPlayed(score) { playerStore.setDailyPlayed(score); },
+
+  // Pets
+  getUnlockedPets() { return inventoryStore.getUnlockedPets(); },
+  unlockPet(id) { inventoryStore.unlockPet(id); },
+  getEquippedPet() { return inventoryStore.getEquippedPet(); },
+  setEquippedPet(id) { inventoryStore.setEquippedPet(id); },
+
+  // Seeds
+  getSeeds() { return playerStore.getSeeds(); },
+  setSeeds(val) { playerStore.setSeeds(val); },
+  addSeeds(amt) {
+    const total = playerStore.addSeeds(amt);
+    this.updateAchievement('seedHoarder', amt);
+    return total;
   },
-  setDailyPlayed(score) {
-    const today = new Date().toDateString();
-    safeSet(STORAGE_KEYS.DAILY_CHALLENGE, { date: today, played: true, score });
+  spendSeeds(amt) { return playerStore.spendSeeds(amt); },
+
+  // Skins
+  getUnlockedSkins() { return inventoryStore.getUnlockedSkins(); },
+  unlockSkin(id) { inventoryStore.unlockSkin(id); },
+  getEquippedSkin() { return inventoryStore.getEquippedSkin(); },
+  setEquippedSkin(id) { inventoryStore.setEquippedSkin(id); },
+
+  // Tiles
+  getUnlockedTiles() { return inventoryStore.getUnlockedTiles(); },
+  unlockTile(id) { inventoryStore.unlockTile(id); },
+  getEquippedTile() { return inventoryStore.getEquippedTile(); },
+  setEquippedTile(id) { inventoryStore.setEquippedTile(id); },
+
+  // Trails
+  getUnlockedTrails() { return inventoryStore.getUnlockedTrails(); },
+  unlockTrail(id) { inventoryStore.unlockTrail(id); },
+  getEquippedTrail() { return inventoryStore.getEquippedTrail(); },
+  setEquippedTrail(id) { inventoryStore.setEquippedTrail(id); },
+
+  // Best Level
+  getBestLevel() { return playerStore.getBestLevel(); },
+  updateBestLevel(lvl) {
+    playerStore.updateBestLevel(lvl);
+    if (lvl >= 5) this.updateAchievement('earlyBird', true);
   },
 
-  getUnlockedPets() {
-    return safeGet(STORAGE_KEYS.UNLOCKED_PETS, []);
-  },
-  unlockPet(id) {
-    const unlocked = this.getUnlockedPets();
-    if (!unlocked.includes(id)) {
-      unlocked.push(id);
-      safeSet(STORAGE_KEYS.UNLOCKED_PETS, unlocked);
-    }
-  },
-  getEquippedPet() {
-    return safeGet(STORAGE_KEYS.EQUIPPED_PET, null);
-  },
-  setEquippedPet(id) {
-    safeSet(STORAGE_KEYS.EQUIPPED_PET, id);
-  },
-
-  getSeeds() {
-    return safeGet(STORAGE_KEYS.SEEDS, 0);
-  },
-  setSeeds(amount) {
-    safeSet(STORAGE_KEYS.SEEDS, amount);
-  },
-  addSeeds(amount) {
-    const current = this.getSeeds();
-    safeSet(STORAGE_KEYS.SEEDS, current + amount);
-    this.updateAchievement('seedHoarder', amount);
-    return current + amount;
-  },
-  spendSeeds(amount) {
-    const current = this.getSeeds();
-    if (current < amount) return false;
-    safeSet(STORAGE_KEYS.SEEDS, current - amount);
-    return true;
-  },
-
-  getUnlockedSkins() {
-    return safeGet(STORAGE_KEYS.UNLOCKED_SKINS, ['classic']);
-  },
-  unlockSkin(id) {
-    const unlocked = this.getUnlockedSkins();
-    if (!unlocked.includes(id)) {
-      unlocked.push(id);
-      safeSet(STORAGE_KEYS.UNLOCKED_SKINS, unlocked);
-    }
-  },
-
-  getUnlockedTiles() {
-    return safeGet(STORAGE_KEYS.UNLOCKED_TILES, ['classic']);
-  },
-  unlockTile(id) {
-    const unlocked = this.getUnlockedTiles();
-    if (!unlocked.includes(id)) {
-      unlocked.push(id);
-      safeSet(STORAGE_KEYS.UNLOCKED_TILES, unlocked);
-    }
-  },
-
-  getUnlockedTrails() {
-    return safeGet(STORAGE_KEYS.UNLOCKED_TRAILS, ['none']);
-  },
-  unlockTrail(id) {
-    const unlocked = this.getUnlockedTrails();
-    if (!unlocked.includes(id)) {
-      unlocked.push(id);
-      safeSet(STORAGE_KEYS.UNLOCKED_TRAILS, unlocked);
-    }
-  },
-
-  getEquippedSkin() {
-    return safeGet(STORAGE_KEYS.EQUIPPED_SKIN, 'classic');
-  },
-  setEquippedSkin(id) {
-    safeSet(STORAGE_KEYS.EQUIPPED_SKIN, id);
-  },
-
-  getEquippedTile() {
-    return safeGet(STORAGE_KEYS.EQUIPPED_TILE, 'classic');
-  },
-  setEquippedTile(id) {
-    safeSet(STORAGE_KEYS.EQUIPPED_TILE, id);
-  },
-
-  getEquippedTrail() {
-    return safeGet(STORAGE_KEYS.EQUIPPED_TRAIL, 'none');
-  },
-  setEquippedTrail(id) {
-    safeSet(STORAGE_KEYS.EQUIPPED_TRAIL, id);
-  },
-
-  getBestLevel() {
-    return safeGet(STORAGE_KEYS.BEST_LEVEL, 0);
-  },
-  updateBestLevel(level) {
-    const best = this.getBestLevel();
-    if (level > best) {
-      safeSet(STORAGE_KEYS.BEST_LEVEL, level);
-    }
-    if (level >= 5) this.updateAchievement('earlyBird', true);
-  },
-
-  getLeaderboard() {
-    return safeGet(STORAGE_KEYS.LEADERBOARD, []);
-  },
+  // Leaderboard
+  getLeaderboard() { return playerStore.getLeaderboard(); },
   addLeaderboardEntry(entry) {
-    const board = this.getLeaderboard();
-    board.push({ ...entry, date: new Date().toLocaleDateString() });
-    board.sort((a, b) => b.level - a.level);
-    const top10 = board.slice(0, 10);
-    safeSet(STORAGE_KEYS.LEADERBOARD, top10);
+    const board = playerStore.addLeaderboardEntry(entry);
     this.updateAchievement('survivor', 1);
-    return top10;
+    return board;
   },
 
-  hasGoldenHomeMascot() {
-    return safeGet(STORAGE_KEYS.GOLDEN_MASCOT, false);
-  },
-  unlockGoldenMascot() {
-    safeSet(STORAGE_KEYS.GOLDEN_MASCOT, true);
-  },
+  // Special
+  hasGoldenHomeMascot() { return inventoryStore.hasGoldenMascot(); },
+  unlockGoldenMascot() { inventoryStore.unlockGoldenMascot(); },
+
+  // Hub (V4)
+  getBuildings() { return hubStore.getBuildings(); },
+  upgradeBuilding(id) { return hubStore.upgradeBuilding(id); },
+  getEggs() { return hubStore.getEggs(); },
+  addEgg(id) { hubStore.addEgg(id); },
+  removeEgg(index) { hubStore.removeEgg(index); },
+  updateEggs(eggs) { hubStore.setEggs(eggs); },
 };

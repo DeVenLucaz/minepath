@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { gameStore } from '../store/gameStore';
+import { playerStore } from '../store/playerStore';
 import { audio } from '../audio/engine';
 import { CHICKEN_SKINS, TILE_STYLES, TRAIL_EFFECTS } from '../data/skins';
 import { PETS } from '../data/pets';
+import { BIOMES } from '../data/biomes';
+import { SKILLS } from '../data/skills';
 import ChickenSVG from './ChickenSVG';
 import TopBar from './TopBar';
 import GameOverModal from './GameOverModal';
@@ -23,7 +26,7 @@ function getDifficultyConfig(level) {
 }
 
 // ─── GRID GENERATION ─────────────────────────────────────────────
-function generateGrid(rows, cols, mineRate, level, isDaily) {
+function generateGrid(rows, cols, mineRate, level, isDaily, biome) {
   // Simple Seeded Random for Daily Challenge
   let seed = 12345;
   if (isDaily) {
@@ -41,6 +44,10 @@ function generateGrid(rows, cols, mineRate, level, isDaily) {
   const startR = rows - 1, startC = 0;
   const powerupCount = Math.max(1, Math.floor(level / 3));
   const powerupTypes = ['shield', 'slowmo', 'reveal', 'doublescore', 'magnet'];
+  
+  // V4: Light Orbs for Swamp Biome
+  if (biome.hazard === 'fog') powerupTypes.push('light');
+
   const fakeSafeCount = level >= 8 ? Math.floor(level / 8) : 0;
   const seedCount = Math.max(2, Math.floor(rows * cols * 0.1));
 
@@ -56,30 +63,25 @@ function generateGrid(rows, cols, mineRate, level, isDaily) {
         powerup: null,
         hasSeed: false,
         isFakeSafe: false,
+        isBurning: false, // V4: Forge hazard
       });
     }
   }
 
   // Place mines
-  const candidates = tiles.filter(t =>
-    !t.isCheckpoint && !t.isStart
-  );
-
-  // Shuffle and place mines
+  const candidates = tiles.filter(t => !t.isCheckpoint && !t.isStart);
   const shuffled = [...candidates].sort(() => sRandom() - 0.5);
   const mineCount = Math.floor((rows * cols - 2) * mineRate);
-  let minesPlaced = 0;
-
+  
   shuffled.slice(0, mineCount).forEach(t => {
     const tile = tiles.find(x => x.r === t.r && x.c === t.c);
     if (tile && !tile.isCheckpoint && !tile.isStart) {
       tile.isMine = true;
       tile.isSafe = false;
-      minesPlaced++;
     }
   });
 
-  // Place fake safe tiles (look safe but are mines)
+  // Place fake safe tiles
   const safeTiles = tiles.filter(t => !t.isMine && !t.isCheckpoint && !t.isStart);
   safeTiles.slice(0, fakeSafeCount).forEach(t => {
     const tile = tiles.find(x => x.r === t.r && x.c === t.c);
@@ -90,14 +92,14 @@ function generateGrid(rows, cols, mineRate, level, isDaily) {
     }
   });
 
-  // Place powerups on safe tiles
+  // Place powerups
   const safeTilesForPowerup = tiles.filter(t => !t.isMine && !t.isCheckpoint && !t.isStart);
   safeTilesForPowerup.sort(() => sRandom() - 0.5).slice(0, powerupCount).forEach((t, i) => {
     const tile = tiles.find(x => x.r === t.r && x.c === t.c);
     if (tile) tile.powerup = powerupTypes[i % powerupTypes.length];
   });
 
-  // Place seeds on remaining safe tiles
+  // Place seeds
   const remainingSafe = tiles.filter(t => !t.isMine && !t.isCheckpoint && !t.isStart && !t.powerup);
   remainingSafe.sort(() => sRandom() - 0.5).slice(0, seedCount).forEach(t => {
     const tile = tiles.find(x => x.r === t.r && x.c === t.c);
@@ -305,9 +307,9 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, i
     content = (tile.powerup && !isFoggy) ? '✨' : ((tile.hasSeed && !isFoggy) ? '🌾' : '?');
     extraClass = `tile-hidden ${tile.powerup ? 'tile-powerup-glow' : ''} ${isAdjacent ? 'tile-adjacent' : ''} ${isFoggy ? 'tile-foggy' : ''}`;
   } else if (tile.state === 'revealed') {
-    bg = styleData.safeColor;
-    content = tile.powerup ? getPowerupIcon(tile.powerup) : (tile.hasSeed ? '🌾' : '✓');
-    extraClass = 'tile-revealed tile-flip-anim';
+    bg = tile.isBurning ? 'linear-gradient(to bottom, #FF4500, #B71C1C)' : styleData.safeColor;
+    content = tile.isBurning ? '🔥' : (tile.powerup ? getPowerupIcon(tile.powerup) : (tile.hasSeed ? '🌾' : '✓'));
+    extraClass = `tile-revealed tile-flip-anim ${tile.isBurning ? 'tile-burning' : ''}`;
   } else if (tile.state === 'mine') {
     bg = styleData.mineColor;
     content = '💀';
@@ -338,12 +340,13 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, i
       {tile.state === 'hidden' && tile.powerup && (
         <div className="powerup-indicator" />
       )}
+      {tile.isBurning && <div className="fire-overlay" />}
     </div>
   );
 }
 
 function getPowerupIcon(type) {
-  const icons = { shield: '🛡️', slowmo: '⏱️', reveal: '👁️', doublescore: '⭐', magnet: '🧲' };
+  const icons = { shield: '🛡️', slowmo: '⏱️', reveal: '👁️', doublescore: '⭐', magnet: '🧲', light: '🕯️' };
   return icons[type] || '✨';
 }
 
@@ -407,6 +410,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [activePowerup, setActivePowerup] = useState(null);
   const [powerupTimer, setPowerupTimer] = useState(0);
   const [hasShield, setHasShield] = useState(false);
+  const [shieldHits, setShieldHits] = useState(1); // V4: Shield Master
   const [chickenAnim, setChickenAnim] = useState('idle');
   const [shaking, setShaking] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -416,23 +420,26 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [combo, setCombo] = useState(0);
   const [comboMultiplier, setComboMultiplier] = useState(1);
   const [lastMoveTime, setLastMoveTime] = useState(0);
-  const [gamePhase, setGamePhase] = useState('playing'); // playing | levelcomplete | gameover
-  const [visitedTiles, setVisitedTiles] = useState([]); // [{r, c}]
+  const [gamePhase, setGamePhase] = useState('playing'); 
+  const [visitedTiles, setVisitedTiles] = useState([]); 
   const [levelSeeds, setLevelSeeds] = useState(0);
   const [levelTimeLeft, setLevelTimeLeft] = useState(0);
   const [rows, setRows] = useState(6);
   const [cols, setCols] = useState(8);
   const [revealAllActive, setRevealAllActive] = useState(false);
   const [slowMoActive, setSlowMoActive] = useState(false);
-  const [modifiers, setModifiers] = useState([]); // 'fog', 'speed'
+  const [modifiers, setModifiers] = useState([]); 
+  const [biome, setBiome] = useState(BIOMES[0]);
+  const [fogRadius, setFogRadius] = useState(1); // V4: Light Orb
   const [equippedPetId, setEquippedPetId] = useState(gameStore.getEquippedPet());
   const [touchStart, setTouchStart] = useState(null);
-  const [isPaused, setIsPaused] = useState(false);
   const [mineSkipCharges, setMineSkipCharges] = useState(0);
+  const [blastResistanceUsed, setBlastResistanceUsed] = useState(false);
 
   const timerRef = useRef(null);
   const powerupTimerRef = useRef(null);
   const obstacleTimerRef = useRef(null);
+  const fireTimerRef = useRef(null);
   const timerVal = useRef(30);
   const timerMaxVal = useRef(30);
   const slowMoRef = useRef(false);
@@ -444,44 +451,38 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const equippedSkin = gameStore.getEquippedSkin();
   const equippedTile = gameStore.getEquippedTile();
   const equippedTrail = gameStore.getEquippedTrail();
+  const unlockedSkills = playerStore.getSkills();
 
   // Initialize level
   const initLevel = useCallback((lvl) => {
     const diff = getDifficultyConfig(lvl);
     diffRef.current = diff;
 
+    // --- BIOME SELECTION ---
+    let bIndex = 0;
+    if (lvl > 15) bIndex = Math.floor(Math.random() * BIOMES.length);
+    else if (lvl > 12) bIndex = 4; // Windswept Plains
+    else if (lvl > 8) bIndex = 3;  // Midnight Swamp
+    else if (lvl > 5) bIndex = 2;  // Volcanic Forge
+    else if (lvl > 2) bIndex = 1;  // Glacial Tundra
+    const currentBiome = BIOMES[bIndex];
+    setBiome(currentBiome);
+
     // --- MODIFIERS ---
     const activeMods = [];
-    if (lvl >= 7 && Math.random() < 0.25) activeMods.push('fog');
-    if (lvl >= 12 && Math.random() < 0.25) activeMods.push('speed');
+    if (currentBiome.hazard === 'fog') activeMods.push('fog');
     setModifiers(activeMods);
+    setFogRadius(1);
 
-    const newTiles = generateGrid(diff.rows, diff.cols, diff.mineRate, lvl, isDaily);
+    const newTiles = generateGrid(diff.rows, diff.cols, diff.mineRate, lvl, isDaily, currentBiome);
     const startR = diff.rows - 1, startC = 0;
 
-    // --- REFRESH EQUIPPED ITEMS ---
     setEquippedPetId(gameStore.getEquippedPet());
 
-    // --- PET BONUSES ---
+    // --- PET & BUILDING BONUSES ---
     const pet = PETS.find(p => p.id === gameStore.getEquippedPet());
     let startTime = diff.timerMax;
     if (pet?.bonus === 'time_bonus') startTime += pet.bonusVal;
-
-    if (pet?.bonus === 'safe_reveal') {
-      const safeTiles = newTiles.filter(t => !t.isMine && t.state === 'hidden' && !t.isCheckpoint && !t.isStart);
-      if (safeTiles.length > 0) {
-        const randomTile = safeTiles[Math.floor(Math.random() * safeTiles.length)];
-        randomTile.state = 'revealed';
-      }
-    }
-
-    if (pet?.bonus === 'mine_skip') {
-      // 1 charge every 5 levels
-      const charges = Math.floor(lvl / 5);
-      setMineSkipCharges(charges);
-    } else {
-      setMineSkipCharges(0);
-    }
 
     setRows(diff.rows);
     setCols(diff.cols);
@@ -494,6 +495,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     setActivePowerup(null);
     setPowerupTimer(0);
     setHasShield(false);
+    setShieldHits(1);
     setDoubleScore(false);
     setMagnetActive(false);
     setCombo(0);
@@ -509,6 +511,30 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     levelRef.current = lvl;
     gamePhaseRef.current = 'playing';
     setGamePhase('playing');
+    setBlastResistanceUsed(false);
+
+    // --- VOLCANIC FORGE HAZARD ---
+    if (currentBiome.hazard === 'fire') {
+      clearInterval(fireTimerRef.current);
+      fireTimerRef.current = setInterval(() => {
+        if (gamePhaseRef.current !== 'playing' || pauseRef.current) return;
+        setTiles(ts => {
+          const newTs = [...ts];
+          const revealedSafe = newTs.filter(t => t.state === 'revealed' && !t.isMine && !t.isStart);
+          if (revealedSafe.length > 0) {
+            const target = revealedSafe[Math.floor(Math.random() * revealedSafe.length)];
+            target.isBurning = true;
+            audio.windGust(); // Reuse sound or find fire sound
+            setTimeout(() => {
+              setTiles(currentTs => currentTs.map(t => t.r === target.r && t.c === target.c ? { ...t, isBurning: false } : t));
+            }, 3000);
+          }
+          return newTs;
+        });
+      }, 5000);
+    } else {
+      clearInterval(fireTimerRef.current);
+    }
   }, []);
 
   useEffect(() => {
@@ -520,6 +546,11 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   useEffect(() => {
     if (gamePhase !== 'playing') return;
     clearInterval(timerRef.current);
+    
+    // V4: Training Nest Buff (reduces timer speed)
+    const buildings = gameStore.getBuildings();
+    const nestBuff = 1 - (buildings.nest * 0.05); // 5% slower timer per level
+
     timerRef.current = setInterval(() => {
       if (pauseRef.current) return;
       if (gamePhaseRef.current !== 'playing') return;
@@ -527,7 +558,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       const drainRate = diff ? diff.timerSpeed : 1;
       const slowFactor = slowMoRef.current ? 0.5 : 1;
       const speedFactor = modifiers.includes('speed') ? 1.5 : 1;
-      const drain = (drainRate * slowFactor * speedFactor) / 10; // per 100ms tick
+      const drain = (drainRate * slowFactor * speedFactor * nestBuff) / 10; // per 100ms tick
       timerVal.current = Math.max(0, timerVal.current - drain);
       setTimer(timerVal.current);
 
@@ -623,42 +654,49 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     if (frozen) return;
     if (gamePhase !== 'playing') return;
     if (!isAdjacent(tile, chicken)) return;
+
+    // V4: Fire hazard check
+    if (tile.isBurning) {
+      handleMineHit(tile, 'fire');
+      return;
+    }
+
     if (tile.state === 'checkpoint') {
-      // Level complete!
       handleLevelComplete();
       return;
     }
+
     if (tile.state === 'revealed') {
-      setChicken({ r: tile.r, c: tile.c });
-      setVisitedTiles(prev => [...prev, { r: tile.r, c: tile.c }]);
-      setChickenAnim('walk');
-      setTimeout(() => setChickenAnim('idle'), 300);
+      moveChicken(tile.r, tile.c);
       return;
     }
+
     if (tile.state === 'peeked') {
       if (tile.isMine) {
         handleMineHit(tile);
       } else {
-        setChicken({ r: tile.r, c: tile.c });
-        setVisitedTiles(prev => [...prev, { r: tile.r, c: tile.c }]);
-        setChickenAnim('walk');
-        setTimeout(() => setChickenAnim('idle'), 300);
+        moveChicken(tile.r, tile.c);
       }
       return;
     }
+
     if (tile.state !== 'hidden') return;
 
     // Reveal tile
     if (tile.isMine) {
-      if (tile.isFakeSafe) {
-        audio.fakeMinePop();
-      }
+      if (tile.isFakeSafe) audio.fakeMinePop();
+      
       // Check shield
       if (hasShield) {
-        setHasShield(false);
-        setActivePowerup(null);
+        const remainingHits = shieldHits - 1;
+        setShieldHits(remainingHits);
+        if (remainingHits <= 0) {
+          setHasShield(false);
+          setActivePowerup(null);
+        }
+        
         setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false } : t));
-        setChicken({ r: tile.r, c: tile.c });
+        moveChicken(tile.r, tile.c);
         setChickenAnim('shield');
         setTimeout(() => setChickenAnim('idle'), 600);
         return;
@@ -668,22 +706,24 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     } else {
       setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed' } : t));
       audio.safeTap();
-      setChicken({ r: tile.r, c: tile.c });
-      setVisitedTiles(prev => [...prev, { r: tile.r, c: tile.c }]);
-      setChickenAnim('walk');
-      setTimeout(() => setChickenAnim('idle'), 300);
+      moveChicken(tile.r, tile.c);
 
       // --- COMBO LOGIC ---
       const now = Date.now();
       const timeDiff = now - lastMoveTime;
-      let newCombo = 0;
-      if (timeDiff < 1500) { // 1.5 second window
-        newCombo = combo + 1;
-      } else {
-        newCombo = 1;
-      }
+      let newCombo = timeDiff < 1500 ? combo + 1 : 1;
       setCombo(newCombo);
       setLastMoveTime(now);
+
+      // --- SKILL: Hazard Sense ---
+      if (unlockedSkills.includes('hazard_sense') && Math.random() < 0.1) {
+        setTiles(ts => ts.map(t => {
+          if (isAdjacent(t, { r: tile.r, c: tile.c }) && t.state === 'hidden' && t.isMine) {
+            return { ...t, state: 'peeked' };
+          }
+          return t;
+        }));
+      }
 
       // --- PET BONUSES ---
       const pet = PETS.find(p => p.id === equippedPetId);
@@ -696,58 +736,85 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         }));
       }
 
-      let mult = 1;
-      if (newCombo >= 10) mult = 2;
-      else if (newCombo >= 6) mult = 1.5;
-      else if (newCombo >= 3) mult = 1.2;
+      let mult = newCombo >= 10 ? 2 : newCombo >= 6 ? 1.5 : newCombo >= 3 ? 1.2 : 1;
       setComboMultiplier(mult);
 
       // --- MAGNET LOGIC ---
       if (magnetActive) {
         let attractedSeeds = 0;
         let powerupsToCollect = [];
-        
         setTiles(ts => ts.map(t => {
           if (isAdjacent(t, { r: tile.r, c: tile.c })) {
-            if (t.hasSeed) {
-              attractedSeeds++;
-              return { ...t, hasSeed: false, state: 'revealed' };
-            }
-            if (t.powerup && t.state === 'hidden') {
-              powerupsToCollect.push(t.powerup);
-              return { ...t, powerup: null, state: 'revealed' };
-            }
+            if (t.hasSeed) { attractedSeeds++; return { ...t, hasSeed: false, state: 'revealed' }; }
+            if (t.powerup && t.state === 'hidden') { powerupsToCollect.push(t.powerup); return { ...t, powerup: null, state: 'revealed' }; }
           }
           return t;
         }));
-
-        if (attractedSeeds > 0) {
-          setSeeds(s => s + attractedSeeds);
-        }
+        if (attractedSeeds > 0) setSeeds(s => s + attractedSeeds);
         powerupsToCollect.forEach(p => collectPowerup(p));
       }
 
-      // Collect powerup on current tile
-      if (tile.powerup) {
-        collectPowerup(tile.powerup);
-      }
-      // Collect seed on current tile
+      if (tile.powerup) collectPowerup(tile.powerup);
       if (tile.hasSeed) {
-        const pet = PETS.find(p => p.id === equippedPetId);
+        const buildings = gameStore.getBuildings();
+        const playgroundBuff = 1 + (buildings.playground * 0.2);
         let amt = 1;
-        if (pet?.bonus === 'seed_bonus' && Math.random() < 0.2) amt += 1;
+        if (pet?.bonus === 'seed_bonus' && Math.random() < (0.2 * playgroundBuff)) amt += 1;
+        if (unlockedSkills.includes('seed_finder')) amt = Math.ceil(amt * 1.2);
         setSeeds(s => s + amt);
         setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, hasSeed: false } : t));
       }
-    }
-  }, [gamePhase, chicken, hasShield, tiles]);
 
-  const handleMineHit = (tile) => {
-    if (mineSkipCharges > 0) {
-      setMineSkipCharges(prev => prev - 1);
-      audio.powerupCollect(); // reuse sound for skip
+      // --- SLIP HAZARD (Tundra) ---
+      if (biome.hazard === 'slip' && Math.random() < 0.4) {
+        const dr = tile.r - chicken.r;
+        const dc = tile.c - chicken.c;
+        const nr = tile.r + dr;
+        const nc = tile.c + dc;
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+          const nextTile = tiles.find(t => t.r === nr && t.c === nc);
+          if (nextTile) {
+            setTimeout(() => handleTileStep(nextTile), 200);
+          }
+        }
+      }
+    }
+  }, [gamePhase, chicken, hasShield, shieldHits, tiles, biome, unlockedSkills]);
+
+  const moveChicken = (r, c) => {
+    setChicken({ r, c });
+    setVisitedTiles(prev => [...prev, { r, c }]);
+    setChickenAnim('walk');
+    setTimeout(() => setChickenAnim('idle'), 300);
+  };
+
+  const handleMineHit = (tile, cause = 'mine') => {
+    // V4: Skill: Tough Feathers
+    if (unlockedSkills.includes('tough_feathers') && Math.random() < 0.05) {
+      audio.powerupCollect();
+      setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false, isBurning: false } : t));
+      moveChicken(tile.r, tile.c);
+      setChickenAnim('shield');
+      setTimeout(() => setChickenAnim('idle'), 600);
+      return;
+    }
+
+    // V4: Skill: Blast Resistance
+    if (unlockedSkills.includes('blast_resistance') && !blastResistanceUsed && cause === 'mine') {
+      setBlastResistanceUsed(true);
+      timerVal.current = timerVal.current * 0.5;
+      setTimer(timerVal.current);
+      audio.mineExplosion();
       setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false } : t));
-      setChicken({ r: tile.r, c: tile.c });
+      moveChicken(tile.r, tile.c);
+      return;
+    }
+
+    if (mineSkipCharges > 0 && cause === 'mine') {
+      setMineSkipCharges(prev => prev - 1);
+      audio.powerupCollect(); 
+      setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false } : t));
+      moveChicken(tile.r, tile.c);
       setChickenAnim('shield');
       setTimeout(() => setChickenAnim('idle'), 600);
       return;
@@ -762,6 +829,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     gamePhaseRef.current = 'gameover';
     setGamePhase('gameover');
     clearInterval(timerRef.current);
+    clearInterval(fireTimerRef.current);
     clearTimeout(obstacleTimerRef.current);
     setTimeout(() => {
       onGameOver({ level: levelRef.current, seeds: levelSeeds });
@@ -774,8 +842,9 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     if (!isAdjacent(tile, chicken)) return;
     if (tile.state !== 'hidden') return;
 
-    // Cost 1 second
-    timerVal.current = Math.max(0, timerVal.current - 1);
+    // V4: Skill: Quick Eyes (reduces peek cost)
+    const cost = unlockedSkills.includes('fast_peek') ? 0.5 : 1;
+    timerVal.current = Math.max(0, timerVal.current - cost);
     setTimer(timerVal.current);
     audio.peek();
     setCombo(0);
@@ -788,7 +857,6 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       return t;
     }));
 
-    // Un-peek after 3 seconds if mine
     if (tile.isMine) {
       setTimeout(() => {
         setTiles(ts => ts.map(t => {
@@ -799,13 +867,15 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         }));
       }, 3000);
     }
-  }, [gamePhase, chicken]);
+  }, [gamePhase, chicken, unlockedSkills]);
 
   const collectPowerup = (type) => {
     audio.powerupCollect();
     if (type === 'shield') {
       setHasShield(true);
       setActivePowerup('shield');
+      // V4: Skill: Shield Master
+      setShieldHits(unlockedSkills.includes('shield_master') ? 2 : 1);
     } else if (type === 'slowmo') {
       setActivePowerup('slowmo');
       setSlowMoActive(true);
@@ -825,8 +895,12 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     } else if (type === 'reveal') {
       setActivePowerup('reveal');
       setRevealAllActive(true);
+      // V4: Skill: Wider Vision
+      const range = unlockedSkills.includes('wider_vision') ? 3 : 2;
       setTiles(ts => ts.map(t => {
-        if (t.state === 'hidden' && t.isMine) {
+        const dr = Math.abs(t.r - chicken.r);
+        const dc = Math.abs(t.c - chicken.c);
+        if (t.state === 'hidden' && t.isMine && dr <= range && dc <= range) {
           return { ...t, state: 'peeked' };
         }
         return t;
@@ -858,6 +932,13 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           setActivePowerup(null);
         }
       }, 1000);
+    } else if (type === 'light') {
+      setActivePowerup('light');
+      setFogRadius(3); // Temporary vision boost
+      setTimeout(() => {
+        setFogRadius(1);
+        setActivePowerup(null);
+      }, 5000);
     }
   };
 
@@ -974,12 +1055,12 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   return (
     <div
       className={`gameplay-screen ${shaking ? 'screen-shake' : ''}`}
-      style={{ background: `linear-gradient(135deg, ${bgColor}, ${bgColor2})` }}
+      style={{ background: `linear-gradient(135deg, ${biome.color}, ${bgColor2})` }}
       onTouchStart={handleTouchStartGrid}
       onTouchEnd={handleTouchEndGrid}
     >
       <TopBar 
-        title={isDaily ? "DAILY" : `LEVEL ${level}`} 
+        title={isDaily ? "DAILY" : biome.name.toUpperCase()} 
         onBack={onBack} 
         showSeeds={false} 
       />
@@ -1028,7 +1109,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
                 {combo}x <span className="hud-badge-sub">COMBO</span>
               </div>
             )}
-            {hasShield    && <div className="hud-badge hud-badge--shield">🛡️</div>}
+            {hasShield    && <div className="hud-badge hud-badge--shield">🛡️ {shieldHits > 1 ? `x${shieldHits}` : ''}</div>}
             {doubleScore  && <div className="hud-badge hud-badge--double">⭐ 2X</div>}
             {slowMoActive && <div className="hud-badge hud-badge--slow">⏱️</div>}
             {mineSkipCharges > 0 && <div className="hud-badge hud-badge--skip">👟 {mineSkipCharges}</div>}
@@ -1053,13 +1134,13 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           {tiles.map(tile => {
             const dr = Math.abs(tile.r - chicken.r);
             const dc = Math.abs(tile.c - chicken.c);
-            const isFoggy = modifiers.includes('fog') && (dr > 1 || dc > 1);
+            const isFoggy = modifiers.includes('fog') && (dr > fogRadius || dc > fogRadius);
             
             return (
               <Tile
                 key={`${tile.r}-${tile.c}`}
                 tile={tile}
-                tileStyle={equippedTile}
+                tileStyle={biome.tileStyle || equippedTile}
                 isAdjacent={isAdjacent(tile, chicken)}
                 onTap={handleTileStep}
                 onLongPress={handleLongPress}

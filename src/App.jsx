@@ -1,5 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import HomeScreen from './components/HomeScreen';
+import SanctuaryScreen from './components/SanctuaryScreen';
+import HubUpgradesScreen from './components/HubUpgradesScreen';
+import SkillTreeScreen from './components/SkillTreeScreen';
+import EndlessTowerScreen from './components/EndlessTowerScreen';
 import GameplayScreen from './components/GameplayScreen';
 import GameOverModal from './components/GameOverModal';
 import LevelClearModal from './components/LevelClearModal';
@@ -11,6 +14,7 @@ import TutorialOverlay from './components/TutorialOverlay';
 import TopBar from './components/TopBar';
 import ChickenSVG from './components/ChickenSVG';
 import { gameStore } from './store/gameStore';
+import { playerStore } from './store/playerStore';
 import './Styles/game.css';
 
 export default function App() {
@@ -49,12 +53,19 @@ export default function App() {
   const goLeaderboard   = useCallback(() => setScreen('leaderboard'), []);
   const goSettings      = useCallback(() => setScreen('settings'), []);
   const goAchievements  = useCallback(() => setScreen('achievements'), []);
+  const goSkillTree     = useCallback(() => setScreen('skilltree'), []);
+  const goTower         = useCallback(() => setScreen('tower'), []);
+  const goHubUpgrades    = useCallback(() => setScreen('hub_upgrades'), []);
 
   // ── Game over — update store ──
   const handleGameOver = useCallback((data) => {
     if (isDaily) gameStore.setDailyPlayed(data.seeds);
     gameStore.addLeaderboardEntry({ level: data.level, seeds: data.seeds });
     gameStore.updateBestLevel(data.level);
+    
+    // V4: Add XP on game over
+    const xpGained = data.level * 5;
+    playerStore.addXP(xpGained);
   }, [isDaily]);
 
   // ── Level clear — update store ──
@@ -66,6 +77,15 @@ export default function App() {
     }
     gameStore.addSeeds(data.seeds);
     gameStore.updateBestLevel(data.level);
+    
+    // V4: Add XP on level clear
+    const xpGained = data.level * 20;
+    playerStore.addXP(xpGained);
+
+    // V4: Chance to find an egg
+    if (Math.random() < 0.2) {
+      gameStore.addEgg('normal_egg');
+    }
   }, [isDaily]);
 
   const handleTutorialComplete = () => {
@@ -75,8 +95,6 @@ export default function App() {
     setScreen('game');
   };
 
-  const equippedSkin = gameStore.getEquippedSkin();
-
   return (
     <div className="app-root">
       {/* Global TopBar and ChickenSVG for requirement — hidden if not needed */}
@@ -85,15 +103,18 @@ export default function App() {
         <ChickenSVG skinId="classic" />
       </div>
 
-      {/* ── HOME ── */}
+      {/* ── SANCTUARY (HOME) ── */}
       {screen === 'home' && (
-        <HomeScreen
+        <SanctuaryScreen
           onPlay={goPlay}
           onShop={goShop}
           onLeaderboard={goLeaderboard}
           onSettings={goSettings}
           onDaily={goDaily}
           onAchievements={goAchievements}
+          onSkillTree={goSkillTree}
+          onTower={goTower}
+          onHubUpgrades={goHubUpgrades}
         />
       )}
 
@@ -117,6 +138,9 @@ export default function App() {
       {screen === 'leaderboard' && <LeaderboardScreen onBack={() => setScreen('home')}/>}
       {screen === 'settings' && <SettingsScreen onBack={() => setScreen('home')}/>}
       {screen === 'achievements' && <AchievementsScreen onBack={goHome}/>}
+      {screen === 'skilltree' && <SkillTreeScreen onBack={goHome}/>}
+      {screen === 'tower' && <EndlessTowerScreen onBack={goHome}/>}
+      {screen === 'hub_upgrades' && <HubUpgradesScreen onBack={goHome}/>}
 
       {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete}/>}
     </div>
