@@ -12,11 +12,10 @@ No hearts. No retries. One wrong tap and you're done.
 
 🌐 **[Play in Browser — No install needed](https://DeVenLucaz.github.io/minepath/)**
 
-📲 **[Download APK — MINEPATH V4 (Latest)](https://github.com/DeVenLucaz/minepath/releases/latest)**
+📲 **[Download APK — MINEPATH V4 (Latest)](https://github.com/DeVenLucaz/minepath/releases/download/V4/Minepath.V4.apk)**
 
 📲 **[Download APK — MINEPATH V3](https://github.com/DeVenLucaz/minepath/releases/download/V3/Minepath.V3.apk)**
 
-📲 **[Download APK — MINEPATH V4](https://github.com/DeVenLucaz/minepath/releases/download/V4/Minepath.V4.apk)**
 
 Works on any mobile browser. Just open and play.
 
