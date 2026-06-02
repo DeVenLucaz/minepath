@@ -1085,9 +1085,9 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             const centerX = (pos.c * (cellSize.w + 2) + cellSize.w / 2) / (cols * (cellSize.w + 2)) * 100;
             const centerY = (pos.r * (cellSize.h + 2) + cellSize.h / 2) / (rows * (cellSize.h + 2)) * 100;
             
-            // Randomize dot count per tile (5-10) using a stable seed based on tile position
+            // Randomize dot count per tile (3-7) using a stable seed based on tile position
             const dotSeed = pos.r * 100 + pos.c;
-            const numDots = 5 + (dotSeed % 6);
+            const numDots = 3 + (dotSeed % 5);
             
             return Array.from({ length: numDots }).map((_, j) => {
               // Stable deterministic pseudo-random offsets
