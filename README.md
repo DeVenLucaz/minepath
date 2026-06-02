@@ -16,7 +16,7 @@ No hearts. No retries. One wrong tap and you're done.
 
 📲 **[Download APK — MINEPATH V3](https://github.com/DeVenLucaz/minepath/releases/download/V3/Minepath.V3.apk)**
 
-📲 **[Download APK — MINEPATH V4](https://github.com/DeVenLucaz/minepath/releases/download/V3/Minepath.V3.apk)**
+📲 **[Download APK — MINEPATH V4](https://github.com/DeVenLucaz/minepath/releases/download/V4/Minepath.V4.apk)**
 
 Works on any mobile browser. Just open and play.
 
