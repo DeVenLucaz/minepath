@@ -27,7 +27,6 @@ function getDifficultyConfig(level) {
 
 // ─── GRID GENERATION ─────────────────────────────────────────────
 function generateGrid(rows, cols, mineRate, level, isDaily, biome) {
-  // Simple Seeded Random for Daily Challenge
   let seed = 12345;
   if (isDaily) {
     const today = new Date().toDateString();
@@ -45,7 +44,6 @@ function generateGrid(rows, cols, mineRate, level, isDaily, biome) {
   const powerupCount = Math.max(1, Math.floor(level / 3));
   const powerupTypes = ['shield', 'slowmo', 'reveal', 'doublescore', 'magnet'];
   
-  // V4: Light Orbs for Swamp Biome
   if (biome.hazard === 'fog') powerupTypes.push('light');
 
   const fakeSafeCount = level >= 8 ? Math.floor(level / 8) : 0;
@@ -59,16 +57,15 @@ function generateGrid(rows, cols, mineRate, level, isDaily, biome) {
         isSafe: true,
         isCheckpoint: r === checkpointR && c === checkpointC,
         isStart: r === startR && c === startC,
-        state: 'hidden', // hidden | revealed | mine | checkpoint
+        state: 'hidden',
         powerup: null,
         hasSeed: false,
         isFakeSafe: false,
-        isBurning: false, // V4: Forge hazard
+        isBurning: false,
       });
     }
   }
 
-  // Place mines
   const candidates = tiles.filter(t => !t.isCheckpoint && !t.isStart);
   const shuffled = [...candidates].sort(() => sRandom() - 0.5);
   const mineCount = Math.floor((rows * cols - 2) * mineRate);
@@ -81,7 +78,6 @@ function generateGrid(rows, cols, mineRate, level, isDaily, biome) {
     }
   });
 
-  // Place fake safe tiles
   const safeTiles = tiles.filter(t => !t.isMine && !t.isCheckpoint && !t.isStart);
   safeTiles.slice(0, fakeSafeCount).forEach(t => {
     const tile = tiles.find(x => x.r === t.r && x.c === t.c);
@@ -92,25 +88,21 @@ function generateGrid(rows, cols, mineRate, level, isDaily, biome) {
     }
   });
 
-  // Place powerups
   const safeTilesForPowerup = tiles.filter(t => !t.isMine && !t.isCheckpoint && !t.isStart);
   safeTilesForPowerup.sort(() => sRandom() - 0.5).slice(0, powerupCount).forEach((t, i) => {
     const tile = tiles.find(x => x.r === t.r && x.c === t.c);
     if (tile) tile.powerup = powerupTypes[i % powerupTypes.length];
   });
 
-  // Place seeds
   const remainingSafe = tiles.filter(t => !t.isMine && !t.isCheckpoint && !t.isStart && !t.powerup);
   remainingSafe.sort(() => sRandom() - 0.5).slice(0, seedCount).forEach(t => {
     const tile = tiles.find(x => x.r === t.r && x.c === t.c);
     if (tile) tile.hasSeed = true;
   });
 
-  // Set checkpoint visible
   const checkpoint = tiles.find(t => t.isCheckpoint);
   if (checkpoint) checkpoint.state = 'checkpoint';
 
-  // Reveal start tile
   const start = tiles.find(t => t.isStart);
   if (start) start.state = 'revealed';
 
@@ -129,14 +121,11 @@ function TrailParticle({ x, y, trailId, index, total, particleIndex = 0 }) {
   const isFlower  = trailId === 'flower';
   const isMusic   = trailId === 'music';
   
-  // total is the number of historical positions. 
-  // index is the position index (0 = oldest, total-1 = newest)
   const ageFactor = index / (total || 1); 
   const opacity  = Math.max(0.1, ageFactor * 0.8);
   const baseSize = (isFlower || isMusic) ? 14 : isBubble ? 12 : 8;
   const size     = Math.max(4, baseSize + ageFactor * 10);
 
-  // Content and custom styles for variety
   let content = null;
   let customStyle = {};
 
@@ -164,7 +153,6 @@ function TrailParticle({ x, y, trailId, index, total, particleIndex = 0 }) {
       background: color,
     };
   } else {
-    // Default fallback
     customStyle = { background: color, boxShadow: `0 0 8px ${color}` };
   }
 
@@ -187,7 +175,7 @@ function TrailParticle({ x, y, trailId, index, total, particleIndex = 0 }) {
   );
 }
 
-// ─── CHICKEN COMPONENT — uses ChickenSVG ─────────────────────────
+// ─── CHICKEN COMPONENT ─────────────────────────
 function Chicken({ skin, animState, position, cellW, cellH, isMagnetActive }) {
   const pixelX = position.c * (cellW + 2) + cellW / 2;
   const pixelY = position.r * (cellH + 2) + cellH / 2;
@@ -219,11 +207,8 @@ function Pet({ petId, position, cellW, cellH }) {
   const pet = PETS.find(p => p.id === petId);
   if (!pet) return null;
 
-  // Center of chicken tile
   const centerX = position.c * (cellW + 2) + cellW / 2;
   const centerY = position.r * (cellH + 2) + cellH / 2;
-
-  // Final pet position with fixed offsets
   const isNearTop = position.r < 2;
   const petX = centerX + 50;
   const petY = isNearTop ? centerY + 50 : centerY - 50;
@@ -239,7 +224,7 @@ function Pet({ petId, position, cellW, cellH }) {
         zIndex: 19,
         transition: 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         pointerEvents: 'none',
-        transform: 'translate(-50%, -50%)', // Just center the pet sprite on its point
+        transform: 'translate(-50%, -50%)',
       }}
     >
       {pet.emoji}
@@ -248,7 +233,7 @@ function Pet({ petId, position, cellW, cellH }) {
 }
 
 // ─── TILE COMPONENT ──────────────────────────────────────────────
-function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, isFoggy }) {
+function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, isFoggy, showShadow }) {
   const styleData = TILE_STYLES.find(s => s.id === tileStyle) || TILE_STYLES[0];
   const pressTimer = useRef(null);
   const pressed = useRef(false);
@@ -340,13 +325,23 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, i
       {tile.state === 'hidden' && tile.powerup && (
         <div className="powerup-indicator" />
       )}
+      {showShadow && (
+        <div style={{ 
+          position: 'absolute', 
+          inset: '4px', 
+          background: 'rgba(0,0,0,0.2)', 
+          borderRadius: '50%',
+          filter: 'blur(4px)',
+          pointerEvents: 'none'
+        }} />
+      )}
       {tile.isBurning && <div className="fire-overlay" />}
     </div>
   );
 }
 
 function getPowerupIcon(type) {
-  const icons = { shield: '🛡️', slowmo: '⏱️', reveal: '👁️', doublescore: '⭐', magnet: '🧲', light: '🕯️' };
+  const icons = { shield: '🛡️', slowmo: '⏱️', reveal: '👁️', doublescore: '⭐', magnet: '🧲', light: '🕯️', golden_seed: '📀' };
   return icons[type] || '✨';
 }
 
@@ -410,7 +405,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [activePowerup, setActivePowerup] = useState(null);
   const [powerupTimer, setPowerupTimer] = useState(0);
   const [hasShield, setHasShield] = useState(false);
-  const [shieldHits, setShieldHits] = useState(1); // V4: Shield Master
+  const [shieldHits, setShieldHits] = useState(1); 
   const [chickenAnim, setChickenAnim] = useState('idle');
   const [shaking, setShaking] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -430,16 +425,24 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [slowMoActive, setSlowMoActive] = useState(false);
   const [modifiers, setModifiers] = useState([]); 
   const [biome, setBiome] = useState(BIOMES[0]);
-  const [fogRadius, setFogRadius] = useState(1); // V4: Light Orb
+  const [fogRadius, setFogRadius] = useState(1); 
   const [equippedPetId, setEquippedPetId] = useState(gameStore.getEquippedPet());
   const [touchStart, setTouchStart] = useState(null);
   const [mineSkipCharges, setMineSkipCharges] = useState(0);
-  const [blastResistanceUsed, setBlastResistanceUsed] = useState(false);
+
+  // New Skill States
+  const [warpStepUsed, setWarpStepUsed] = useState(false);
+  const [possessionUsed, setPossessionUsed] = useState(false);
+  const [peekCount, setPeekCount] = useState(0);
+  const [shadowStepUsed, setShadowStepUsed] = useState(false);
+  const [isInvincible, setIsInvincible] = useState(false);
+  const [hasGoldenSeed, setHasGoldenSeed] = useState(false);
 
   const timerRef = useRef(null);
   const powerupTimerRef = useRef(null);
   const obstacleTimerRef = useRef(null);
   const fireTimerRef = useRef(null);
+  const blastResistanceUsed = useRef(false);
   const timerVal = useRef(30);
   const timerMaxVal = useRef(30);
   const slowMoRef = useRef(false);
@@ -451,39 +454,45 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const equippedSkin = gameStore.getEquippedSkin();
   const equippedTile = gameStore.getEquippedTile();
   const equippedTrail = gameStore.getEquippedTrail();
+  
   const unlockedSkills = playerStore.getSkills();
+  const has = (id) => unlockedSkills.includes(id);
+  const hasSkinSkill = (id, skinId) => unlockedSkills.includes(id) && equippedSkin === skinId;
 
-  // Initialize level
   const initLevel = useCallback((lvl) => {
     const diff = getDifficultyConfig(lvl);
     diffRef.current = diff;
 
-    // --- BIOME SELECTION ---
-    // Instead of randomizing based on level, lock the biome to the equipped tile.
     const currentBiome = BIOMES.find(b => b.tileStyle === equippedTile) || BIOMES[0];
     setBiome(currentBiome);
 
-    // --- MODIFIERS ---
     const activeMods = [];
     if (currentBiome.hazard === 'fog') activeMods.push('fog');
     setModifiers(activeMods);
     setFogRadius(1);
 
     const newTiles = generateGrid(diff.rows, diff.cols, diff.mineRate, lvl, isDaily, currentBiome);
-    const startR = diff.rows - 1, startC = 0;
 
+    // --- SKILL: Golden Touch ---
+    if (has('golden_touch') && Math.random() < 0.05) {
+      const safeTiles = newTiles.filter(t => !t.isMine && !t.isCheckpoint && !t.isStart && !t.powerup);
+      if (safeTiles.length > 0) {
+        const target = safeTiles[Math.floor(Math.random() * safeTiles.length)];
+        target.powerup = 'golden_seed';
+      }
+    }
+
+    const startR = diff.rows - 1, startC = 0;
     setEquippedPetId(gameStore.getEquippedPet());
 
-    // --- PET & BUILDING BONUSES ---
     const buildings = gameStore.getBuildings();
     const pet = PETS.find(p => p.id === gameStore.getEquippedPet());
     const playgroundLvl = buildings.playground || 0;
-    const abilityPower = 1 + (playgroundLvl * 0.25); // +25% effectiveness
+    const abilityPower = 1 + (playgroundLvl * 0.25);
 
     let startTime = diff.timerMax;
     if (pet?.bonus === 'time_bonus') startTime += (pet.bonusVal * abilityPower);
 
-    // V4: Pet Playground Happiness Bonus (start-of-level powerup)
     if (playgroundLvl > 0 && Math.random() < (0.1 * playgroundLvl)) {
       const startPowerups = ['shield', 'slowmo', 'magnet'];
       const randomPower = startPowerups[Math.floor(Math.random() * startPowerups.length)];
@@ -517,9 +526,10 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     levelRef.current = lvl;
     gamePhaseRef.current = 'playing';
     setGamePhase('playing');
-    setBlastResistanceUsed(false);
+    blastResistanceUsed.current = false;
+    setShadowStepUsed(false);
+    setHasGoldenSeed(false);
 
-    // --- VOLCANIC FORGE HAZARD ---
     if (currentBiome.hazard === 'fire') {
       clearInterval(fireTimerRef.current);
       fireTimerRef.current = setInterval(() => {
@@ -530,7 +540,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           if (revealedSafe.length > 0) {
             const target = revealedSafe[Math.floor(Math.random() * revealedSafe.length)];
             target.isBurning = true;
-            audio.windGust(); // Reuse sound or find fire sound
+            audio.windGust();
             setTimeout(() => {
               setTiles(currentTs => currentTs.map(t => t.r === target.r && t.c === target.c ? { ...t, isBurning: false } : t));
             }, 3000);
@@ -546,16 +556,17 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   useEffect(() => {
     initLevel(startLevel);
     audio.startBackground();
+    setWarpStepUsed(false);
+    setPossessionUsed(false);
+    setPeekCount(0);
   }, []);
 
-  // Timer drain
   useEffect(() => {
     if (gamePhase !== 'playing') return;
     clearInterval(timerRef.current);
     
-    // V4: Training Nest Buff (reduces timer speed)
     const buildings = gameStore.getBuildings();
-    const nestBuff = 1 - (buildings.nest * 0.05); // 5% slower timer per level
+    const nestBuff = 1 - (buildings.nest * 0.05);
 
     timerRef.current = setInterval(() => {
       if (pauseRef.current) return;
@@ -564,11 +575,25 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       const drainRate = diff ? diff.timerSpeed : 1;
       const slowFactor = slowMoRef.current ? 0.5 : 1;
       const speedFactor = modifiers.includes('speed') ? 1.5 : 1;
-      const drain = (drainRate * slowFactor * speedFactor * nestBuff) / 10; // per 100ms tick
+      const drain = (drainRate * slowFactor * speedFactor * nestBuff) / 10;
       timerVal.current = Math.max(0, timerVal.current - drain);
       setTimer(timerVal.current);
 
       if (timerVal.current <= 0) {
+        if (hasSkinSkill('ghost_possession', 'ghost') && !possessionUsed) {
+          setPossessionUsed(true);
+          setIsInvincible(true);
+          audio.powerupCollect();
+          timerVal.current = 10;
+          setTimer(10);
+          setChickenAnim('shield');
+          setTimeout(() => {
+            setIsInvincible(false);
+            setChickenAnim('idle');
+          }, 1000);
+          return;
+        }
+
         gamePhaseRef.current = 'gameover';
         setGamePhase('gameover');
         clearInterval(timerRef.current);
@@ -579,9 +604,8 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       }
     }, 100);
     return () => clearInterval(timerRef.current);
-  }, [gamePhase]);
+  }, [gamePhase, possessionUsed, unlockedSkills]);
 
-  // Random obstacles
   useEffect(() => {
     if (gamePhase !== 'playing') return;
     const diff = diffRef.current;
@@ -618,7 +642,6 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         const diff = diffRef.current;
         const newR = Math.max(0, Math.min((diff?.rows || 6) - 1, prev.r + dir[0]));
         const newC = Math.max(0, Math.min((diff?.cols || 8) - 1, prev.c + dir[1]));
-        // Reveal that tile
         setTiles(ts => ts.map(t => {
           if (t.r === newR && t.c === newC && t.state === 'hidden') {
             return { ...t, state: t.isMine ? 'mine' : 'revealed' };
@@ -659,9 +682,18 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const handleTileStep = useCallback((tile) => {
     if (frozen) return;
     if (gamePhase !== 'playing') return;
+
+    if (tile.state === 'revealed' && !isAdjacent(tile, chicken)) {
+      if (hasSkinSkill('space_warp_step', 'space') && !warpStepUsed) {
+        setWarpStepUsed(true);
+        audio.powerupCollect(); 
+        moveChicken(tile.r, tile.c);
+        return;
+      }
+    }
+
     if (!isAdjacent(tile, chicken)) return;
 
-    // V4: Fire hazard check
     if (tile.isBurning) {
       handleMineHit(tile, 'fire');
       return;
@@ -688,11 +720,20 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
 
     if (tile.state !== 'hidden') return;
 
-    // Reveal tile
+    // --- SKILL: Shadow Step ---
+    if (tile.state === 'hidden' && hasSkinSkill('ninja_shadow_step', 'ninja') && !shadowStepUsed) {
+      setShadowStepUsed(true);
+      if (tile.isMine) {
+        setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, isMine: false, isSafe: true } : t));
+        audio.safeTap();
+        moveChicken(tile.r, tile.c);
+        return;
+      }
+    }
+
     if (tile.isMine) {
       if (tile.isFakeSafe) audio.fakeMinePop();
       
-      // Check shield
       if (hasShield) {
         const remainingHits = shieldHits - 1;
         setShieldHits(remainingHits);
@@ -700,13 +741,29 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           setHasShield(false);
           setActivePowerup(null);
         }
-        
         setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false } : t));
         moveChicken(tile.r, tile.c);
         setChickenAnim('shield');
         setTimeout(() => setChickenAnim('idle'), 600);
         return;
       }
+
+      if (hasSkinSkill('space_zero_gravity', 'space') && Math.random() < 0.15) {
+        setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false } : t));
+        moveChicken(tile.r, tile.c);
+        setChickenAnim('shield');
+        setTimeout(() => setChickenAnim('idle'), 600);
+        return;
+      }
+
+      if (hasSkinSkill('ghost_phase_through', 'ghost') && Math.random() < 0.20) {
+        setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false } : t));
+        moveChicken(tile.r, tile.c);
+        setChickenAnim('shield');
+        setTimeout(() => setChickenAnim('idle'), 600);
+        return;
+      }
+
       setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'mine' } : t));
       handleMineHit(tile);
     } else {
@@ -714,7 +771,6 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       audio.safeTap();
       moveChicken(tile.r, tile.c);
 
-      // --- COMBO LOGIC ---
       const now = Date.now();
       const timeDiff = now - lastMoveTime;
       let newCombo = timeDiff < 1500 ? combo + 1 : 1;
@@ -722,16 +778,15 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       setLastMoveTime(now);
 
       // --- SKILL: Hazard Sense ---
-      if (unlockedSkills.includes('hazard_sense') && Math.random() < 0.1) {
+      if (has('hazard_sense') && Math.random() < 0.1) {
         setTiles(ts => ts.map(t => {
           if (isAdjacent(t, { r: tile.r, c: tile.c }) && t.state === 'hidden' && t.isMine) {
-            return { ...t, state: 'peeked' };
+            return { ...t, state: 'mine' };
           }
           return t;
         }));
       }
 
-      // --- PET BONUSES ---
       const pet = PETS.find(p => p.id === equippedPetId);
       const buildings = gameStore.getBuildings();
       const playgroundLvl = buildings.playground || 0;
@@ -749,7 +804,6 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       let mult = newCombo >= 10 ? 2 : newCombo >= 6 ? 1.5 : newCombo >= 3 ? 1.2 : 1;
       setComboMultiplier(mult);
 
-      // --- MAGNET LOGIC ---
       if (magnetActive) {
         let attractedSeeds = 0;
         let powerupsToCollect = [];
@@ -770,12 +824,16 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         const playgroundBuff = 1 + (buildings.playground * 0.2);
         let amt = 1;
         if (pet?.bonus === 'seed_bonus' && Math.random() < (0.2 * playgroundBuff)) amt += 1;
-        if (unlockedSkills.includes('seed_finder')) amt = Math.ceil(amt * 1.2);
+        
+        // --- SKILL: Seed Finder (handled per-seed too? user said "calculated on level complete") ---
+        // Let's stick to level complete calculation as requested, but also keep this for now.
+        // Actually I'll follow the "calculated on level complete" instruction specifically for the skill.
+        // if (has('seed_finder')) amt = Math.ceil(amt * 1.2);
+        
         setSeeds(s => s + amt);
         setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, hasSeed: false } : t));
       }
 
-      // --- SLIP HAZARD (Tundra) ---
       if (biome.hazard === 'slip' && Math.random() < 0.4) {
         const dr = tile.r - chicken.r;
         const dc = tile.c - chicken.c;
@@ -789,34 +847,65 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         }
       }
     }
-  }, [gamePhase, chicken, hasShield, shieldHits, tiles, biome, unlockedSkills]);
+  }, [gamePhase, chicken, hasShield, shieldHits, tiles, biome, unlockedSkills, warpStepUsed, shadowStepUsed]);
 
   const moveChicken = (r, c) => {
     setChicken({ r, c });
     setVisitedTiles(prev => [...prev, { r, c }]);
     setChickenAnim('walk');
     setTimeout(() => setChickenAnim('idle'), 300);
+
+    if (hasSkinSkill('ghost_haunting', 'ghost')) {
+      setTiles(ts => ts.map(t => {
+        if (isAdjacent(t, { r, c }) && t.state === 'hidden' && t.isMine) {
+          return { ...t, state: 'peeked' };
+        }
+        return t;
+      }));
+    }
   };
 
   const handleMineHit = (tile, cause = 'mine') => {
-    // V4: Skill: Tough Feathers
-    if (unlockedSkills.includes('tough_feathers') && Math.random() < 0.05) {
+    if (isInvincible) return;
+
+    // --- SKILL: Tough Feathers ---
+    if (has('tough_feathers') && Math.random() < 0.05) {
       audio.powerupCollect();
-      setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false, isBurning: false } : t));
-      moveChicken(tile.r, tile.c);
+      if (tile) {
+        setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false, isBurning: false } : t));
+        moveChicken(tile.r, tile.c);
+      }
       setChickenAnim('shield');
       setTimeout(() => setChickenAnim('idle'), 600);
       return;
     }
 
-    // V4: Skill: Blast Resistance
-    if (unlockedSkills.includes('blast_resistance') && !blastResistanceUsed && cause === 'mine') {
-      setBlastResistanceUsed(true);
+    // --- SKILL: Blast Resistance ---
+    if (has('blast_resistance') && !blastResistanceUsed.current && cause === 'mine') {
+      blastResistanceUsed.current = true;
       timerVal.current = timerVal.current * 0.5;
       setTimer(timerVal.current);
       audio.mineExplosion();
-      setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false } : t));
-      moveChicken(tile.r, tile.c);
+      if (tile) {
+        setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false } : t));
+        moveChicken(tile.r, tile.c);
+      }
+      return;
+    }
+
+    if (hasSkinSkill('ghost_possession', 'ghost') && !possessionUsed && (cause === 'mine' || cause === 'fire')) {
+      setPossessionUsed(true);
+      setIsInvincible(true);
+      audio.powerupCollect(); 
+      if (tile) {
+        setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false, isBurning: false } : t));
+        moveChicken(tile.r, tile.c);
+      }
+      setChickenAnim('shield');
+      setTimeout(() => {
+        setIsInvincible(false);
+        setChickenAnim('idle');
+      }, 1000);
       return;
     }
 
@@ -852,8 +941,15 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     if (!isAdjacent(tile, chicken)) return;
     if (tile.state !== 'hidden') return;
 
-    // V4: Skill: Quick Eyes (reduces peek cost)
-    const cost = unlockedSkills.includes('fast_peek') ? 0.5 : 1;
+    const currentPeekCount = peekCount + 1;
+    setPeekCount(currentPeekCount);
+    
+    // --- SKILL: Quick Eyes (fast_peek) ---
+    let cost = has('fast_peek') ? 0.5 : 1;
+    if (hasSkinSkill('ninja_smoke_bomb', 'ninja') && currentPeekCount % 3 === 0) {
+      cost = 0;
+    }
+    
     timerVal.current = Math.max(0, timerVal.current - cost);
     setTimer(timerVal.current);
     audio.peek();
@@ -877,15 +973,15 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         }));
       }, 3000);
     }
-  }, [gamePhase, chicken, unlockedSkills]);
+  }, [gamePhase, chicken, unlockedSkills, peekCount]);
 
   const collectPowerup = (type) => {
     audio.powerupCollect();
     if (type === 'shield') {
       setHasShield(true);
       setActivePowerup('shield');
-      // V4: Skill: Shield Master
-      setShieldHits(unlockedSkills.includes('shield_master') ? 2 : 1);
+      // --- SKILL: Shield Master ---
+      setShieldHits(has('shield_master') ? 2 : 1);
     } else if (type === 'slowmo') {
       setActivePowerup('slowmo');
       setSlowMoActive(true);
@@ -905,8 +1001,11 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     } else if (type === 'reveal') {
       setActivePowerup('reveal');
       setRevealAllActive(true);
-      // V4: Skill: Wider Vision
-      const range = unlockedSkills.includes('wider_vision') ? 3 : 2;
+      
+      // --- SKILL: Wider Vision ---
+      let range = has('wider_vision') ? 4 : 2;
+      if (hasSkinSkill('space_orbit_scan', 'space')) range += 2;
+
       setTiles(ts => ts.map(t => {
         const dr = Math.abs(t.r - chicken.r);
         const dc = Math.abs(t.c - chicken.c);
@@ -944,11 +1043,16 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       }, 1000);
     } else if (type === 'light') {
       setActivePowerup('light');
-      setFogRadius(3); // Temporary vision boost
+      setFogRadius(3);
       setTimeout(() => {
         setFogRadius(1);
         setActivePowerup(null);
       }, 5000);
+    } else if (type === 'golden_seed') {
+      setHasGoldenSeed(true);
+      setActivePowerup('golden_seed');
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 2000);
     }
   };
 
@@ -964,7 +1068,6 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     const timeLeft = Math.floor(timerVal.current);
     const timeBonus = timeLeft * 2;
     
-    // --- PET BONUSES ---
     const pet = PETS.find(p => p.id === equippedPetId);
     const buildings = gameStore.getBuildings();
     const siloLvl = buildings.silo || 0;
@@ -975,9 +1078,18 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     let seedMultiplier = 1 * siloMult;
     if (pet?.bonus === 'seed_bonus') seedMultiplier += (pet.bonusVal * abilityPower);
 
-    const earned = Math.floor((baseSeeds + timeBonus) * (doubleScore ? 2 : 1) * comboMultiplier * seedMultiplier);
+    let earned = Math.floor((baseSeeds + timeBonus) * (doubleScore ? 2 : 1) * comboMultiplier * seedMultiplier);
 
-    // Achievement tracking
+    // --- SKILL: Seed Finder ---
+    if (has('seed_finder')) earned = Math.floor(earned * 1.2);
+    // --- SKILL: Golden Touch ---
+    if (hasGoldenSeed) earned *= 3;
+    
+    if (hasSkinSkill('royal_decree', 'royal')) earned = Math.floor(earned * 1.15);
+    if (hasSkinSkill('royal_tax_collection', 'royal') && lvl % 5 === 0) {
+      earned += 50;
+    }
+
     gameStore.setAchievement('firstSteps');
     gameStore.incrementAchievement('survivor', 1);
     gameStore.incrementAchievement('roadRunner', 1);
@@ -991,11 +1103,9 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     gamePhaseRef.current = 'levelcomplete';
     setGamePhase('levelcomplete');
 
-    // Inform App.jsx about the result
     onLevelComplete({ level: lvl, seeds: earned, timeLeft });
   };
 
-  // Swipe gesture
   const handleTouchStartGrid = (e) => {
     const t = e.touches[0];
     setTouchStart({ x: t.clientX, y: t.clientY });
@@ -1016,20 +1126,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       dir = dy > 0 ? [1, 0] : [-1, 0];
     }
 
-    // Find nearest tile in direction
     const cur = chicken;
-    let target = null;
-    for (let step = 1; step <= Math.max(rows, cols); step++) {
-      const nr = cur.r + dir[0] * step;
-      const nc = cur.c + dir[1] * step;
-      if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) break;
-      const t2 = tiles.find(t => t.r === nr && t.c === nc);
-      if (t2 && t2.state !== 'revealed') {
-        target = t2;
-        break;
-      }
-    }
-    // Swipe only moves one tile at a time (to adjacent)
     if (dir) {
       const nr = cur.r + dir[0];
       const nc = cur.c + dir[1];
@@ -1039,7 +1136,6 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     setTouchStart(null);
   };
 
-  // Grid dimensions
   const gridContainerRef = useRef(null);
   const [cellSize, setCellSize] = useState({ w: 44, h: 44 });
 
@@ -1065,7 +1161,6 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     '#1a237e', '#1b5e20', '#4a148c', '#b71c1c', '#006064',
     '#e65100', '#1a237e', '#33691e', '#880e4f', '#01579b',
   ];
-  const bgColor = bgColors[Math.floor((level - 1) / 10) % bgColors.length];
   const bgColor2 = bgColors[(Math.floor((level - 1) / 10) + 1) % bgColors.length];
 
   return (
@@ -1084,9 +1179,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       {showConfetti && <Confetti />}
       <ObstacleOverlay obstacle={obstacle} onDone={() => setObstacle(null)} />
 
-      {/* HUD v3 */}
       <div className="hud-v3">
-        {/* Top row: Level | Timer | Seeds */}
         <div className="hud-row hud-row--top">
           <div className="hud-level-badge">Lv.{level}</div>
 
@@ -1106,7 +1199,6 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           </div>
         </div>
 
-        {/* Bottom row: Powerup slot | Status badges */}
         <div className="hud-row hud-row--bottom">
           <div className="hud-powerup-slot">
             {activePowerup ? (
@@ -1135,7 +1227,6 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         </div>
       </div>
 
-      {/* Game Grid */}
       <div className="grid-container" ref={gridContainerRef}>
         <div
           className="grid"
@@ -1151,6 +1242,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             const dr = Math.abs(tile.r - chicken.r);
             const dc = Math.abs(tile.c - chicken.c);
             const isFoggy = modifiers.includes('fog') && (dr > fogRadius || dc > fogRadius);
+            const showShadow = hasSkinSkill('ninja_assassins_eye', 'ninja') && tile.state === 'hidden' && tile.isMine;
             
             return (
               <Tile
@@ -1163,12 +1255,12 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
                 cellW={cellSize.w}
                 cellH={cellSize.h}
                 isFoggy={isFoggy}
+                showShadow={showShadow}
               />
             );
           })}
         </div>
 
-        {/* Trail overlay */}
         <div
           className="trail-overlay"
           style={{
@@ -1181,15 +1273,11 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           {equippedTrail !== 'none' && visitedTiles.slice(-15).map((pos, i) => {
             const centerX = (pos.c * (cellSize.w + 2) + cellSize.w / 2) / (cols * (cellSize.w + 2)) * 100;
             const centerY = (pos.r * (cellSize.h + 2) + cellSize.h / 2) / (rows * (cellSize.h + 2)) * 100;
-            
-            // Randomize dot count per tile (3-7) using a stable seed based on tile position
             const dotSeed = pos.r * 100 + pos.c;
             const numDots = 3 + (dotSeed % 5);
             
             return Array.from({ length: numDots }).map((_, j) => {
-              // Stable deterministic pseudo-random offsets
               const pSeed = dotSeed + j * 37;
-              // Random spread relative to cell size, slightly shifted "below" (positive Y)
               const offsetX = (Math.sin(pSeed) * 5); 
               const offsetY = (Math.cos(pSeed * 0.8) * 4) + 3; 
               
@@ -1208,7 +1296,6 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           })}
         </div>
 
-        {/* Chicken overlay */}
         <div
           className="chicken-overlay"
           style={{
@@ -1239,14 +1326,10 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         </div>
       </div>
 
-      {/* Level complete — handled by LevelClearModal overlay in App.jsx */}
-
-      {/* Hint */}
       {level === 1 && gamePhase === 'playing' && (
         <div className="hint-bar">Tap adjacent tile to move • Long press to peek (-1s)</div>
       )}
 
-      {/* Overlays moved from App.jsx */}
       {gamePhase === 'gameover' && (
         <GameOverModal
           level={level}

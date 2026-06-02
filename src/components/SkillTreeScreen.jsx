@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { playerStore } from '../store/playerStore';
+import { inventoryStore } from '../store/inventoryStore';
 import { SKILLS } from '../data/skills';
 import TopBar from './TopBar';
 import { audio } from '../audio/engine';
@@ -9,15 +10,19 @@ export default function SkillTreeScreen({ onBack }) {
   const [xp, setXp] = useState(0);
   const [feathers, setFeathers] = useState(0);
   const [unlockedSkills, setUnlockedSkills] = useState([]);
+  const [ownedSkins, setOwnedSkins] = useState([]);
 
   useEffect(() => {
     setLevel(playerStore.getPlayerLevel());
     setXp(playerStore.getXP());
     setFeathers(playerStore.getFeathers());
     setUnlockedSkills(playerStore.getSkills());
+    setOwnedSkins(inventoryStore.getUnlockedSkins());
   }, []);
 
   const handleUnlock = (skill) => {
+    if (isLockedByTier(skill)) return;
+
     if (feathers >= skill.cost && !unlockedSkills.includes(skill.id)) {
       playerStore.spendFeathers(skill.cost);
       playerStore.unlockSkill(skill.id);
@@ -27,13 +32,89 @@ export default function SkillTreeScreen({ onBack }) {
     }
   };
 
+  const isLockedByTier = (skill) => {
+    const pathSkills = SKILLS.filter(s => 
+      s.path === skill.path && (s.path !== 'skin' || s.skinId === skill.skinId)
+    );
+    
+    if (skill.rarity === 'rare') {
+      const basicSkill = pathSkills.find(s => s.rarity === 'basic');
+      return !basicSkill || !unlockedSkills.includes(basicSkill.id);
+    }
+    if (skill.rarity === 'epic') {
+      const rareSkill = pathSkills.find(s => s.rarity === 'rare');
+      return !rareSkill || !unlockedSkills.includes(rareSkill.id);
+    }
+    return false;
+  };
+
   const xpToNext = playerStore.getXPToNextLevel(level);
   const xpPct = (xp / xpToNext) * 100;
 
   const paths = ['scout', 'tank', 'merchant'];
+  const skinIds = ['space', 'ninja', 'royal', 'ghost'];
+  const skinNames = {
+    space: 'Space Chicken',
+    ninja: 'Ninja Chicken',
+    royal: 'Royal Chicken',
+    ghost: 'Ghost Chicken'
+  };
+
+  const rarityColors = {
+    basic: '#4CAF50',
+    rare: '#2196F3',
+    epic: '#9C27B0'
+  };
+
+  const rarityTiers = {
+    basic: 'Tier 1',
+    rare: 'Tier 2',
+    epic: 'Tier 3'
+  };
+
+  const renderSkillNode = (skill) => {
+    const isUnlocked = unlockedSkills.includes(skill.id);
+    const tierLocked = !isUnlocked && isLockedByTier(skill);
+    const canAfford = feathers >= skill.cost;
+    
+    return (
+      <div key={skill.id} className={`st-node ${isUnlocked ? 'st-node--unlocked' : ''}`} style={tierLocked ? { opacity: 0.7 } : {}}>
+        <div style={{ 
+          backgroundColor: rarityColors[skill.rarity],
+          color: 'white',
+          fontSize: '8px',
+          padding: '2px 6px',
+          borderRadius: '10px',
+          marginBottom: '4px',
+          fontWeight: 900,
+          textTransform: 'uppercase'
+        }}>
+          {skill.rarity} • {rarityTiers[skill.rarity]}
+        </div>
+        <div className="st-node-icon">{skill.icon}</div>
+        <div className="st-node-name">{skill.name}</div>
+        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', margin: '4px 0', minHeight: '30px' }}>
+          {skill.description}
+        </div>
+        
+        {isUnlocked ? (
+          <div style={{ color: '#4CAF50', fontWeight: 900, fontSize: '11px', marginTop: '4px' }}>UNLOCKED</div>
+        ) : (
+          <button 
+            className="st-unlock-btn" 
+            onClick={() => handleUnlock(skill)}
+            disabled={tierLocked || !canAfford}
+            style={tierLocked ? { background: '#444', color: '#888', cursor: 'not-allowed' } : {}}
+          >
+            {tierLocked ? 'LOCKED' : `UNLOCK (${skill.cost}🪶)`}
+          </button>
+        )}
+      </div>
+    );
+  };
 
   return (
-    <div className="skill-tree-screen">
+    <div className="skill-tree-screen screen-base">
       <TopBar title="SKILL TREE" onBack={onBack} />
       
       <div className="st-header">
@@ -50,38 +131,70 @@ export default function SkillTreeScreen({ onBack }) {
           <span>🪶</span> {feathers}
         </div>
       </div>
+      
+      <div style={{ 
+        textAlign: 'center', 
+        fontSize: '10px', 
+        color: 'rgba(255,255,255,0.4)', 
+        marginTop: '-10px', 
+        marginBottom: '10px',
+        padding: '0 20px',
+        lineHeight: '1.4'
+      }}>
+        🪶 Earn feathers by: leveling up (+1), hatching Brown eggs (20% chance), hatching Blue eggs (40% chance)
+      </div>
 
-      <div className="st-path-container">
+      <div className="st-path-container" style={{ flex: 1, overflowY: 'auto', paddingBottom: '40px' }}>
         {paths.map(pathId => (
           <div key={pathId} className="st-path">
             <div className="st-path-title">{pathId.toUpperCase()} PATH</div>
             <div className="st-nodes">
-              {SKILLS.filter(s => s.path === pathId).map(skill => {
-                const isUnlocked = unlockedSkills.includes(skill.id);
-                const canAfford = feathers >= skill.cost;
-                
-                return (
-                  <div key={skill.id} className={`st-node ${isUnlocked ? 'st-node--unlocked' : ''}`}>
-                    <div className="st-node-icon">{skill.icon}</div>
-                    <div className="st-node-name">{skill.name}</div>
-                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', margin: '4px 0' }}>{skill.description}</div>
-                    {isUnlocked ? (
-                      <div style={{ color: '#4CAF50', fontWeight: 900, fontSize: '11px' }}>UNLOCKED</div>
-                    ) : (
-                      <button 
-                        className="st-unlock-btn" 
-                        onClick={() => handleUnlock(skill)}
-                        disabled={!canAfford}
-                      >
-                        UNLOCK ({skill.cost}🪶)
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
+              {SKILLS.filter(s => s.path === pathId).map(skill => renderSkillNode(skill))}
             </div>
           </div>
         ))}
+
+        <div style={{ 
+          margin: '30px 20px 10px', 
+          paddingTop: '20px', 
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          textAlign: 'center',
+          fontSize: '18px',
+          fontWeight: 900,
+          color: '#FFD700',
+          letterSpacing: '2px'
+        }}>
+          SKIN SKILLS
+        </div>
+
+        {skinIds.map(skinId => {
+          const isSkinOwned = ownedSkins.includes(skinId);
+          return (
+            <div key={skinId} className="st-path" style={{ marginBottom: '20px' }}>
+              <div className="st-path-title" style={{ opacity: isSkinOwned ? 1 : 0.5 }}>
+                {skinNames[skinId].toUpperCase()}
+              </div>
+              {!isSkinOwned ? (
+                <div style={{ 
+                  margin: '0 20px', 
+                  padding: '20px', 
+                  background: 'rgba(0,0,0,0.2)', 
+                  borderRadius: '15px',
+                  color: 'rgba(255,255,255,0.4)',
+                  fontSize: '13px',
+                  textAlign: 'center',
+                  border: '1px dashed rgba(255,255,255,0.1)'
+                }}>
+                  Own <span style={{ color: '#fff' }}>{skinNames[skinId]}</span> to unlock
+                </div>
+              ) : (
+                <div className="st-nodes">
+                  {SKILLS.filter(s => s.path === 'skin' && s.skinId === skinId).map(skill => renderSkillNode(skill))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

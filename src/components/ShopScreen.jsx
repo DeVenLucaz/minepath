@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { gameStore } from '../store/gameStore';
+import { playerStore } from '../store/playerStore';
 import { CHICKEN_SKINS, TILE_STYLES, TRAIL_EFFECTS } from '../data/skins';
 import { PETS } from '../data/pets';
 import { audio } from '../audio/engine';
@@ -86,7 +87,8 @@ function TrailPreview({ trail }) {
 }
 
 // ─── BUY / EQUIP BUTTON ──────────────────────────────────
-function ActionBtn({ owned, equipped, price, onPress }) {
+function ActionBtn({ owned, equipped, price, onPress, hasDiscount }) {
+  const displayPrice = hasDiscount ? Math.floor(price * 0.9) : price;
   if (equipped) {
     return (
       <button className="sp-btn sp-btn--equipped" onClick={onPress}>
@@ -104,7 +106,7 @@ function ActionBtn({ owned, equipped, price, onPress }) {
   return (
     <button className="sp-btn sp-btn--buy" onClick={onPress}>
       <span className="sp-btn-seed">🌾</span>
-      <span>{price}</span>
+      <span>{displayPrice}</span>
     </button>
   );
 }
@@ -123,6 +125,9 @@ export default function ShopScreen({ onBack }) {
   const [equippedPet, setEPet]      = useState(gameStore.getEquippedPet());
   const [toast, setToast]           = useState('');
 
+  const unlockedSkills = playerStore.getSkills();
+  const hasDiscount = unlockedSkills.includes('shop_discount');
+
   const refresh = () => {
     setSeeds(gameStore.getSeeds());
     setUS(gameStore.getUnlockedSkins());
@@ -140,12 +145,17 @@ export default function ShopScreen({ onBack }) {
     setTimeout(() => setToast(''), 2000);
   };
 
+  const getPrice = (originalPrice) => {
+    return hasDiscount ? Math.floor(originalPrice * 0.9) : originalPrice;
+  };
+
   const buySkin = (skin) => {
     if (unlockedSkins.includes(skin.id)) {
       gameStore.setEquippedSkin(skin.id); setES(skin.id);
       showToast(`Equipped ${skin.name}!`);
     } else {
-      if (gameStore.spendSeeds(skin.price)) {
+      const price = getPrice(skin.price);
+      if (gameStore.spendSeeds(price)) {
         gameStore.unlockSkin(skin.id); gameStore.setEquippedSkin(skin.id);
         refresh(); audio.powerupCollect(); showToast(`Unlocked ${skin.name}! 🎉`);
       } else showToast('Not enough seeds! 🌾');
@@ -157,7 +167,8 @@ export default function ShopScreen({ onBack }) {
       gameStore.setEquippedTile(style.id); setETile(style.id);
       showToast(`Equipped ${style.name}!`);
     } else {
-      if (gameStore.spendSeeds(style.price)) {
+      const price = getPrice(style.price);
+      if (gameStore.spendSeeds(price)) {
         gameStore.unlockTile(style.id); gameStore.setEquippedTile(style.id);
         refresh(); audio.powerupCollect(); showToast(`Unlocked ${style.name}! 🎉`);
       } else showToast('Not enough seeds! 🌾');
@@ -169,7 +180,8 @@ export default function ShopScreen({ onBack }) {
       gameStore.setEquippedTrail(trail.id); setETrail(trail.id);
       showToast(`Equipped ${trail.name}!`);
     } else {
-      if (gameStore.spendSeeds(trail.price)) {
+      const price = getPrice(trail.price);
+      if (gameStore.spendSeeds(price)) {
         gameStore.unlockTrail(trail.id); gameStore.setEquippedTrail(trail.id);
         refresh(); audio.powerupCollect(); showToast(`Unlocked ${trail.name}! 🎉`);
       } else showToast('Not enough seeds! 🌾');
@@ -183,7 +195,8 @@ export default function ShopScreen({ onBack }) {
       gameStore.setEquippedPet(next); setEPet(next);
       showToast(unequip ? 'Pet unequipped!' : `Equipped ${pet.name}!`);
     } else {
-      if (gameStore.spendSeeds(pet.price)) {
+      const price = getPrice(pet.price);
+      if (gameStore.spendSeeds(price)) {
         gameStore.unlockPet(pet.id); gameStore.setEquippedPet(pet.id);
         refresh(); audio.powerupCollect(); showToast(`Unlocked ${pet.name}! 🎉`);
       } else showToast('Not enough seeds! 🌾');
@@ -250,6 +263,7 @@ export default function ShopScreen({ onBack }) {
               <ActionBtn
                 owned={owned} equipped={equipped}
                 price={skin.price} onPress={() => buySkin(skin)}
+                hasDiscount={hasDiscount}
               />
             </div>
           );
@@ -276,6 +290,7 @@ export default function ShopScreen({ onBack }) {
               <ActionBtn
                 owned={owned} equipped={equipped}
                 price={style.price} onPress={() => buyTile(style)}
+                hasDiscount={hasDiscount}
               />
             </div>
           );
@@ -305,6 +320,7 @@ export default function ShopScreen({ onBack }) {
               <ActionBtn
                 owned={owned} equipped={equipped}
                 price={trail.price} onPress={() => buyTrail(trail)}
+                hasDiscount={hasDiscount}
               />
             </div>
           );
@@ -335,6 +351,7 @@ export default function ShopScreen({ onBack }) {
               <ActionBtn
                 owned={owned} equipped={equipped}
                 price={pet.price} onPress={() => buyPet(pet)}
+                hasDiscount={hasDiscount}
               />
             </div>
           );

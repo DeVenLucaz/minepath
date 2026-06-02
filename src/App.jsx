@@ -97,11 +97,24 @@ export default function App() {
     playerStore.addXP(xpGained);
 
     // V4: Chance to find an egg
-    if (Math.random() < 0.25) {
-      const roll = Math.random();
+    if (Math.random() < 0.40) {
+      const level = data.level;
+      const roll = Math.random() * 100;
       let type = 'brown_egg';
-      if (roll < 0.05) type = 'golden_egg';
-      else if (roll < 0.15) type = 'blue_egg';
+
+      if (level <= 5) {
+        if (roll < 3) type = 'golden_egg';
+        else if (roll < 13) type = 'blue_egg';
+      } else if (level <= 15) {
+        if (roll < 7) type = 'golden_egg';
+        else if (roll < 25) type = 'blue_egg';
+      } else if (level <= 30) {
+        if (roll < 12) type = 'golden_egg';
+        else if (roll < 37) type = 'blue_egg';
+      } else {
+        if (roll < 18) type = 'golden_egg';
+        else if (roll < 50) type = 'blue_egg';
+      }
       
       gameStore.addEgg(type);
     }

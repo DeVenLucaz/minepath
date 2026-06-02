@@ -69,21 +69,38 @@ export default function HubUpgradesScreen({ onBack }) {
         }
       } else if (egg.eggType === 'blue_egg') {
         const unlocked = gameStore.getUnlockedPets();
+        let msg = '';
         if (unlocked.length > 0) {
           const target = unlocked[Math.floor(Math.random() * unlocked.length)];
           const petObj = PETS.find(p => p.id === target);
           const newLvl = gameStore.upgradePet(target);
-          alert(`BLUE EGG: Upgraded ${petObj.name} to Level ${newLvl}! Ability boosted.`);
+          msg = `BLUE EGG: Upgraded ${petObj.name} to Level ${newLvl}! Ability boosted.`;
         } else {
           const seedsReward = Math.floor(300 * abilityPower);
           gameStore.addSeeds(seedsReward);
-          alert(`BLUE EGG: No pets to upgrade. Gained ${seedsReward} Seeds!`);
+          msg = `BLUE EGG: No pets to upgrade. Gained ${seedsReward} Seeds!`;
         }
+
+        // Feather roll
+        if (Math.random() < 0.40) {
+          const fAmt = Math.floor(Math.random() * 3) + 2; // 2-4
+          playerStore.addFeathers(fAmt);
+          msg += ` Also found ${fAmt} 🪶 Feathers!`;
+        }
+        alert(msg);
       } else {
         // Brown egg
         const seedsReward = Math.floor((100 + Math.random() * 200) * abilityPower);
         gameStore.addSeeds(seedsReward);
-        alert(`BROWN EGG: Found ${seedsReward} Seeds inside! 🌾`);
+        let msg = `BROWN EGG: Found ${seedsReward} Seeds inside! 🌾`;
+        
+        // Feather roll
+        if (Math.random() < 0.20) {
+          const fAmt = Math.floor(Math.random() * 2) + 1; // 1-2
+          playerStore.addFeathers(fAmt);
+          msg += ` Also found ${fAmt} 🪶 Feathers!`;
+        }
+        alert(msg);
       }
 
       gameStore.removeEgg(index);
