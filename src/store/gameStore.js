@@ -57,6 +57,8 @@ export const gameStore = {
 
   // Pets
   getUnlockedPets() { return inventoryStore.getUnlockedPets(); },
+  getPetLevels() { return inventoryStore.getPetLevels(); },
+  upgradePet(id) { return inventoryStore.upgradePet(id); },
   unlockPet(id) { inventoryStore.unlockPet(id); },
   getEquippedPet() { return inventoryStore.getEquippedPet(); },
   setEquippedPet(id) { inventoryStore.setEquippedPet(id); },
@@ -111,6 +113,11 @@ export const gameStore = {
   // Hub (V4)
   getBuildings() { return hubStore.getBuildings(); },
   upgradeBuilding(id) { return hubStore.upgradeBuilding(id); },
+  collectPassiveIncome() {
+    const amt = hubStore.collectPassiveIncome();
+    if (amt > 0) playerStore.addSeeds(amt);
+    return amt;
+  },
   getEggs() { return hubStore.getEggs(); },
   addEgg(id) { hubStore.addEgg(id); },
   removeEgg(index) { hubStore.removeEgg(index); },

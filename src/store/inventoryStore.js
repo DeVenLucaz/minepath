@@ -5,6 +5,7 @@ const STORAGE_KEYS = {
   UNLOCKED_TILES: 'minepath_unlocked_tiles',
   UNLOCKED_TRAILS: 'minepath_unlocked_trails',
   UNLOCKED_PETS: 'minepath_unlocked_pets',
+  PET_LEVELS: 'minepath_pet_levels',
   EQUIPPED_SKIN: 'minepath_equipped_skin',
   EQUIPPED_TILE: 'minepath_equipped_tile',
   EQUIPPED_TRAIL: 'minepath_equipped_trail',
@@ -59,6 +60,13 @@ export const inventoryStore = {
 
   // Pets
   getUnlockedPets() { return safeGet(STORAGE_KEYS.UNLOCKED_PETS, []); },
+  getPetLevels() { return safeGet(STORAGE_KEYS.PET_LEVELS, {}); },
+  upgradePet(id) {
+    const levels = this.getPetLevels();
+    levels[id] = (levels[id] || 1) + 1;
+    safeSet(STORAGE_KEYS.PET_LEVELS, levels);
+    return levels[id];
+  },
   unlockPet(id) {
     const unlocked = this.getUnlockedPets();
     if (!unlocked.includes(id)) safeSet(STORAGE_KEYS.UNLOCKED_PETS, [...unlocked, id]);

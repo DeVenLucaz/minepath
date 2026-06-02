@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import SanctuaryScreen from './components/SanctuaryScreen';
 import HubUpgradesScreen from './components/HubUpgradesScreen';
 import SkillTreeScreen from './components/SkillTreeScreen';
-import EndlessTowerScreen from './components/EndlessTowerScreen';
 import GameplayScreen from './components/GameplayScreen';
 import GameOverModal from './components/GameOverModal';
 import LevelClearModal from './components/LevelClearModal';
@@ -54,8 +53,15 @@ export default function App() {
   const goSettings      = useCallback(() => setScreen('settings'), []);
   const goAchievements  = useCallback(() => setScreen('achievements'), []);
   const goSkillTree     = useCallback(() => setScreen('skilltree'), []);
-  const goTower         = useCallback(() => setScreen('tower'), []);
   const goHubUpgrades    = useCallback(() => setScreen('hub_upgrades'), []);
+
+  React.useEffect(() => {
+    // Collect passive income
+    const passive = gameStore.collectPassiveIncome();
+    if (passive > 0) {
+      alert(`While you were away, your Seed Silo gathered ${passive} seeds! 🌾`);
+    }
+  }, []);
 
   // ── Game over — update store ──
   const handleGameOver = useCallback((data) => {
@@ -75,16 +81,27 @@ export default function App() {
       gameStore.setDailyPlayed(data.seeds);
       return;
     }
+
+    // Apply Training Nest XP Multiplier
+    const buildings = gameStore.getBuildings();
+    const nestLvl = buildings.nest || 0;
+    const xpMult = 1 + (nestLvl * 0.2); // +20% per level
+
     gameStore.addSeeds(data.seeds);
     gameStore.updateBestLevel(data.level);
     
     // V4: Add XP on level clear
-    const xpGained = data.level * 20;
+    const xpGained = Math.floor(data.level * 20 * xpMult);
     playerStore.addXP(xpGained);
 
     // V4: Chance to find an egg
-    if (Math.random() < 0.2) {
-      gameStore.addEgg('normal_egg');
+    if (Math.random() < 0.25) {
+      const roll = Math.random();
+      let type = 'brown_egg';
+      if (roll < 0.05) type = 'golden_egg';
+      else if (roll < 0.15) type = 'blue_egg';
+      
+      gameStore.addEgg(type);
     }
   }, [isDaily]);
 
@@ -113,7 +130,6 @@ export default function App() {
           onDaily={goDaily}
           onAchievements={goAchievements}
           onSkillTree={goSkillTree}
-          onTower={goTower}
           onHubUpgrades={goHubUpgrades}
         />
       )}
@@ -139,7 +155,6 @@ export default function App() {
       {screen === 'settings' && <SettingsScreen onBack={() => setScreen('home')}/>}
       {screen === 'achievements' && <AchievementsScreen onBack={goHome}/>}
       {screen === 'skilltree' && <SkillTreeScreen onBack={goHome}/>}
-      {screen === 'tower' && <EndlessTowerScreen onBack={goHome}/>}
       {screen === 'hub_upgrades' && <HubUpgradesScreen onBack={goHome}/>}
 
       {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete}/>}

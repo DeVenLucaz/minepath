@@ -3,6 +3,7 @@
 const STORAGE_KEYS = {
   BUILDINGS: 'minepath_hub_buildings',
   HATCHERY_EGGS: 'minepath_hatchery_eggs',
+  LAST_COLLECT: 'minepath_hub_last_collect',
 };
 
 function safeGet(key, defaultVal) {
@@ -38,12 +39,41 @@ export const hubStore = {
     return buildings[id];
   },
 
+  // Passive Income (Silo)
+  getLastCollect() { return safeGet(STORAGE_KEYS.LAST_COLLECT, Date.now()); },
+  collectPassiveIncome() {
+    const now = Date.now();
+    const last = this.getLastCollect();
+    const buildings = this.getBuildings();
+    const siloLvl = buildings.silo || 0;
+    
+    if (siloLvl === 0) {
+      safeSet(STORAGE_KEYS.LAST_COLLECT, now);
+      return 0;
+    }
+
+    const hours = (now - last) / (1000 * 60 * 60);
+    const amount = Math.floor(hours * siloLvl * 5); // 5 seeds per hour per level
+    
+    if (amount > 0) {
+      safeSet(STORAGE_KEYS.LAST_COLLECT, now);
+    }
+    return amount;
+  },
+
   // Hatchery: [{ eggId, hatchTime, status: 'incubating' | 'ready' }]
   getEggs() { return safeGet(STORAGE_KEYS.HATCHERY_EGGS, []); },
-  addEgg(eggId) {
+  addEgg(eggType) {
     const eggs = this.getEggs();
-    const hatchTime = Date.now() + (3600 * 1000 * 2); // 2 hours default
-    eggs.push({ eggId, hatchTime, status: 'incubating' });
+    const buildings = this.getBuildings();
+    const nestLvl = buildings.nest || 0;
+    
+    // Base 2 hours, reduced by 15% per level
+    const baseTime = 3600 * 1000 * 2;
+    const reduction = 1 - (nestLvl * 0.15);
+    const hatchTime = Date.now() + (baseTime * Math.max(0.1, reduction));
+
+    eggs.push({ eggType, hatchTime, status: 'incubating' });
     safeSet(STORAGE_KEYS.HATCHERY_EGGS, eggs);
   },
   updateEggStatus(index, status) {

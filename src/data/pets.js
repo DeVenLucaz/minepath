@@ -10,6 +10,7 @@ export const PETS = [
     description: 'Pecks for extra seeds',
     bonusLabel: '+10% seeds per run',
     cardAccent: '#FDD835',
+    rarity: 'common',
   },
   {
     id: 'chick_blue',
@@ -21,6 +22,7 @@ export const PETS = [
     description: 'Chirps to slow down the timer',
     bonusLabel: '+5s start time',
     cardAccent: '#29B6F6',
+    rarity: 'common',
   },
   {
     id: 'chick_ninja',
@@ -32,6 +34,7 @@ export const PETS = [
     description: 'Spots hidden dangers nearby',
     bonusLabel: '5% chance to reveal adjacent tile',
     cardAccent: '#546E7A',
+    rarity: 'rare',
   },
   {
     id: 'sparky',
@@ -43,6 +46,7 @@ export const PETS = [
     description: 'Barks to reveal safe tiles',
     bonusLabel: 'Reveals 1 random safe tile at level start',
     cardAccent: '#FF8A65',
+    rarity: 'rare',
   },
   {
     id: 'bunn_bunn',
@@ -54,6 +58,7 @@ export const PETS = [
     description: 'Saves you from one mine every 5 levels',
     bonusLabel: '1 free mine hit per 5 levels',
     cardAccent: '#F48FB1',
+    rarity: 'epic',
   },
 ];
     

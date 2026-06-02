@@ -24,7 +24,7 @@ const LOGO_LETTERS = [
   { ch: 'H', color: '#FFD700' },
 ];
 
-export default function SanctuaryScreen({ onPlay, onShop, onLeaderboard, onSettings, onDaily, onAchievements, onSkillTree, onTower, onHubUpgrades }) {
+export default function SanctuaryScreen({ onPlay, onShop, onLeaderboard, onSettings, onDaily, onAchievements, onSkillTree, onHubUpgrades }) {
   const [seeds, setSeeds] = useState(0);
   const [equippedSkin, setEquippedSkin] = useState('classic');
   const [equippedPet, setEquippedPet] = useState(null);
@@ -120,17 +120,6 @@ export default function SanctuaryScreen({ onPlay, onShop, onLeaderboard, onSetti
           >
             <span>🏙️</span> MY HUB & HATCHERY
             {hasReadyEggs && <div className="egg-indicator-dot" />}
-          </button>
-
-          <button className="sanctuary-btn-main" 
-            style={{ 
-              background: 'linear-gradient(135deg, #FF5252, #FF1744)', 
-              fontSize: '18px',
-              gridColumn: 'span 3'
-            }} 
-            onClick={onTower}
-          >
-            <span>🗼</span> ENDLESS TOWER
           </button>
           
           <button className="sanctuary-btn-sq" onClick={onShop}>

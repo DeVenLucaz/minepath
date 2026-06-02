@@ -10,8 +10,6 @@ const STORAGE_KEYS = {
   XP: 'minepath_xp',
   LEVEL: 'minepath_level',
   FEATHERS: 'minepath_feathers',
-  GOLDEN_SEEDS: 'minepath_golden_seeds',
-  TOWER_BEST: 'minepath_tower_best',
 };
 
 function safeGet(key, defaultVal) {
@@ -89,12 +87,6 @@ export const playerStore = {
       safeSet(STORAGE_KEYS.SKILLS, skills);
     }
   },
-
-  // --- Tower Elements (V4) ---
-  getGoldenSeeds() { return safeGet(STORAGE_KEYS.GOLDEN_SEEDS, 0); },
-  addGoldenSeeds(amt) { safeSet(STORAGE_KEYS.GOLDEN_SEEDS, this.getGoldenSeeds() + amt); },
-  getTowerBest() { return safeGet(STORAGE_KEYS.TOWER_BEST, 0); },
-  updateTowerBest(val) { if (val > this.getTowerBest()) safeSet(STORAGE_KEYS.TOWER_BEST, val); },
 
   // --- Legacy / Social (kept for internal use) ---
   getLeaderboard() { return safeGet(STORAGE_KEYS.LEADERBOARD, []); },

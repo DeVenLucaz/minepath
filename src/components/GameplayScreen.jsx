@@ -459,13 +459,8 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     diffRef.current = diff;
 
     // --- BIOME SELECTION ---
-    let bIndex = 0;
-    if (lvl > 15) bIndex = Math.floor(Math.random() * BIOMES.length);
-    else if (lvl > 12) bIndex = 4; // Windswept Plains
-    else if (lvl > 8) bIndex = 3;  // Midnight Swamp
-    else if (lvl > 5) bIndex = 2;  // Volcanic Forge
-    else if (lvl > 2) bIndex = 1;  // Glacial Tundra
-    const currentBiome = BIOMES[bIndex];
+    // Instead of randomizing based on level, lock the biome to the equipped tile.
+    const currentBiome = BIOMES.find(b => b.tileStyle === equippedTile) || BIOMES[0];
     setBiome(currentBiome);
 
     // --- MODIFIERS ---
@@ -480,9 +475,20 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     setEquippedPetId(gameStore.getEquippedPet());
 
     // --- PET & BUILDING BONUSES ---
+    const buildings = gameStore.getBuildings();
     const pet = PETS.find(p => p.id === gameStore.getEquippedPet());
+    const playgroundLvl = buildings.playground || 0;
+    const abilityPower = 1 + (playgroundLvl * 0.25); // +25% effectiveness
+
     let startTime = diff.timerMax;
-    if (pet?.bonus === 'time_bonus') startTime += pet.bonusVal;
+    if (pet?.bonus === 'time_bonus') startTime += (pet.bonusVal * abilityPower);
+
+    // V4: Pet Playground Happiness Bonus (start-of-level powerup)
+    if (playgroundLvl > 0 && Math.random() < (0.1 * playgroundLvl)) {
+      const startPowerups = ['shield', 'slowmo', 'magnet'];
+      const randomPower = startPowerups[Math.floor(Math.random() * startPowerups.length)];
+      setTimeout(() => collectPowerup(randomPower), 500);
+    }
 
     setRows(diff.rows);
     setCols(diff.cols);
@@ -727,7 +733,11 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
 
       // --- PET BONUSES ---
       const pet = PETS.find(p => p.id === equippedPetId);
-      if (pet?.bonus === 'reveal_bonus' && Math.random() < pet.bonusVal) {
+      const buildings = gameStore.getBuildings();
+      const playgroundLvl = buildings.playground || 0;
+      const abilityPower = 1 + (playgroundLvl * 0.25);
+
+      if (pet?.bonus === 'reveal_bonus' && Math.random() < (pet.bonusVal * abilityPower)) {
         setTiles(ts => ts.map(t => {
           if (isAdjacent(t, { r: tile.r, c: tile.c }) && t.state === 'hidden' && !t.isMine) {
             return { ...t, state: 'revealed' };
@@ -956,8 +966,14 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     
     // --- PET BONUSES ---
     const pet = PETS.find(p => p.id === equippedPetId);
-    let seedMultiplier = 1;
-    if (pet?.bonus === 'seed_bonus') seedMultiplier += pet.bonusVal;
+    const buildings = gameStore.getBuildings();
+    const siloLvl = buildings.silo || 0;
+    const siloMult = 1 + (siloLvl * 0.1); 
+    const playgroundLvl = buildings.playground || 0;
+    const abilityPower = 1 + (playgroundLvl * 0.25);
+
+    let seedMultiplier = 1 * siloMult;
+    if (pet?.bonus === 'seed_bonus') seedMultiplier += (pet.bonusVal * abilityPower);
 
     const earned = Math.floor((baseSeeds + timeBonus) * (doubleScore ? 2 : 1) * comboMultiplier * seedMultiplier);
 
