@@ -1,5 +1,7 @@
 // Game Store - localStorage persistence layer
 
+import { FEATS, DEFAULT_ACHIEVEMENTS } from '../data/achievements';
+
 const STORAGE_KEYS = {
   SEEDS: 'minepath_seeds',
   UNLOCKED_SKINS: 'minepath_unlocked_skins',
@@ -16,6 +18,7 @@ const STORAGE_KEYS = {
   DAILY_CHALLENGE: 'minepath_daily_challenge',
   UNLOCKED_PETS: 'minepath_unlocked_pets',
   EQUIPPED_PET: 'minepath_equipped_pet',
+  GOLDEN_MASCOT: 'minepath_golden_mascot',
 };
 
 function safeGet(key, defaultVal) {
@@ -51,15 +54,7 @@ export const gameStore = {
   },
 
   getAchievements() {
-    const DEFAULT = {
-      firstSteps: false, seedSnatcher: false, bigHarvest: false,
-      mineMaster: false, deepDigger: false, speedyClucker: false,
-      survivor: 0, roadRunner: 0, dailyDevotee: 0,
-      shopOpener: false, petLover: false, fashionista: false,
-      trailBlazer: false, comboKing: 0, fearless: 0,
-      _claimed: {},
-    };
-    return safeGet(STORAGE_KEYS.ACHIEVEMENTS, DEFAULT);
+    return safeGet(STORAGE_KEYS.ACHIEVEMENTS, DEFAULT_ACHIEVEMENTS);
   },
   setAchievement(key) {
     const ach = this.getAchievements();
@@ -218,5 +213,12 @@ export const gameStore = {
     safeSet(STORAGE_KEYS.LEADERBOARD, top10);
     this.updateAchievement('survivor', 1);
     return top10;
+  },
+
+  hasGoldenHomeMascot() {
+    return safeGet(STORAGE_KEYS.GOLDEN_MASCOT, false);
+  },
+  unlockGoldenMascot() {
+    safeSet(STORAGE_KEYS.GOLDEN_MASCOT, true);
   },
 };

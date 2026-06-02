@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { gameStore } from '../store/gameStore';
 import { audio } from '../audio/engine';
 import ChickenSVG from './ChickenSVG';
@@ -30,12 +30,15 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
   const [bounce, setBounce] = useState(false);
   const [daily, setDaily]   = useState({ date: '', played: false, score: 0 });
   const [feats, setFeats]   = useState(0);
+  const [isGolden, setIsGolden] = useState(false);
+  const clickTimes = useRef([]);
   const equippedSkin        = useMemo(() => gameStore.getEquippedSkin(), []);
 
   useEffect(() => {
     try {
       setSeeds(gameStore.getSeeds());
       setDaily(gameStore.getDailyChallenge());
+      setIsGolden(gameStore.hasGoldenHomeMascot());
       // Count claimed feats from new achievements system
       const ach = gameStore.getAchievements();
       const claimed = Object.values(ach).filter(v => v === true || (typeof v === 'number' && v > 0)).length;
@@ -51,6 +54,19 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
     const t = setInterval(() => setBounce(b => !b), 900);
     return () => clearInterval(t);
   }, []);
+
+  const handleChickenClick = () => {
+    if (isGolden) return;
+    
+    const now = Date.now();
+    clickTimes.current = [...clickTimes.current.filter(t => now - t < 2000), now];
+    
+    if (clickTimes.current.length >= 7) {
+      gameStore.unlockGoldenMascot();
+      setIsGolden(true);
+      audio.powerupCollect(); // Play a sound for feedback
+    }
+  };
 
   return (
     <div className="home-screen">
@@ -83,9 +99,12 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
         </div>
 
         {/* CHICKEN */}
-        <div className={`home-chicken-wrap ${bounce ? 'bounce-up' : 'bounce-down'}`}>
+        <div 
+          className={`home-chicken-wrap ${bounce ? 'bounce-up' : 'bounce-down'} ${isGolden ? 'golden-mascot' : ''}`}
+          onClick={handleChickenClick}
+        >
           <ChickenSVG
-            skinId={equippedSkin}
+            skinId={isGolden ? 'classic' : equippedSkin} 
             mood="normal"
             size={150}
             className="home-chicken-svg"
@@ -119,7 +138,6 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
             <button
               className="home-btn-daily"
               onClick={onDaily}
-              onTouchStart={(e) => { e.preventDefault(); onDaily(); }}
             >
               <span className="home-btn-icon">📅</span>
               <span>DAILY CHALLENGE</span>
@@ -134,7 +152,6 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
           <button
             className="home-btn-play"
             onClick={() => { audio.init(); onPlay(); }}
-            onTouchStart={(e) => { e.preventDefault(); audio.init(); onPlay(); }}
           >
             <span className="home-btn-icon">🎮</span>
             <span>PLAY</span>
@@ -145,7 +162,6 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
             <button
               className="home-btn-sq home-btn-sq--yellow"
               onClick={onShop}
-              onTouchStart={(e) => { e.preventDefault(); onShop(); }}
             >
               <span className="home-btn-sq-icon">🛒</span>
               <span className="home-btn-sq-label">SHOP</span>
@@ -153,7 +169,6 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
             <button
               className="home-btn-sq home-btn-sq--purple"
               onClick={onLeaderboard}
-              onTouchStart={(e) => { e.preventDefault(); onLeaderboard(); }}
             >
               <span className="home-btn-sq-icon">🏆</span>
               <span className="home-btn-sq-label">SCORES</span>
@@ -161,7 +176,6 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
             <button
               className="home-btn-sq home-btn-sq--red"
               onClick={onSettings}
-              onTouchStart={(e) => { e.preventDefault(); onSettings(); }}
             >
               <span className="home-btn-sq-icon">⚙️</span>
               <span className="home-btn-sq-label">SETTINGS</span>

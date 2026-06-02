@@ -92,14 +92,12 @@ export default function LevelClearModal({ level, seeds, timeLeft, onReplay, onNe
           <button
             className="lc-btn lc-btn--replay"
             onClick={onReplay}
-            onTouchStart={e => { e.preventDefault(); onReplay(); }}
           >
             REPLAY
           </button>
           <button
             className="lc-btn lc-btn--next"
             onClick={onNext}
-            onTouchStart={e => { e.preventDefault(); onNext(); }}
           >
             NEXT LEVEL
           </button>

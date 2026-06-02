@@ -55,20 +55,20 @@ function TrailPreview({ trail }) {
 function ActionBtn({ owned, equipped, price, onPress }) {
   if (equipped) {
     return (
-      <button className="sp-btn sp-btn--equipped" onClick={onPress} onTouchStart={e => { e.preventDefault(); onPress(); }}>
+      <button className="sp-btn sp-btn--equipped" onClick={onPress}>
         <span>✓</span>
       </button>
     );
   }
   if (owned) {
     return (
-      <button className="sp-btn sp-btn--equip" onClick={onPress} onTouchStart={e => { e.preventDefault(); onPress(); }}>
+      <button className="sp-btn sp-btn--equip" onClick={onPress}>
         Equip
       </button>
     );
   }
   return (
-    <button className="sp-btn sp-btn--buy" onClick={onPress} onTouchStart={e => { e.preventDefault(); onPress(); }}>
+    <button className="sp-btn sp-btn--buy" onClick={onPress}>
       <span className="sp-btn-seed">🌾</span>
       <span>{price}</span>
     </button>
@@ -170,7 +170,6 @@ export default function ShopScreen({ onBack }) {
             key={t.id}
             className={`sp-tab ${tab === t.id ? 'sp-tab--active' : ''}`}
             onClick={() => setTab(t.id)}
-            onTouchStart={e => { e.preventDefault(); setTab(t.id); }}
           >
             <span className="sp-tab-icon">{t.icon}</span>
             <span className="sp-tab-label">{t.label}</span>

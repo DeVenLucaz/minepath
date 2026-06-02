@@ -83,12 +83,10 @@ export default function LeaderboardScreen({ onBack }) {
         <button
           className={`lb-tab ${tab === 'global' ? 'lb-tab--active' : ''}`}
           onClick={() => setTab('global')}
-          onTouchStart={e => { e.preventDefault(); setTab('global'); }}
         >Global</button>
         <button
           className={`lb-tab ${tab === 'myruns' ? 'lb-tab--active' : ''}`}
           onClick={() => setTab('myruns')}
-          onTouchStart={e => { e.preventDefault(); setTab('myruns'); }}
         >My Runs</button>
       </div>
 

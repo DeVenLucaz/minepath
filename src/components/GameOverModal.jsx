@@ -76,15 +76,13 @@ export default function GameOverModal({ level, seeds, onRetry, onHome, skinId = 
         <button
           className="mo-btn mo-btn--retry"
           onClick={onRetry}
-          onTouchStart={e => { e.preventDefault(); onRetry(); }}
         >
           <span>🔄</span>
           <span>RETRY</span>
         </button>
         <button
           className="mo-btn mo-btn--home"
-          onClick={onHome}
-          onTouchStart={e => { e.preventDefault(); onHome(); }}
+          onClick={() => onHome()}
         >
           <span>🏠</span>
           <span>HOME</span>

@@ -4,6 +4,9 @@ import { audio } from '../audio/engine';
 import { CHICKEN_SKINS, TILE_STYLES, TRAIL_EFFECTS } from '../data/skins';
 import { PETS } from '../data/pets';
 import ChickenSVG from './ChickenSVG';
+import TopBar from './TopBar';
+import GameOverModal from './GameOverModal';
+import LevelClearModal from './LevelClearModal';
 
 // ─── DIFFICULTY CONFIG ───────────────────────────────────────────
 function getDifficultyConfig(level) {
@@ -113,22 +116,28 @@ function generateGrid(rows, cols, mineRate, level, isDaily) {
 }
 
 // ─── TRAIL PARTICLE ──────────────────────────────────────────────
-function TrailParticle({ x, y, trailId, index }) {
+function TrailParticle({ x, y, trailId, index, total }) {
   const trailData = TRAIL_EFFECTS.find(t => t.id === trailId);
   const colors = trailData?.particleColors || ['#FFD700','#FFF'];
   const color = colors[index % colors.length];
   const isBubble = trailId === 'bubble';
   const isFlower = trailId === 'flower';
   const isMusic  = trailId === 'music';
-  const opacity  = Math.max(0.2, 1 - index * 0.06);
-  const size     = Math.max(5, 12 - index * 0.8);
+  
+  // total is the number of historical positions. 
+  // index is the position index (0 = oldest, total-1 = newest)
+  // We want newest to be most opaque.
+  const ageFactor = index / (total || 1); 
+  const opacity  = Math.max(0.1, ageFactor * 0.8);
+  const size     = Math.max(4, 6 + ageFactor * 10);
+
   return (
     <div className={`trail-particle trail-particle--${trailId}`} style={{
       left: x + '%',
       top: y + '%',
       background: isBubble ? 'transparent' : color,
       border: isBubble ? `2px solid ${color}` : 'none',
-      boxShadow: isBubble ? 'none' : `0 0 5px ${color}`,
+      boxShadow: isBubble ? 'none' : `0 0 8px ${color}`,
       opacity,
       width: size,
       height: size,
@@ -356,7 +365,7 @@ function Confetti() {
 }
 
 // ─── MAIN GAMEPLAY SCREEN ─────────────────────────────────────────
-export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComplete, isDaily = false, frozen = false }) {
+export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComplete, isDaily = false, frozen = false, onBack }) {
   const [level, setLevel] = useState(startLevel);
   const [tiles, setTiles] = useState([]);
   const [chicken, setChicken] = useState({ r: 0, c: 0 });
@@ -378,6 +387,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [gamePhase, setGamePhase] = useState('playing'); // playing | levelcomplete | gameover
   const [visitedTiles, setVisitedTiles] = useState([]); // [{r, c}]
   const [levelSeeds, setLevelSeeds] = useState(0);
+  const [levelTimeLeft, setLevelTimeLeft] = useState(0);
   const [rows, setRows] = useState(6);
   const [cols, setCols] = useState(8);
   const [revealAllActive, setRevealAllActive] = useState(false);
@@ -386,6 +396,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [equippedPetId, setEquippedPetId] = useState(gameStore.getEquippedPet());
   const [touchStart, setTouchStart] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [mineSkipCharges, setMineSkipCharges] = useState(0);
 
   const timerRef = useRef(null);
   const powerupTimerRef = useRef(null);
@@ -423,6 +434,22 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     const pet = PETS.find(p => p.id === gameStore.getEquippedPet());
     let startTime = diff.timerMax;
     if (pet?.bonus === 'time_bonus') startTime += pet.bonusVal;
+
+    if (pet?.bonus === 'safe_reveal') {
+      const safeTiles = newTiles.filter(t => !t.isMine && t.state === 'hidden' && !t.isCheckpoint && !t.isStart);
+      if (safeTiles.length > 0) {
+        const randomTile = safeTiles[Math.floor(Math.random() * safeTiles.length)];
+        randomTile.state = 'revealed';
+      }
+    }
+
+    if (pet?.bonus === 'mine_skip') {
+      // 1 charge every 5 levels
+      const charges = Math.floor(lvl / 5);
+      setMineSkipCharges(charges);
+    } else {
+      setMineSkipCharges(0);
+    }
 
     setRows(diff.rows);
     setCols(diff.cols);
@@ -684,6 +711,16 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   }, [gamePhase, chicken, hasShield, tiles]);
 
   const handleMineHit = (tile) => {
+    if (mineSkipCharges > 0) {
+      setMineSkipCharges(prev => prev - 1);
+      audio.powerupCollect(); // reuse sound for skip
+      setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false } : t));
+      setChicken({ r: tile.r, c: tile.c });
+      setChickenAnim('shield');
+      setTimeout(() => setChickenAnim('idle'), 600);
+      return;
+    }
+
     setShaking(true);
     setChickenAnim('explode');
     setCombo(0);
@@ -803,7 +840,13 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     const baseSeeds = lvl * 10;
     const timeLeft = Math.floor(timerVal.current);
     const timeBonus = timeLeft * 2;
-    const earned = Math.floor((baseSeeds + timeBonus) * (doubleScore ? 2 : 1) * comboMultiplier);
+    
+    // --- PET BONUSES ---
+    const pet = PETS.find(p => p.id === equippedPetId);
+    let seedMultiplier = 1;
+    if (pet?.bonus === 'seed_bonus') seedMultiplier += pet.bonusVal;
+
+    const earned = Math.floor((baseSeeds + timeBonus) * (doubleScore ? 2 : 1) * comboMultiplier * seedMultiplier);
 
     // Achievement tracking
     gameStore.setAchievement('firstSteps');
@@ -814,14 +857,13 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     if (timeLeft >= (timerMaxVal.current - 15)) gameStore.setAchievement('speedyClucker');
 
     setLevelSeeds(earned);
+    setLevelTimeLeft(timeLeft);
     setSeeds(gameStore.getSeeds());
     gamePhaseRef.current = 'levelcomplete';
     setGamePhase('levelcomplete');
 
-    // Fire onLevelComplete for App.jsx to show the modal
-    setTimeout(() => {
-      onLevelComplete({ level: lvl, seeds: earned, timeLeft });
-    }, 600);
+    // Inform App.jsx about the result
+    onLevelComplete({ level: lvl, seeds: earned, timeLeft });
   };
 
   // Swipe gesture
@@ -904,6 +946,12 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       onTouchStart={handleTouchStartGrid}
       onTouchEnd={handleTouchEndGrid}
     >
+      <TopBar 
+        title={isDaily ? "DAILY" : `LEVEL ${level}`} 
+        onBack={onBack} 
+        showSeeds={false} 
+      />
+
       {showConfetti && <Confetti />}
       <ObstacleOverlay obstacle={obstacle} onDone={() => setObstacle(null)} />
 
@@ -951,6 +999,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             {hasShield    && <div className="hud-badge hud-badge--shield">🛡️</div>}
             {doubleScore  && <div className="hud-badge hud-badge--double">⭐ 2X</div>}
             {slowMoActive && <div className="hud-badge hud-badge--slow">⏱️</div>}
+            {mineSkipCharges > 0 && <div className="hud-badge hud-badge--skip">👟 {mineSkipCharges}</div>}
             {modifiers.includes('fog')   && <div className="hud-badge hud-badge--fog">🌫️ FOG</div>}
             {modifiers.includes('speed') && <div className="hud-badge hud-badge--speed">⚡</div>}
           </div>
@@ -1000,17 +1049,26 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             zIndex: 15,
           }}
         >
-          {equippedTrail !== 'none' && visitedTiles.slice(-12).map((pos, i) => {
-            const x = (pos.c * (cellSize.w + 2) + cellSize.w / 2) / (cols * (cellSize.w + 2)) * 100;
-            const y = (pos.r * (cellSize.h + 2) + cellSize.h / 2) / (rows * (cellSize.h + 2)) * 100;
-            return (
-              <TrailParticle
-                key={`trail-${i}-${pos.r}-${pos.c}`}
-                x={x} y={y}
-                trailId={equippedTrail}
-                index={i}
-              />
-            );
+          {equippedTrail !== 'none' && visitedTiles.slice(-15).map((pos, i) => {
+            const centerX = (pos.c * (cellSize.w + 2) + cellSize.w / 2) / (cols * (cellSize.w + 2)) * 100;
+            const centerY = (pos.r * (cellSize.h + 2) + cellSize.h / 2) / (rows * (cellSize.h + 2)) * 100;
+            
+            // Spawn 3 scattered particles per step
+            return [0, 1, 2].map(j => {
+              // Stable pseudo-random offsets based on index
+              const offsetX = ((j * 17) % 11 - 5) * 0.8; 
+              const offsetY = ((j * 23) % 13 - 6) * 0.8;
+              return (
+                <TrailParticle
+                  key={`trail-${i}-${j}-${pos.r}-${pos.c}`}
+                  x={centerX + offsetX} 
+                  y={centerY + offsetY}
+                  trailId={equippedTrail}
+                  index={i}
+                  total={visitedTiles.slice(-15).length}
+                />
+              );
+            });
           })}
         </div>
 
@@ -1050,6 +1108,32 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       {/* Hint */}
       {level === 1 && gamePhase === 'playing' && (
         <div className="hint-bar">Tap adjacent tile to move • Long press to peek (-1s)</div>
+      )}
+
+      {/* Overlays moved from App.jsx */}
+      {gamePhase === 'gameover' && (
+        <GameOverModal
+          level={level}
+          seeds={levelSeeds}
+          skinId={equippedSkin}
+          onRetry={() => initLevel(level)}
+          onHome={onBack}
+        />
+      )}
+
+      {gamePhase === 'levelcomplete' && (
+        <LevelClearModal
+          level={level}
+          seeds={levelSeeds}
+          timeLeft={levelTimeLeft}
+          skinId={equippedSkin}
+          onReplay={() => initLevel(level)}
+          onNext={() => {
+            const next = level + 1;
+            setLevel(next);
+            initLevel(next);
+          }}
+        />
       )}
     </div>
   );

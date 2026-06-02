@@ -22,7 +22,6 @@ function SettingToggle({ value, onChange }) {
     <button
       className={`st-toggle ${value ? 'st-toggle--on' : 'st-toggle--off'}`}
       onClick={onChange}
-      onTouchStart={e => { e.preventDefault(); onChange(); }}
     >
       <span className="st-toggle-knob"/>
       <span className="st-toggle-label">{value ? 'ON' : 'OFF'}</span>
@@ -139,8 +138,7 @@ export default function SettingsScreen({ onBack }) {
           <div className="st-row st-row--btn">
             <span className="st-row-icon">🎓</span>
             <span className="st-row-label">TUTORIAL</span>
-            <button className="st-action-btn" onClick={resetTutorial}
-              onTouchStart={e => { e.preventDefault(); resetTutorial(); }}>
+            <button className="st-action-btn" onClick={resetTutorial}>
               Reset
             </button>
           </div>
@@ -166,8 +164,7 @@ export default function SettingsScreen({ onBack }) {
                   placeholder="?"
                   maxLength={3}
                 />
-                <button className="st-gate-btn" onClick={tryUnlockGate}
-                  onTouchStart={e => { e.preventDefault(); tryUnlockGate(); }}>
+                <button className="st-gate-btn" onClick={tryUnlockGate}>
                   UNLOCK
                 </button>
               </div>

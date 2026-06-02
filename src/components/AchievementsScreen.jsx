@@ -182,7 +182,6 @@ export default function AchievementsScreen({ onBack }) {
                   <button
                     className="af-claim-btn"
                     onClick={() => handleClaim(feat)}
-                    onTouchStart={e => { e.preventDefault(); handleClaim(feat); }}
                   >
                     <span>CLAIM</span>
                     <span className="af-claim-reward">+{feat.reward}🌾</span>
