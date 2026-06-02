@@ -3,6 +3,7 @@ import { gameStore } from '../store/gameStore';
 import { audio } from '../audio/engine';
 import { CHICKEN_SKINS, TILE_STYLES, TRAIL_EFFECTS } from '../data/skins';
 import { PETS } from '../data/pets';
+import ChickenSVG from './ChickenSVG';
 
 // ─── DIFFICULTY CONFIG ───────────────────────────────────────────
 function getDifficultyConfig(level) {
@@ -112,65 +113,60 @@ function generateGrid(rows, cols, mineRate, level, isDaily) {
 }
 
 // ─── TRAIL PARTICLE ──────────────────────────────────────────────
-function TrailParticle({ x, y, trailId }) {
-  const colors = {
-    sparkle: ['#FFD700', '#FFF', '#FFB6C1', '#87CEEB'],
-    fire: ['#FF4500', '#FF8C00', '#FFD700', '#FF6347'],
-    rainbow: ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#8B00FF'],
-  };
-  const c = colors[trailId] || ['#FFD700'];
-  const color = c[Math.floor(Math.random() * c.length)];
+function TrailParticle({ x, y, trailId, index }) {
+  const trailData = TRAIL_EFFECTS.find(t => t.id === trailId);
+  const colors = trailData?.particleColors || ['#FFD700','#FFF'];
+  const color = colors[index % colors.length];
+  const isBubble = trailId === 'bubble';
+  const isFlower = trailId === 'flower';
+  const isMusic  = trailId === 'music';
+  const opacity  = Math.max(0.2, 1 - index * 0.06);
+  const size     = Math.max(5, 12 - index * 0.8);
   return (
-    <div className="trail-particle" style={{
+    <div className={`trail-particle trail-particle--${trailId}`} style={{
       left: x + '%',
       top: y + '%',
-      background: color,
-      boxShadow: `0 0 4px ${color}`,
-    }} />
+      background: isBubble ? 'transparent' : color,
+      border: isBubble ? `2px solid ${color}` : 'none',
+      boxShadow: isBubble ? 'none' : `0 0 5px ${color}`,
+      opacity,
+      width: size,
+      height: size,
+      borderRadius: isMusic ? '2px' : '50%',
+      fontSize: isFlower ? '10px' : isMusic ? '11px' : undefined,
+      display: (isFlower || isMusic) ? 'flex' : undefined,
+      alignItems: (isFlower || isMusic) ? 'center' : undefined,
+      justifyContent: (isFlower || isMusic) ? 'center' : undefined,
+    }}>
+      {isFlower && '🌸'}
+      {isMusic && ['🎵','🎶','♪'][index % 3]}
+    </div>
   );
 }
 
-// ─── CHICKEN COMPONENT ───────────────────────────────────────────
-function Chicken({ skin, trail, animState, position, gridCols, gridRows, cellW, cellH, isMagnetActive }) {
-  const skinData = CHICKEN_SKINS.find(s => s.id === skin) || CHICKEN_SKINS[0];
-  const outfitClass = `chicken-outfit-${skinData.outfit || 'classic'}`;
-
-  // Position chicken at center of the tile using pixel coordinates
-  // Each cell is cellW x cellH, with 2px gaps
+// ─── CHICKEN COMPONENT — uses ChickenSVG ─────────────────────────
+function Chicken({ skin, animState, position, cellW, cellH, isMagnetActive }) {
   const pixelX = position.c * (cellW + 2) + cellW / 2;
   const pixelY = position.r * (cellH + 2) + cellH / 2;
-
+  const mood = animState === 'explode' ? 'sad' : animState === 'celebrate' ? 'happy' : 'normal';
+  const size = Math.min(cellW, cellH) * 1.15;
   return (
     <div
-      className={`chicken-entity ${outfitClass} anim-${animState}`}
+      className={`chicken-entity anim-${animState}`}
       style={{
         position: 'absolute',
         left: pixelX,
         top: pixelY,
         transform: 'translate(-50%, -50%)',
         zIndex: 20,
-        transition: 'left 0.2s ease, top 0.2s ease',
+        transition: 'left 0.18s ease, top 0.18s ease',
         pointerEvents: 'none',
+        filter: animState === 'explode' ? 'drop-shadow(0 0 8px #FF4500)' : 'drop-shadow(0 3px 6px rgba(0,0,0,0.5))',
       }}
     >
-      <div className="chicken-body" style={{ background: skinData.color }}>
-        <div className="chicken-head" style={{ background: skinData.color }}>
-          <div className="chicken-eye left-eye" />
-          <div className="chicken-eye right-eye" />
-          <div className="chicken-beak" />
-          {skinData.hat && <div className="chicken-hat">{skinData.hat}</div>}
-          {skinData.outfit === 'ninja' && <div className="ninja-mask" />}
-          {skinData.outfit === 'ghost' && <div className="ghost-overlay" />}
-        </div>
-        <div className="chicken-wing left" style={{ background: skinData.color }} />
-        <div className="chicken-wing right" style={{ background: skinData.color }} />
-        {animState === 'shield' && <div className="shield-bubble" />}
-        {isMagnetActive && <div className="magnet-pulse" />}
-      </div>
-      <div className="chicken-legs">
-        <div className="chicken-leg" style={{ background: skinData.color }} />
-        <div className="chicken-leg" style={{ background: skinData.color }} />
-      </div>
+      <ChickenSVG skinId={skin} mood={mood} size={size}/>
+      {animState === 'shield' && <div className="shield-bubble"/>}
+      {isMagnetActive && <div className="magnet-pulse"/>}
     </div>
   );
 }
@@ -360,7 +356,7 @@ function Confetti() {
 }
 
 // ─── MAIN GAMEPLAY SCREEN ─────────────────────────────────────────
-export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComplete, isDaily = false }) {
+export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComplete, isDaily = false, frozen = false }) {
   const [level, setLevel] = useState(startLevel);
   const [tiles, setTiles] = useState([]);
   const [chicken, setChicken] = useState({ r: 0, c: 0 });
@@ -550,14 +546,12 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const triggerGameOver = (reason) => {
     clearInterval(timerRef.current);
     clearTimeout(obstacleTimerRef.current);
-    const earned = 0;
-    setLevelSeeds(earned);
     gamePhaseRef.current = 'gameover';
     setGamePhase('gameover');
     setChickenAnim('explode');
     setTimeout(() => {
-      onGameOver({ level: levelRef.current, seeds: earned });
-    }, 1500);
+      onGameOver({ level: levelRef.current, seeds: levelSeeds });
+    }, 900);
   };
 
   const isAdjacent = (tile, pos) => {
@@ -567,6 +561,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   };
 
   const handleTileStep = useCallback((tile) => {
+    if (frozen) return;
     if (gamePhase !== 'playing') return;
     if (!isAdjacent(tile, chicken)) return;
     if (tile.state === 'checkpoint') {
@@ -698,12 +693,14 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     gamePhaseRef.current = 'gameover';
     setGamePhase('gameover');
     clearInterval(timerRef.current);
+    clearTimeout(obstacleTimerRef.current);
     setTimeout(() => {
-      onGameOver({ level: levelRef.current, seeds: 0 });
-    }, 1500);
+      onGameOver({ level: levelRef.current, seeds: levelSeeds });
+    }, 900);
   };
 
   const handleLongPress = useCallback((tile) => {
+    if (frozen) return;
     if (gamePhase !== 'playing') return;
     if (!isAdjacent(tile, chicken)) return;
     if (tile.state !== 'hidden') return;
@@ -804,29 +801,27 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
 
     const lvl = levelRef.current;
     const baseSeeds = lvl * 10;
-    const timeBonus = Math.floor(timerVal.current * 2);
+    const timeLeft = Math.floor(timerVal.current);
+    const timeBonus = timeLeft * 2;
     const earned = Math.floor((baseSeeds + timeBonus) * (doubleScore ? 2 : 1) * comboMultiplier);
-    gameStore.addSeeds(earned);
-    gameStore.updateBestLevel(lvl);
 
-    // Achievement: Perfectionist (No peeking)
-    const peekCount = tiles.filter(t => t.state === 'peeked').length;
-    if (peekCount === 0) {
-      gameStore.updateAchievement('perfectionist', true);
-    }
+    // Achievement tracking
+    gameStore.setAchievement('firstSteps');
+    gameStore.incrementAchievement('survivor', 1);
+    gameStore.incrementAchievement('roadRunner', 1);
+    if (lvl >= 10) gameStore.setAchievement('mineMaster');
+    if (lvl >= 20) gameStore.setAchievement('deepDigger');
+    if (timeLeft >= (timerMaxVal.current - 15)) gameStore.setAchievement('speedyClucker');
 
-    gameStore.addLeaderboardEntry({ level: lvl, seeds: earned });
     setLevelSeeds(earned);
     setSeeds(gameStore.getSeeds());
     gamePhaseRef.current = 'levelcomplete';
     setGamePhase('levelcomplete');
 
+    // Fire onLevelComplete for App.jsx to show the modal
     setTimeout(() => {
-      const nextLevel = lvl + 1;
-      levelRef.current = nextLevel;
-      setLevel(nextLevel);
-      initLevel(nextLevel);
-    }, 2500);
+      onLevelComplete({ level: lvl, seeds: earned, timeLeft });
+    }, 600);
   };
 
   // Swipe gesture
@@ -912,50 +907,53 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       {showConfetti && <Confetti />}
       <ObstacleOverlay obstacle={obstacle} onDone={() => setObstacle(null)} />
 
-      {/* HUD */}
-      <div className="hud">
-        <div className="hud-top">
-          <div className="hud-level">Lv.{level}</div>
-          <div className="hud-combo">
-            {combo > 1 && (
-              <div className="combo-badge">
-                <span className="combo-count">{combo} COMBO</span>
-                <span className="combo-mult">{comboMultiplier}x</span>
-              </div>
-            )}
+      {/* HUD v3 */}
+      <div className="hud-v3">
+        {/* Top row: Level | Timer | Seeds */}
+        <div className="hud-row hud-row--top">
+          <div className="hud-level-badge">Lv.{level}</div>
+
+          <div className="hud-timer-wrap">
+            <div className={`hud-timer-bar ${slowMoActive ? 'hud-timer--slow' : ''}`}>
+              <div
+                className="hud-timer-fill"
+                style={{ width: `${timerPct}%`, background: timerColor }}
+              />
+              <span className="hud-timer-text">{Math.ceil(timer)}s</span>
+            </div>
           </div>
-          <div className={`timer-bar-container ${slowMoActive ? 'slowmo-glow' : ''}`}>
-            <div
-              className="timer-bar-fill"
-              style={{
-                width: `${timerPct}%`,
-                background: timerColor,
-                transition: 'width 0.1s linear',
-              }}
-            />
-            <div className="timer-text">{Math.ceil(timer)}s</div>
+
+          <div className="hud-seeds-chip">
+            <span className="hud-seeds-icon">🌾</span>
+            <span className="hud-seeds-val">{seeds}</span>
           </div>
-          <div className="hud-seeds">🌾{seeds}</div>
         </div>
-        <div className="hud-bottom">
-          <div className="powerup-slot">
+
+        {/* Bottom row: Powerup slot | Status badges */}
+        <div className="hud-row hud-row--bottom">
+          <div className="hud-powerup-slot">
             {activePowerup ? (
-              <div className="powerup-active">
-                {getPowerupIcon(activePowerup)}
-                {powerupTimer > 0 && <span className="powerup-timer">{powerupTimer}s</span>}
+              <div className="hud-powerup-active">
+                <span>{getPowerupIcon(activePowerup)}</span>
+                {powerupTimer > 0 && <span className="hud-powerup-timer">{powerupTimer}s</span>}
               </div>
             ) : (
-              <div className="powerup-empty">🔲</div>
+              <div className="hud-powerup-empty">—</div>
             )}
           </div>
-          {hasShield && <div className="shield-indicator">🛡️ SHIELD</div>}
-          {doubleScore && <div className="doublescore-indicator">⭐ 2X</div>}
-          {slowMoActive && <div className="slowmo-indicator">⏱️ SLOW</div>}
-          {modifiers.map(m => (
-            <div key={m} className={`mod-indicator ${m}-mod`}>
-              {m === 'fog' ? '🌫️ FOG' : '⚡ SPEED'}
-            </div>
-          ))}
+
+          <div className="hud-status-row">
+            {combo > 1 && (
+              <div className="hud-badge hud-badge--combo">
+                {combo}x <span className="hud-badge-sub">COMBO</span>
+              </div>
+            )}
+            {hasShield    && <div className="hud-badge hud-badge--shield">🛡️</div>}
+            {doubleScore  && <div className="hud-badge hud-badge--double">⭐ 2X</div>}
+            {slowMoActive && <div className="hud-badge hud-badge--slow">⏱️</div>}
+            {modifiers.includes('fog')   && <div className="hud-badge hud-badge--fog">🌫️ FOG</div>}
+            {modifiers.includes('speed') && <div className="hud-badge hud-badge--speed">⚡</div>}
+          </div>
         </div>
       </div>
 
@@ -1002,17 +1000,15 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             zIndex: 15,
           }}
         >
-          {visitedTiles.slice(-15).map((pos, i) => {
-            if (equippedTrail === 'none') return null;
-            // Center of tile
+          {equippedTrail !== 'none' && visitedTiles.slice(-12).map((pos, i) => {
             const x = (pos.c * (cellSize.w + 2) + cellSize.w / 2) / (cols * (cellSize.w + 2)) * 100;
             const y = (pos.r * (cellSize.h + 2) + cellSize.h / 2) / (rows * (cellSize.h + 2)) * 100;
             return (
               <TrailParticle
-                key={`trail-${i}`}
-                x={x}
-                y={y}
+                key={`trail-${i}-${pos.r}-${pos.c}`}
+                x={x} y={y}
                 trailId={equippedTrail}
+                index={i}
               />
             );
           })}
@@ -1049,14 +1045,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         </div>
       </div>
 
-      {/* Level complete overlay */}
-      {gamePhase === 'levelcomplete' && (
-        <div className="level-complete-overlay">
-          <div className="level-complete-text">LEVEL {level - 1} DONE! 🎉</div>
-          <div className="level-seeds-earned">+{levelSeeds} 🌾</div>
-          <div className="level-next-text">Next level incoming...</div>
-        </div>
-      )}
+      {/* Level complete — handled by LevelClearModal overlay in App.jsx */}
 
       {/* Hint */}
       {level === 1 && gamePhase === 'playing' && (
