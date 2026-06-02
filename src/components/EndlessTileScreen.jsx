@@ -195,7 +195,7 @@ export default function EndlessTileScreen({ onBack }) {
     });
 
     // Death check: if chicken falls below the screen (below bottom edge)
-    const chickenVisualY = chicken.r * 60 - scrollPos * 60;
+    const chickenVisualY = chickenPosRef.current.r * 60 - scrollPos * 60;
     if (chickenVisualY < -10) {
       triggerGameOver();
       return;
@@ -516,7 +516,7 @@ export default function EndlessTileScreen({ onBack }) {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justifyContent: center;
+            justify-content: center;
             z-index: 100;
         }
         .shake { animation: shake 0.5s infinite; }
