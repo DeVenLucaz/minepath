@@ -24,7 +24,7 @@ const LOGO_LETTERS = [
   { ch: 'H', color: '#FFD700' },
 ];
 
-export default function SanctuaryScreen({ onPlay, onShop, onLeaderboard, onSettings, onDaily, onAchievements, onSkillTree, onHubUpgrades }) {
+export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboard, onSettings, onDaily, onAchievements, onSkillTree, onHubUpgrades }) {
   const [seeds, setSeeds] = useState(0);
   const [equippedSkin, setEquippedSkin] = useState('classic');
   const [equippedPet, setEquippedPet] = useState(null);
@@ -107,6 +107,16 @@ export default function SanctuaryScreen({ onPlay, onShop, onLeaderboard, onSetti
         <div className="sanctuary-nav" style={{ marginTop: '5px' }}>
           <button className="sanctuary-btn-main" onClick={() => { audio.init(); onPlay(); }}>
             <span>🎮</span> PLAY
+          </button>
+
+          <button className="sanctuary-btn-main" 
+            style={{ 
+              background: 'linear-gradient(135deg, #FF9800, #F57C00)', 
+              fontSize: '18px'
+            }} 
+            onClick={() => { audio.init(); onEndless(); }}
+          >
+            <span>🌀</span> ENDLESS
           </button>
           
           <button className="sanctuary-btn-main" 

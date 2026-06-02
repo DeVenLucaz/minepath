@@ -3,6 +3,7 @@ import SanctuaryScreen from './components/SanctuaryScreen';
 import HubUpgradesScreen from './components/HubUpgradesScreen';
 import SkillTreeScreen from './components/SkillTreeScreen';
 import GameplayScreen from './components/GameplayScreen';
+import EndlessTileScreen from './components/EndlessTileScreen';
 import GameOverModal from './components/GameOverModal';
 import LevelClearModal from './components/LevelClearModal';
 import ShopScreen from './components/ShopScreen';
@@ -54,6 +55,7 @@ export default function App() {
   const goAchievements  = useCallback(() => setScreen('achievements'), []);
   const goSkillTree     = useCallback(() => setScreen('skilltree'), []);
   const goHubUpgrades    = useCallback(() => setScreen('hub_upgrades'), []);
+  const goEndless       = useCallback(() => setScreen('endless'), []);
 
   React.useEffect(() => {
     // Collect passive income
@@ -124,6 +126,7 @@ export default function App() {
       {screen === 'home' && (
         <SanctuaryScreen
           onPlay={goPlay}
+          onEndless={goEndless}
           onShop={goShop}
           onLeaderboard={goLeaderboard}
           onSettings={goSettings}
@@ -147,6 +150,11 @@ export default function App() {
             frozen={false} 
           />
         </div>
+      )}
+
+      {/* ── ENDLESS MODE ── */}
+      {screen === 'endless' && (
+        <EndlessTileScreen onBack={goHome} />
       )}
 
       {/* ── OTHER SCREENS ── */}
