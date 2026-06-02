@@ -116,39 +116,71 @@ function generateGrid(rows, cols, mineRate, level, isDaily) {
 }
 
 // ─── TRAIL PARTICLE ──────────────────────────────────────────────
-function TrailParticle({ x, y, trailId, index, total }) {
+function TrailParticle({ x, y, trailId, index, total, particleIndex = 0 }) {
   const trailData = TRAIL_EFFECTS.find(t => t.id === trailId);
   const colors = trailData?.particleColors || ['#FFD700','#FFF'];
-  const color = colors[index % colors.length];
-  const isBubble = trailId === 'bubble';
-  const isFlower = trailId === 'flower';
-  const isMusic  = trailId === 'music';
+  const color = colors[(index + particleIndex) % colors.length];
+  
+  const isSparkle = trailId === 'sparkle';
+  const isRainbow = trailId === 'rainbow';
+  const isBubble  = trailId === 'bubble';
+  const isFlower  = trailId === 'flower';
+  const isMusic   = trailId === 'music';
   
   // total is the number of historical positions. 
   // index is the position index (0 = oldest, total-1 = newest)
-  // We want newest to be most opaque.
   const ageFactor = index / (total || 1); 
   const opacity  = Math.max(0.1, ageFactor * 0.8);
-  const size     = Math.max(4, 6 + ageFactor * 10);
+  const baseSize = (isFlower || isMusic) ? 14 : isBubble ? 12 : 8;
+  const size     = Math.max(4, baseSize + ageFactor * 10);
+
+  // Content and custom styles for variety
+  let content = null;
+  let customStyle = {};
+
+  if (isFlower) {
+    const flowers = ['🌸', '🌼', '🌻', '🌺', '🌷'];
+    content = flowers[(index + particleIndex) % flowers.length];
+    customStyle = { fontSize: `${size}px`, background: 'none', boxShadow: 'none' };
+  } else if (isMusic) {
+    const notes = ['🎵', '🎶', '♪', '♫', '♬'];
+    content = notes[(index + particleIndex) % notes.length];
+    customStyle = { fontSize: `${size}px`, background: 'none', boxShadow: 'none', color };
+  } else if (isSparkle) {
+    content = '✨';
+    customStyle = { fontSize: `${size}px`, background: 'none', boxShadow: 'none' };
+  } else if (isBubble) {
+    customStyle = {
+      background: 'rgba(255,255,255,0.2)',
+      border: `1.5px solid ${color}`,
+      boxShadow: `inset -2px -2px 4px rgba(255,255,255,0.4), 0 0 5px ${color}`,
+    };
+  } else if (isRainbow) {
+    customStyle = {
+      boxShadow: `0 0 12px ${color}, 0 0 4px #fff`,
+      border: '1px solid #fff',
+      background: color,
+    };
+  } else {
+    // Default fallback
+    customStyle = { background: color, boxShadow: `0 0 8px ${color}` };
+  }
 
   return (
     <div className={`trail-particle trail-particle--${trailId}`} style={{
       left: x + '%',
       top: y + '%',
-      background: isBubble ? 'transparent' : color,
-      border: isBubble ? `2px solid ${color}` : 'none',
-      boxShadow: isBubble ? 'none' : `0 0 8px ${color}`,
       opacity,
       width: size,
       height: size,
-      borderRadius: isMusic ? '2px' : '50%',
-      fontSize: isFlower ? '10px' : isMusic ? '11px' : undefined,
-      display: (isFlower || isMusic) ? 'flex' : undefined,
-      alignItems: (isFlower || isMusic) ? 'center' : undefined,
-      justifyContent: (isFlower || isMusic) ? 'center' : undefined,
+      borderRadius: (isMusic || isFlower || isSparkle) ? '0' : '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      pointerEvents: 'none',
+      ...customStyle
     }}>
-      {isFlower && '🌸'}
-      {isMusic && ['🎵','🎶','♪'][index % 3]}
+      {content}
     </div>
   );
 }
@@ -1053,11 +1085,17 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             const centerX = (pos.c * (cellSize.w + 2) + cellSize.w / 2) / (cols * (cellSize.w + 2)) * 100;
             const centerY = (pos.r * (cellSize.h + 2) + cellSize.h / 2) / (rows * (cellSize.h + 2)) * 100;
             
-            // Spawn 3 scattered particles per step
-            return [0, 1, 2].map(j => {
-              // Stable pseudo-random offsets based on index
-              const offsetX = ((j * 17) % 11 - 5) * 0.8; 
-              const offsetY = ((j * 23) % 13 - 6) * 0.8;
+            // Randomize dot count per tile (5-10) using a stable seed based on tile position
+            const dotSeed = pos.r * 100 + pos.c;
+            const numDots = 5 + (dotSeed % 6);
+            
+            return Array.from({ length: numDots }).map((_, j) => {
+              // Stable deterministic pseudo-random offsets
+              const pSeed = dotSeed + j * 37;
+              // Random spread relative to cell size, slightly shifted "below" (positive Y)
+              const offsetX = (Math.sin(pSeed) * 5); 
+              const offsetY = (Math.cos(pSeed * 0.8) * 4) + 3; 
+              
               return (
                 <TrailParticle
                   key={`trail-${i}-${j}-${pos.r}-${pos.c}`}
@@ -1065,6 +1103,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
                   y={centerY + offsetY}
                   trailId={equippedTrail}
                   index={i}
+                  particleIndex={j}
                   total={visitedTiles.slice(-15).length}
                 />
               );

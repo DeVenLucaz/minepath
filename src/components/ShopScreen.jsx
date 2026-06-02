@@ -30,22 +30,56 @@ function TrailPreview({ trail }) {
   if (trail.id === 'none') {
     return <div className="sp-trail-preview sp-trail-none">✗</div>;
   }
+  
+  const isFlower = trail.id === 'flower';
+  const isMusic  = trail.id === 'music';
+  const isSparkle = trail.id === 'sparkle';
+  const isBubble = trail.id === 'bubble';
+
   return (
     <div className="sp-trail-preview">
       <div className="sp-trail-dots">
-        {[0,1,2,3,4].map(i => (
-          <div
-            key={i}
-            className="sp-trail-dot"
-            style={{
-              background: trail.particleColors[i % trail.particleColors.length],
-              opacity: 1 - i * 0.15,
-              width: `${14 - i * 1.5}px`,
-              height: `${14 - i * 1.5}px`,
-              animationDelay: `${i * 0.12}s`,
-            }}
-          />
-        ))}
+        {[0,1,2,3,4].map(i => {
+          const color = trail.particleColors[i % trail.particleColors.length];
+          let content = null;
+          let style = {
+            background: color,
+            opacity: 1 - i * 0.15,
+            width: `${16 - i * 2}px`,
+            height: `${16 - i * 2}px`,
+            animationDelay: `${i * 0.12}s`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          };
+          
+          if (isFlower) {
+            content = ['🌸', '🌼', '🌻'][i % 3];
+            style.background = 'none';
+            style.fontSize = `${16 - i * 2}px`;
+          } else if (isMusic) {
+            content = ['🎵', '🎶', '♪'][i % 3];
+            style.background = 'none';
+            style.color = color;
+            style.fontSize = `${16 - i * 2}px`;
+          } else if (isSparkle) {
+            content = '✨';
+            style.background = 'none';
+            style.fontSize = `${16 - i * 2}px`;
+          } else if (isBubble) {
+            style.background = 'rgba(255,255,255,0.2)';
+            style.border = `1.5px solid ${color}`;
+            style.boxShadow = `inset -1px -1px 2px rgba(255,255,255,0.4)`;
+          } else if (trail.id === 'rainbow') {
+            style.boxShadow = `0 0 6px ${color}`;
+          }
+
+          return (
+            <div key={i} className="sp-trail-dot" style={style}>
+              {content}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
