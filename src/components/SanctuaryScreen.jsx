@@ -45,7 +45,6 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
     const now = Date.now();
     setHasReadyEggs(eggs.some(e => e.status === 'ready' || now >= e.hatchTime));
 
-    audio.startBackground();
     const t = setInterval(() => setBounce(b => !b), 900);
     return () => clearInterval(t);
   }, []);

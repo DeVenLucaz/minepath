@@ -45,7 +45,6 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
       const ach = gameStore.getAchievements();
       const claimed = Object.values(ach).filter(v => v === true || (typeof v === 'number' && v > 0)).length;
       setFeats(claimed);
-      audio.startBackground();
     } catch (e) {
       console.error('Home init error:', e);
     }

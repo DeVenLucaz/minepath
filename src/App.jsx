@@ -28,7 +28,14 @@ export default function App() {
   // ── Navigation helpers ──
   const goHome = useCallback(() => {
     audio.init();
-    if (screen === 'game' || screen === 'endless') audio.fadeOutBackground();
+    if (screen === 'game' || screen === 'endless') {
+      audio.fadeOutBackground();
+      setTimeout(() => {
+        audio.startBackground();
+      }, 600);
+    } else {
+      audio.startBackground();
+    }
     setCurrentLevel(1);
     setIsDaily(false);
     setScreen('home');

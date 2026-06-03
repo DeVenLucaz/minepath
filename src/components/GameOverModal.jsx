@@ -23,7 +23,6 @@ export default function GameOverModal({ level, seeds, onRetry, onHome, skinId = 
   useEffect(() => {
     setTotalSeeds(gameStore.getSeeds());
     setBestLevel(gameStore.getBestLevel());
-    audio.startBackground();
   }, []);
 
   return (

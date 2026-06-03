@@ -1190,7 +1190,6 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   // --- 5. EFFECTS ---
   useEffect(() => {
     initLevel(startLevel);
-    audio.startBackground();
     setWarpStepUsed(false);
     setPossessionUsed(false);
     setPeekCount(0);
