@@ -47,12 +47,12 @@ export const hubStore = {
     const buildings = this.getBuildings();
     const siloLvl = buildings.silo || 0;
     
-    if (siloLvl === 0) {
+    if (siloLvl === 0 || now <= last) {
       safeSet(STORAGE_KEYS.LAST_COLLECT, now);
       return 0;
     }
 
-    const hours = (now - last) / (1000 * 60 * 60);
+    const hours = Math.min(24, (now - last) / (1000 * 60 * 60)); // Cap at 24h to prevent extreme exploits
     const amount = Math.floor(hours * siloLvl * 5); // 5 seeds per hour per level
     
     if (amount > 0) {

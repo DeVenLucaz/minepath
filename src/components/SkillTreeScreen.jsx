@@ -81,40 +81,36 @@ export default function SkillTreeScreen({ onBack }) {
     const skinLocked = skill.path === 'skin' && !ownedSkins.includes(skill.skinId);
     const isLocked = tierLocked || skinLocked;
     const canAfford = feathers >= skill.cost;
+
+    const rarityClasses = {
+      basic: 'text-accent-green border-accent-green/30 bg-accent-green/10',
+      rare: 'text-accent-blue border-accent-blue/30 bg-accent-blue/10',
+      epic: 'text-accent-purple border-accent-purple/30 bg-accent-purple/10'
+    };
     
     return (
-      <div key={skill.id} className={`st-node ${isUnlocked ? 'st-node--unlocked' : ''}`} style={isLocked ? { opacity: 0.7 } : {}}>
-        <div style={{ 
-          backgroundColor: rarityColors[skill.rarity],
-          color: 'white',
-          fontSize: '8px',
-          padding: '2px 6px',
-          borderRadius: '10px',
-          marginBottom: '4px',
-          fontWeight: 900,
-          textTransform: 'uppercase'
-        }}>
+      <div key={skill.id} className={`st-node ${isUnlocked ? 'st-node--unlocked' : ''}`} style={isLocked ? { opacity: 0.6 } : {}}>
+        <div className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border w-fit mb-1 tracking-wider ${rarityClasses[skill.rarity]}`}>
           {skill.rarity} • {rarityTiers[skill.rarity]}
         </div>
         <div className="st-node-icon">{skill.icon}</div>
         <div className="st-node-name">
-          {isLocked && !isUnlocked && <span style={{ marginRight: '4px' }}>🔒</span>}
+          {isLocked && !isUnlocked && <span className="mr-1">🔒</span>}
           {skill.name}
         </div>
-        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', margin: '4px 0', minHeight: '30px' }}>
+        <div className="text-[11px] text-secondary mt-1 mb-2 min-h-[32px] leading-tight">
           {skill.description}
         </div>
         
         {isUnlocked ? (
-          <div style={{ color: '#4CAF50', fontWeight: 900, fontSize: '11px', marginTop: '4px' }}>UNLOCKED</div>
+          <div className="text-accent-green font-black text-xs mt-1 uppercase tracking-tighter">Unlocked</div>
         ) : (
           <button 
             className="st-unlock-btn" 
             onClick={() => handleUnlock(skill)}
             disabled={isLocked || !canAfford}
-            style={isLocked ? { background: '#444', color: '#888', cursor: 'not-allowed' } : {}}
           >
-            {isLocked ? `LOCKED (${skill.cost}🪶)` : `UNLOCK (${skill.cost}🪶)`}
+            {isLocked ? `Locked` : `Unlock (${skill.cost}🪶)`}
           </button>
         )}
       </div>
@@ -122,8 +118,8 @@ export default function SkillTreeScreen({ onBack }) {
   };
 
   return (
-    <div className="skill-tree-screen screen-base">
-      <TopBar title="SKILL TREE" onBack={onBack} />
+    <div className="skill-tree-screen">
+      <TopBar title="SKILL TREE" onBack={onBack} showSeeds={false} />
 
       <button 
         onClick={() => setShowHelp(true)}
@@ -135,60 +131,43 @@ export default function SkillTreeScreen({ onBack }) {
       
       <div className="st-header">
         <div className="st-player-info">
-          <div style={{ color: 'white', fontWeight: 900, fontSize: '18px' }}>Level {level}</div>
+          <div className="text-primary font-black text-lg">Level {level}</div>
           <div className="st-xp-bar">
             <div className="st-xp-fill" style={{ width: `${xpPct}%` }} />
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', marginTop: '2px' }}>
+          <div className="text-muted text-[10px] font-bold mt-1 uppercase tracking-widest">
             {xp} / {xpToNext} XP
           </div>
         </div>
         <div className="st-stat-badge">
-          <span>🪶</span> {feathers}
+          <span className="text-lg">🪶</span> <span>{feathers}</span>
         </div>
       </div>
       
-      <div style={{ 
-        textAlign: 'center', 
-        fontSize: '10px', 
-        color: 'rgba(255,255,255,0.4)', 
-        marginTop: '-10px', 
-        marginBottom: '10px',
-        padding: '0 20px',
-        lineHeight: '1.4'
-      }}>
+      <div className="text-center text-[10px] text-muted px-6 mt-2 mb-4 leading-relaxed font-medium uppercase tracking-tight">
         🪶 Earn feathers: Level up (+1 each) • Hatch Brown eggs (20% chance) • Hatch Blue eggs (40% chance)
       </div>
 
-      <div className="st-path-container" style={{ flex: 1, overflowY: 'auto', paddingBottom: '40px' }}>
+      <div className="st-path-container">
         {paths.map(pathId => (
           <div key={pathId} className="st-path">
-            <div className="st-path-title">{pathId.toUpperCase()} PATH</div>
+            <div className="st-path-title">{pathId} Path</div>
             <div className="st-nodes">
               {SKILLS.filter(s => s.path === pathId).map(skill => renderSkillNode(skill))}
             </div>
           </div>
         ))}
 
-        <div style={{ 
-          margin: '30px 20px 10px', 
-          paddingTop: '20px', 
-          borderTop: '1px solid rgba(255,255,255,0.1)',
-          textAlign: 'center',
-          fontSize: '18px',
-          fontWeight: 900,
-          color: '#FFD700',
-          letterSpacing: '2px'
-        }}>
-          SKIN SKILLS
+        <div className="mt-8 mb-2 pt-6 border-t border-white/10 text-center text-lg font-black text-gold tracking-widest uppercase">
+          Skin Skills
         </div>
 
         {skinIds.map(skinId => {
           const isSkinOwned = ownedSkins.includes(skinId);
           return (
-            <div key={skinId} className="st-path" style={{ marginBottom: '20px' }}>
-              <div className="st-path-title" style={{ opacity: isSkinOwned ? 1 : 0.5 }}>
-                {skinNames[skinId].toUpperCase()}
+            <div key={skinId} className="st-path mb-6">
+              <div className="st-path-title" style={{ opacity: isSkinOwned ? 1 : 0.4 }}>
+                {skinNames[skinId]}
               </div>
               <div className="st-nodes">
                 {SKILLS.filter(s => s.path === 'skin' && s.skinId === skinId).map(skill => renderSkillNode(skill))}

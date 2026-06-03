@@ -106,7 +106,7 @@ export default function LeaderboardScreen({ onBack }) {
                   <div className="lb-podium-crown">{pc.crown}</div>
                   {/* Chicken avatar */}
                   <div className="lb-podium-chicken">
-                    <ChickenSVG skinId={player.skin} mood="happy" size={rank === 0 ? 72 : 58}/>
+                    <ChickenSVG skinId={player.skin} mood="happy" size={rank === 0 ? 72 : 58} focus={rank === 0 ? null : (rank === 1 ? 'right' : 'left')}/>
                   </div>
                   {/* Name + score */}
                   <div className="lb-podium-name">{player.name}</div>
@@ -114,7 +114,7 @@ export default function LeaderboardScreen({ onBack }) {
                   {/* Pedestal */}
                   <div
                     className="lb-pedestal"
-                    style={{ height: h, background: pc.bg, boxShadow: `0 6px 0 ${pc.shadow}` }}
+                    style={{ height: h }}
                   >
                     <span className="lb-pedestal-num">{pc.label}</span>
                   </div>
@@ -175,14 +175,14 @@ export default function LeaderboardScreen({ onBack }) {
                 <div className="lb-runs-header">
                   <span>Rank</span>
                   <span>Level</span>
-                  <span>Seeds 🌾</span>
+                  <span>Seeds</span>
                   <span>Date</span>
                 </div>
                 {myRuns.map((run, i) => (
                   <div key={i} className={`lb-run-row ${i === 0 ? 'lb-run-row--best' : ''}`}>
                     <span className="lb-run-rank">#{i + 1}</span>
                     <span className="lb-run-level">Lv.{run.level}</span>
-                    <span className="lb-run-seeds">{(run.seeds || 0).toLocaleString()}</span>
+                    <span className="lb-run-seeds">{(run.seeds || 0).toLocaleString()} 🌾</span>
                     <span className="lb-run-date">{run.date}</span>
                   </div>
                 ))}

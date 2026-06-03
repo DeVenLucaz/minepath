@@ -10,32 +10,19 @@ export default function RewardModal({ isOpen, title, message, rewardEmoji, onCon
             initial={{ scale: 0.5, opacity: 0, y: 40 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.5, opacity: 0, y: 40 }}
-            className="modal-card"
-            style={{ padding: '24px', textAlign: 'center', gap: '16px' }}
+            className="modal-card p-6 text-center gap-4"
           >
-            <div style={{ fontSize: '64px', marginBottom: '8px' }}>{rewardEmoji || '🎁'}</div>
-            <h2 style={{ 
-              fontSize: '24px', 
-              fontWeight: 900, 
-              color: '#1a1a1a',
-              margin: 0,
-              textTransform: 'uppercase',
-              letterSpacing: '1px'
-            }}>
+            <div className="text-6xl mb-2">{rewardEmoji || '🎁'}</div>
+            <h2 className="text-2xl font-black text-primary uppercase tracking-tight m-0" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.4)' }}>
               {title || 'REWARD!'}
             </h2>
-            <p style={{ 
-              fontSize: '16px', 
-              color: '#666', 
-              lineHeight: 1.5,
-              margin: 0
-            }}>
+            <p className="text-base text-secondary leading-relaxed m-0 font-bold px-4">
               {message}
             </p>
             <button 
-              className="mo-btn mo-btn--retry" 
-              style={{ width: '100%', margin: '8px 0 0' }}
+              className="mo-btn mo-btn--retry w-full mt-2" 
               onClick={onConfirm}
+              style={{ textShadow: 'var(--text-stroke-white)' }}
             >
               AWESOME!
             </button>

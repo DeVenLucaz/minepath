@@ -153,19 +153,14 @@ const RARITY_COLORS = {
 
 function RarityBadge({ rarity }) {
   if (!rarity) return null;
+  const colors = {
+    common: 'text-slate-400 border-slate-400/30 bg-slate-400/10',
+    rare: 'text-blue-400 border-blue-400/30 bg-blue-400/10',
+    epic: 'text-purple-400 border-purple-400/30 bg-purple-400/10',
+    legendary: 'text-gold border-gold/30 bg-gold/10'
+  };
   return (
-    <div style={{
-      fontSize: '8px',
-      fontWeight: '900',
-      textTransform: 'uppercase',
-      padding: '2px 6px',
-      borderRadius: '6px',
-      background: RARITY_COLORS[rarity] || '#555',
-      color: 'white',
-      width: 'fit-content',
-      marginBottom: '4px',
-      letterSpacing: '0.5px'
-    }}>
+    <div className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border w-fit mb-1 tracking-wider ${colors[rarity] || colors.common}`}>
       {rarity}
     </div>
   );
@@ -272,7 +267,7 @@ export default function ShopScreen({ onBack }) {
 
   return (
     <div className="shop-screen">
-      <TopBar title="SHOP" onBack={onBack} />
+      <TopBar title="SHOP" onBack={onBack} seeds={seeds} />
 
       <button 
         onClick={() => setShowHelp(true)}
@@ -306,9 +301,7 @@ export default function ShopScreen({ onBack }) {
         {tab === 'skins' && CHICKEN_SKINS.map(skin => {
           const owned    = unlockedSkins.includes(skin.id);
           const equipped = equippedSkin === skin.id;
-          const isNinja  = skin.id === 'ninja';
           
-          // Determine rarity based on price
           let rarity = 'common';
           if (skin.price >= 800) rarity = 'legendary';
           else if (skin.price >= 500) rarity = 'epic';
@@ -318,33 +311,16 @@ export default function ShopScreen({ onBack }) {
             <div
               key={skin.id}
               className={`sp-card ${equipped ? 'sp-card--equipped' : ''}`}
-              style={{
-                background: equipped
-                  ? `linear-gradient(135deg, ${skin.cardColor}, ${skin.cardColor}dd)`
-                  : owned ? `${skin.cardColor}aa` : 'rgba(255,255,255,0.07)',
-                borderColor: equipped ? skin.cardBorder : owned ? `${skin.cardBorder}66` : 'rgba(255,255,255,0.1)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}
             >
-              {!owned && <div style={{ position: 'absolute', top: 5, right: 10, fontSize: '14px', opacity: 0.2 }}>🔒</div>}
-              {/* Chicken SVG preview */}
+              {!owned && <div className="absolute top-2 right-3 text-xs opacity-20">🔒</div>}
               <div className="sp-card-art">
-                <ChickenSVG skinId={skin.id} mood="normal" size={72}/>
+                <ChickenSVG skinId={skin.id} mood="normal" size={72} focus={equipped ? 'right' : null}/>
               </div>
               <div className="sp-card-info">
                 <RarityBadge rarity={rarity} />
-                <div className="sp-card-name" style={{ color: isNinja ? '#fff' : '#1a1a1a' }}>
-                  {skin.name}
-                </div>
-                <div className="sp-card-desc" style={{ color: isNinja ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
-                  {skin.description}
-                </div>
-                {equipped && (
-                  <div className="sp-equipped-badge">
-                    <span>✅</span> Equipped
-                  </div>
-                )}
+                <div className="sp-card-name">{skin.name}</div>
+                <div className="sp-card-desc">{skin.description}</div>
+                {equipped && <div className="sp-equipped-badge"><span>✅</span> Equipped</div>}
               </div>
               <ActionBtn
                 owned={owned} equipped={equipped}
@@ -364,13 +340,8 @@ export default function ShopScreen({ onBack }) {
             <div
               key={style.id}
               className={`sp-card ${equipped ? 'sp-card--equipped' : ''}`}
-              style={{
-                background: equipped ? 'rgba(255,215,0,0.15)' : owned ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)',
-                borderColor: equipped ? 'rgba(255,215,0,0.5)' : 'rgba(255,255,255,0.1)',
-                position: 'relative'
-              }}
             >
-              {!owned && <div style={{ position: 'absolute', top: 5, right: 10, fontSize: '14px', opacity: 0.2 }}>🔒</div>}
+              {!owned && <div className="absolute top-2 right-3 text-xs opacity-20">🔒</div>}
               <TilePreview style={style}/>
               <div className="sp-card-info">
                 <div className="sp-card-name">{style.name}</div>
@@ -394,15 +365,8 @@ export default function ShopScreen({ onBack }) {
             <div
               key={trail.id}
               className={`sp-card ${equipped ? 'sp-card--equipped' : ''}`}
-              style={{
-                background: equipped
-                  ? `${trail.cardAccent}22`
-                  : owned ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)',
-                borderColor: equipped ? `${trail.cardAccent}88` : 'rgba(255,255,255,0.1)',
-                position: 'relative'
-              }}
             >
-              {!owned && <div style={{ position: 'absolute', top: 5, right: 10, fontSize: '14px', opacity: 0.2 }}>🔒</div>}
+              {!owned && <div className="absolute top-2 right-3 text-xs opacity-20">🔒</div>}
               <TrailPreview trail={trail}/>
               <div className="sp-card-info">
                 <div className="sp-card-name">{trail.name}</div>
@@ -427,17 +391,10 @@ export default function ShopScreen({ onBack }) {
             <div
               key={pet.id}
               className={`sp-card ${equipped ? 'sp-card--equipped' : ''}`}
-              style={{
-                background: equipped
-                  ? `${pet.cardAccent}22`
-                  : owned ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)',
-                borderColor: equipped ? `${pet.cardAccent}88` : 'rgba(255,255,255,0.1)',
-                position: 'relative'
-              }}
             >
-              {!owned && <div style={{ position: 'absolute', top: 5, right: 10, fontSize: '14px', opacity: 0.2 }}>🔒</div>}
+              {!owned && <div className="absolute top-2 right-3 text-xs opacity-20">🔒</div>}
               <div className="sp-card-art">
-                <PetSVG petId={pet.id} size={70}/>
+                <PetSVG petId={pet.id} size={70} mood={equipped ? 'happy' : 'normal'}/>
               </div>
               <div className="sp-card-info">
                 <RarityBadge rarity={pet.rarity} />
@@ -447,7 +404,6 @@ export default function ShopScreen({ onBack }) {
                   ⚡ {pet.bonus === 'seed_bonus' ? `+${Math.round(pet.bonusVal * abilityPower * 100)}% seeds` :
                      pet.bonus === 'time_bonus' ? `+${Math.round(pet.bonusVal * abilityPower)}s time` :
                      pet.bonusLabel}
-                  {abilityPower > 1 && <span style={{ fontSize: '9px', opacity: 0.7, marginLeft: '4px' }}>(BOOSTED)</span>}
                 </div>
                 {equipped && <div className="sp-equipped-badge"><span>✅</span> Equipped</div>}
               </div>

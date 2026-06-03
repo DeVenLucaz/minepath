@@ -93,40 +93,42 @@ export default function LevelClearModal({
         </div>
 
         {/* Stats Section — Breakdown */}
-        <div className="lc-stats-section" style={{ padding: '0 25px', margin: '15px 0' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px' }}>
-              <span style={{ color: '#666' }}>🌾 Tile Seeds</span>
-              <span style={{ fontWeight: 'bold' }}>{tileSeedsCollected}</span>
+        <div className="lc-stats-section">
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-secondary">🌾 Tile Seeds</span>
+              <span className="font-bold text-primary">{tileSeedsCollected}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px' }}>
-              <span style={{ color: '#666' }}>⭐ Level Reward:</span>
-              <span style={{ fontWeight: 'bold' }}>{baseLevelReward}</span>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-secondary">⭐ Level Reward</span>
+              <span className="font-bold text-primary">{baseLevelReward}</span>
             </div>
             {multiplierBonusSeeds > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', color: '#FFA000' }}>
-                <span>🔥 Multipliers:</span>
-                <span style={{ fontWeight: 'bold' }}>+{multiplierBonusSeeds}</span>
+              <div className="flex justify-between items-center text-sm text-gold">
+                <span>🔥 Multipliers</span>
+                <span className="font-bold">+{multiplierBonusSeeds}</span>
               </div>
             )}
             {petBonusSeeds > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', color: '#4CAF50' }}>
-                <span>🐾 Pet Bonus:</span>
-                <span style={{ fontWeight: 'bold' }}>+{petBonusSeeds}</span>
+              <div className="flex justify-between items-center text-sm text-accent-green">
+                <span>🐾 Pet Bonus</span>
+                <span className="font-bold">+{petBonusSeeds}</span>
               </div>
             )}
             {skillBonusSeeds > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', color: '#2196F3' }}>
-                <span>✨ Skill Bonus:</span>
-                <span style={{ fontWeight: 'bold' }}>+{skillBonusSeeds}</span>
+              <div className="flex justify-between items-center text-sm text-accent-blue">
+                <span>✨ Skill Bonus</span>
+                <span className="font-bold">+{skillBonusSeeds}</span>
               </div>
             )}
             
-            <div style={{ height: '1px', background: '#eee', margin: '5px 0' }} />
+            <div className="h-px bg-white/10 my-2" />
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: '900' }}>
-              <span>TOTAL:</span>
-              <span style={{ color: '#F9A825' }}>{tileSeedsCollected + baseLevelReward + petBonusSeeds + skillBonusSeeds + multiplierBonusSeeds}</span>
+            <div className="flex justify-between items-center text-lg font-black">
+              <span className="text-primary">TOTAL</span>
+              <span className="text-gold" style={{ textShadow: '0 0 10px rgba(250, 204, 21, 0.4)' }}>
+                {tileSeedsCollected + baseLevelReward + petBonusSeeds + skillBonusSeeds + multiplierBonusSeeds}
+              </span>
             </div>
           </div>
         </div>
@@ -151,8 +153,8 @@ export default function LevelClearModal({
           >
             <span style={{ fontSize: '24px' }}>{currentEgg.icon}</span>
             <div>
-              <div style={{ fontSize: '12px', fontWeight: 'bold', color: currentEgg.border, letterSpacing: '0.5px' }}>EGG FOUND!</div>
-              <div style={{ fontSize: '14px', color: '#333' }}>{currentEgg.text}</div>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: currentEgg.border, letterSpacing: '0.5px', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>EGG FOUND!</div>
+              <div className="text-primary font-bold text-sm" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{currentEgg.text}</div>
             </div>
           </motion.div>
         )}

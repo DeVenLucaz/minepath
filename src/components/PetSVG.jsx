@@ -88,7 +88,7 @@ const BunnBunn = () => (
   </g>
 );
 
-const PetSVG = ({ petId, size = 60, animClass = '' }) => {
+const PetSVG = ({ petId, size = 60, animClass = '', mood = 'normal' }) => {
   let content = null;
   let idleClass = '';
   
@@ -152,7 +152,21 @@ const PetSVG = ({ petId, size = 60, animClass = '' }) => {
         .pet-bonus-sparky { animation: pet-bonus-sparky 0.4s ease-out 1; }
         .pet-bonus-bunn { animation: pet-bonus-bunn 0.5s ease-out 1; }
       `}</style>
-      {content}
+      
+      {/* ── DYNAMIC SHADOW ── */}
+      <ellipse 
+        cx="50" cy="92" rx="25" ry="5" 
+        fill="rgba(0,0,0,0.35)"
+        style={{ animation: 'dynamicShadow 1.2s infinite alternate ease-in-out', transformOrigin: 'center center' }}
+      />
+      
+      <g style={{ animation: mood === 'sad' ? 'none' : 'squashStretch 1.2s infinite alternate ease-in-out', transformOrigin: 'center bottom' }}>
+        {content}
+        {/* Rim Light Overlay */}
+        <g opacity="0.15">
+           <circle cx="35" cy="35" r="15" fill="white" />
+        </g>
+      </g>
     </svg>
   );
 };

@@ -1,13 +1,13 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { gameStore } from '../store/gameStore';
+import PetSVG from './PetSVG';
 
-// Title letter colors — each screen gets its own palette
 const TITLE_PALETTES = {
-  SHOP:     ['#FF5C5C','#FFB347','#FFD700','#5CFF8F'],
-  SCORES:   ['#5CB8FF','#A78BFA','#FF5CDB','#FFD700'],
-  SETTINGS: ['#5CFF8F','#FFD700','#FF5C5C','#5CB8FF'],
-  FEATS:    ['#FFD700','#FF5C5C','#A78BFA','#5CFF8F','#FFB347'],
-  DEFAULT:  ['#FFD700','#FF5C5C','#5CFF8F','#5CB8FF'],
+  SHOP:     ['#FFFFFF'],
+  SCORES:   ['#FFFFFF'],
+  SETTINGS: ['#FFFFFF'],
+  FEATS:    ['#FFFFFF'],
+  DEFAULT:  ['#FFFFFF'],
 };
 
 function BubblyTitle({ text, palette }) {
@@ -27,27 +27,41 @@ function BubblyTitle({ text, palette }) {
   );
 }
 
-export default function TopBar({ title, onBack, showSeeds = true }) {
+export default function TopBar({ title, onBack, showSeeds = true, mood = 'normal' }) {
   const seeds = gameStore.getSeeds();
   const palette = TITLE_PALETTES[title.toUpperCase()] || TITLE_PALETTES.DEFAULT;
+  const equippedPet = useMemo(() => gameStore.getEquippedPet(), []);
 
   return (
-    <div className="topbar">
-      <button className="topbar-back" onClick={onBack}>
+    <div className="topbar" style={{ zIndex: 100 }}>
+      <button 
+        type="button"
+        className="topbar-back" 
+        onClick={(e) => { e.stopPropagation(); onBack && onBack(); }}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <span className="topbar-back-arrow">‹</span>
         <span className="topbar-back-text">Back</span>
       </button>
 
       <BubblyTitle text={title} palette={palette} />
 
-      {showSeeds ? (
-        <div className="topbar-seeds">
-          <span className="topbar-seeds-icon">🌾</span>
-          <span className="topbar-seeds-val">{seeds}</span>
-        </div>
-      ) : (
-        <div className="topbar-seeds-spacer" />
-      )}
+      <div className="flex items-center gap-3">
+        {showSeeds && (
+          <div className="topbar-seeds">
+            <span className="topbar-seeds-icon">🌾</span>
+            <span className="topbar-seeds-val">{seeds}</span>
+          </div>
+        )}
+
+        {equippedPet && (
+          <div className="w-10 h-10 bg-white/5 rounded-full border border-white/10 flex items-center justify-center overflow-hidden backdrop-blur-md">
+            <PetSVG petId={equippedPet} size={32} mood={mood} />
+          </div>
+        )}
+        
+        {!equippedPet && !showSeeds && <div className="topbar-seeds-spacer" />}
+      </div>
     </div>
   );
 }

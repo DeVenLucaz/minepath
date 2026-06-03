@@ -122,9 +122,10 @@ function TrailParticle({ x, y, trailId, index, total, particleIndex = 0 }) {
   const isMusic   = trailId === 'music';
   
   const ageFactor = index / (total || 1); 
-  const opacity  = Math.max(0.1, ageFactor * 0.8);
-  const baseSize = (isFlower || isMusic) ? 14 : isBubble ? 12 : 8;
-  const size     = Math.max(4, baseSize + ageFactor * 10);
+  const opacity  = Math.max(0, ageFactor * 0.9);
+  const baseSize = (isFlower || isMusic) ? 16 : isBubble ? 14 : 10;
+  const size     = baseSize * ageFactor; // Grow as they get newer
+  const rotation = (index * 20 + particleIndex * 45) % 360;
 
   let content = null;
   let customStyle = {};
@@ -132,28 +133,41 @@ function TrailParticle({ x, y, trailId, index, total, particleIndex = 0 }) {
   if (isFlower) {
     const flowers = ['🌸', '🌼', '🌻', '🌺', '🌷'];
     content = flowers[(index + particleIndex) % flowers.length];
-    customStyle = { fontSize: `${size}px`, background: 'none', boxShadow: 'none' };
+    customStyle = { fontSize: `${size}px`, background: 'none', boxShadow: 'none', transform: `rotate(${rotation}deg)` };
   } else if (isMusic) {
     const notes = ['🎵', '🎶', '♪', '♫', '♬'];
     content = notes[(index + particleIndex) % notes.length];
-    customStyle = { fontSize: `${size}px`, background: 'none', boxShadow: 'none', color };
+    customStyle = { fontSize: `${size}px`, background: 'none', boxShadow: 'none', color, transform: `rotate(${rotation}deg)` };
   } else if (isSparkle) {
-    content = '✨';
-    customStyle = { fontSize: `${size}px`, background: 'none', boxShadow: 'none' };
+    content = '✦';
+    customStyle = { 
+      fontSize: `${size}px`, 
+      background: 'none', 
+      boxShadow: 'none', 
+      color: '#FFF176',
+      textShadow: '0 0 10px gold',
+      transform: `rotate(${rotation}deg) scale(${0.5 + ageFactor * 0.5})`
+    };
   } else if (isBubble) {
     customStyle = {
-      background: 'rgba(255,255,255,0.2)',
+      background: 'rgba(255,255,255,0.1)',
       border: `1.5px solid ${color}`,
-      boxShadow: `inset -2px -2px 4px rgba(255,255,255,0.4), 0 0 5px ${color}`,
+      boxShadow: `inset -2px -2px 4px rgba(255,255,255,0.3), 0 0 8px ${color}`,
+      transform: `scale(${0.4 + ageFactor * 0.6})`
     };
   } else if (isRainbow) {
     customStyle = {
-      boxShadow: `0 0 12px ${color}, 0 0 4px #fff`,
-      border: '1px solid #fff',
+      boxShadow: `0 0 15px ${color}, 0 0 5px #fff`,
+      border: '1px solid rgba(255,255,255,0.5)',
       background: color,
+      transform: `rotate(${rotation}deg) scale(${0.3 + ageFactor * 0.7})`
     };
   } else {
-    customStyle = { background: color, boxShadow: `0 0 8px ${color}` };
+    customStyle = { 
+      background: color, 
+      boxShadow: `0 0 10px ${color}`,
+      transform: `scale(${ageFactor})`
+    };
   }
 
   return (
@@ -181,17 +195,26 @@ function Chicken({ skin, animState, position, cellW, cellH, isMagnetActive, skin
   const pixelY = position.r * (cellH + 2) + cellH / 2;
   
   const [trail, setTrail] = useState(null);
+  const [focus, setFocus] = useState(null);
   const prevPosRef = useRef(position);
 
   useEffect(() => {
     if (prevPosRef.current.r !== position.r || prevPosRef.current.c !== position.c) {
       setTrail({ r: prevPosRef.current.r, c: prevPosRef.current.c, key: Date.now() });
+      
+      // Look in direction of move
+      if (position.r < prevPosRef.current.r) setFocus('up');
+      else if (position.r > prevPosRef.current.r) setFocus('down');
+      else if (position.c < prevPosRef.current.c) setFocus('left');
+      else if (position.c > prevPosRef.current.c) setFocus('right');
+      
+      setTimeout(() => setFocus(null), 300);
       prevPosRef.current = position;
     }
   }, [position]);
 
   const mood = animState === 'explode' || animState === 'death' ? 'sad' : animState === 'celebrate' ? 'happy' : 'normal';
-  const size = Math.min(cellW, cellH) * 1.15;
+  const size = Math.min(cellW, cellH) * 1.15; // Reverted to original tactical size
   
   let animClass = '';
   if (animState === 'normal' || animState === 'idle') animClass = 'anim-idle-breathe';
@@ -233,7 +256,7 @@ function Chicken({ skin, animState, position, cellW, cellH, isMagnetActive, skin
           filter: (animState === 'explode' || animState === 'death') ? 'drop-shadow(0 0 8px #FF4500)' : 'drop-shadow(0 3px 6px rgba(0,0,0,0.5))',
         }}
       >
-        <ChickenSVG skinId={skin} mood={mood} size={size} animClass={animClass}/>
+        <ChickenSVG skinId={skin} mood={mood} size={size} animClass={animClass} focus={focus}/>
         {animState === 'shield' && <div className="shield-bubble"/>}
         {isMagnetActive && <div className="magnet-pulse"/>}
         
@@ -258,15 +281,17 @@ function Chicken({ skin, animState, position, cellW, cellH, isMagnetActive, skin
 }
 
 // ─── PET COMPONENT ──────────────────────────────────────────────
-function Pet({ petId, position, cellW, cellH, animClass }) {
+function Pet({ petId, position, cellW, cellH, animClass, mood }) {
   const pet = PETS.find(p => p.id === petId);
   if (!pet) return null;
 
   const centerX = position.c * (cellW + 2) + cellW / 2;
   const centerY = position.r * (cellH + 2) + cellH / 2;
   const isNearTop = position.r < 2;
-  const petX = centerX + 50;
-  const petY = isNearTop ? centerY + 50 : centerY - 50;
+  
+  // Offset pet to the side and slightly above/below chicken based on grid space
+  const petX = centerX + (cellW * 0.4);
+  const petY = isNearTop ? centerY + (cellH * 0.3) : centerY - (cellH * 0.3);
 
   return (
     <div
@@ -279,9 +304,11 @@ function Pet({ petId, position, cellW, cellH, animClass }) {
         transition: 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         pointerEvents: 'none',
         transform: 'translate(-50%, -50%)',
+        width: cellW * 0.45,
+        height: cellH * 0.45
       }}
     >
-      <PetSVG petId={petId} size={Math.min(cellW, cellH) * 0.8} animClass={animClass} />
+      <PetSVG petId={petId} size="100%" animClass={animClass} mood={mood} />
     </div>
   );
 }
@@ -290,48 +317,35 @@ function Pet({ petId, position, cellW, cellH, animClass }) {
 function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, showShadow }) {
   const styleData = TILE_STYLES.find(s => s.id === tileStyle) || TILE_STYLES[0];
   const pressTimer = useRef(null);
-  const pressed = useRef(false);
+  const isLongPress = useRef(false);
 
-  const handleTouchStart = (e) => {
-    e.preventDefault();
-    pressed.current = true;
+  const onPointerDown = (e) => {
+    // Only handle primary pointer (left click or touch)
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    
+    isLongPress.current = false;
     pressTimer.current = setTimeout(() => {
-      if (pressed.current) {
-        onLongPress(tile);
-        pressed.current = false;
-      }
+      onLongPress(tile);
+      isLongPress.current = true;
     }, 400);
   };
 
-  const handleTouchEnd = (e) => {
-    e.preventDefault();
-    if (pressed.current) {
+  const onPointerUp = (e) => {
+    if (pressTimer.current) {
       clearTimeout(pressTimer.current);
-      pressed.current = false;
+      pressTimer.current = null;
+    }
+    
+    // Only trigger tap if it wasn't a long press
+    if (!isLongPress.current) {
       onTap(tile);
     }
   };
 
-  const handleTouchMove = () => {
-    clearTimeout(pressTimer.current);
-    pressed.current = false;
-  };
-
-  const handleMouseDown = () => {
-    pressed.current = true;
-    pressTimer.current = setTimeout(() => {
-      if (pressed.current) {
-        onLongPress(tile);
-        pressed.current = false;
-      }
-    }, 400);
-  };
-
-  const handleMouseUp = () => {
-    if (pressed.current) {
+  const onPointerCancel = () => {
+    if (pressTimer.current) {
       clearTimeout(pressTimer.current);
-      pressed.current = false;
-      onTap(tile);
+      pressTimer.current = null;
     }
   };
 
@@ -348,7 +362,7 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, s
   } else if (tile.state === 'revealed') {
     bg = styleData.safeColor;
     content = tile.powerup ? getPowerupIcon(tile.powerup) : (tile.hasSeed ? '🌾' : '✓');
-    extraClass = `tile-revealed tile-flip-improve`;
+    extraClass = `tile-revealed tile-3d-flip`;
   } else if (tile.state === 'mine') {
     bg = styleData.mineColor;
     content = '💀';
@@ -356,7 +370,7 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, s
   } else if (tile.state === 'peeked') {
     bg = tile.isMine ? '#ff6b6b' : '#90EE90';
     content = tile.isMine ? '💣' : '✓';
-    extraClass = 'tile-peeked tile-flip-improve';
+    extraClass = 'tile-peeked tile-3d-flip';
   }
 
   return (
@@ -368,12 +382,12 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, s
         background: bg,
         border: `2px solid ${styleData.borderColor}`,
         position: 'relative',
+        touchAction: 'none' // Prevent scrolling/zooming during grid play
       }}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchMove={handleTouchMove}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+      onPointerLeave={onPointerCancel}
     >
       <span className="tile-content">{content}</span>
       {tile.state === 'hidden' && tile.powerup && (
@@ -1387,7 +1401,6 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         
         @keyframes tile-mine-pulse { 0%, 100% { box-shadow: 0 0 4px rgba(180,0,0,0.2); } 50% { box-shadow: 0 0 8px rgba(180,0,0,0.4); } }
         @keyframes tile-powerup-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-        @keyframes tile-flip-improve { 0% { transform: scaleX(1); } 50% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
         @keyframes tile-safe-floor-glow { 0%, 100% { box-shadow: 0 0 8px rgba(100,255,100,0.3); } 50% { box-shadow: 0 0 16px rgba(100,255,100,0.6); } }
         @keyframes tile-adjacent-pulse { 0%, 100% { border-color: rgba(255,255,255,0.4); } 50% { border-color: rgba(255,255,255,1); } }
 
@@ -1398,7 +1411,6 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
 
         .tile-mine-pulse { animation: tile-mine-pulse 2s infinite ease-in-out; }
         .tile-powerup-float { animation: tile-powerup-float 1.5s infinite ease-in-out; }
-        .tile-flip-improve { animation: tile-flip-improve 0.2s ease-out forwards; }
         .tile-safe-floor-glow { animation: tile-safe-floor-glow 1.5s infinite ease-in-out; }
         .tile-adjacent-pulse { animation: tile-adjacent-pulse 0.8s infinite ease-in-out !important; }
         
@@ -1524,72 +1536,73 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
               />
             );
           })}
-        </div>
 
-        <div
-          className="trail-overlay"
-          style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0, bottom: 0,
-            pointerEvents: 'none',
-            zIndex: 15,
-          }}
-        >
-          {equippedTrail !== 'none' && visitedTiles.slice(-15).map((pos, i) => {
-            const centerX = (pos.c * (cellSize.w + 2) + cellSize.w / 2) / (cols * (cellSize.w + 2)) * 100;
-            const centerY = (pos.r * (cellSize.h + 2) + cellSize.h / 2) / (rows * (cellSize.h + 2)) * 100;
-            const dotSeed = pos.r * 100 + pos.c;
-            const numDots = 3 + (dotSeed % 5);
-            
-            return Array.from({ length: numDots }).map((_, j) => {
-              const pSeed = dotSeed + j * 37;
-              const offsetX = (Math.sin(pSeed) * 5); 
-              const offsetY = (Math.cos(pSeed * 0.8) * 4) + 3; 
+          <div
+            className="trail-overlay"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              zIndex: 15,
+            }}
+          >
+            {equippedTrail !== 'none' && visitedTiles.slice(-16, -1).map((pos, i) => {
+              const centerX = (pos.c * (cellSize.w + 2) + cellSize.w / 2) / (cols * cellSize.w + (cols - 1) * 2) * 100;
+              const centerY = (pos.r * (cellSize.h + 2) + cellSize.h / 2) / (rows * cellSize.h + (rows - 1) * 2) * 100;
+              const dotSeed = pos.r * 100 + pos.c;
+              const numDots = 3 + (dotSeed % 5);
               
-              return (
-                <TrailParticle
-                  key={`trail-${i}-${j}-${pos.r}-${pos.c}`}
-                  x={centerX + offsetX} 
-                  y={centerY + offsetY}
-                  trailId={equippedTrail}
-                  index={i}
-                  particleIndex={j}
-                  total={visitedTiles.slice(-15).length}
-                />
-              );
-            });
-          })}
-        </div>
+              return Array.from({ length: numDots }).map((_, j) => {
+                const pSeed = dotSeed + j * 37;
+                const offsetX = (Math.sin(pSeed) * 5); 
+                const offsetY = (Math.cos(pSeed * 0.8) * 4) + 3; 
+                
+                return (
+                  <TrailParticle
+                    key={`trail-${i}-${j}-${pos.r}-${pos.c}`}
+                    x={centerX + offsetX} 
+                    y={centerY + offsetY}
+                    trailId={equippedTrail}
+                    index={i}
+                    particleIndex={j}
+                    total={visitedTiles.slice(-16, -1).length}
+                  />
+                );
+              });
+            })}
+          </div>
 
-        <div
-          className="chicken-overlay"
-          style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0, bottom: 0,
-            pointerEvents: 'none',
-          }}
-        >
-          <Chicken
-            skin={equippedSkin}
-            trail={equippedTrail}
-            animState={chickenAnim}
-            position={chicken}
-            gridCols={cols}
-            gridRows={rows}
-            cellW={cellSize.w}
-            cellH={cellSize.h}
-            isMagnetActive={magnetActive}
-            skinSkillAnim={skinSkillAnim}
-          />
-          {equippedPetId && (
-            <Pet
-              petId={equippedPetId}
+          <div
+            className="chicken-overlay"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+            }}
+          >
+            <Chicken
+              skin={equippedSkin}
+              trail={equippedTrail}
+              animState={chickenAnim}
               position={chicken}
+              gridCols={cols}
+              gridRows={rows}
               cellW={cellSize.w}
               cellH={cellSize.h}
-              animClass={petAnim}
+              isMagnetActive={magnetActive}
+              skinSkillAnim={skinSkillAnim}
             />
-          )}
+            {equippedPetId && (
+              <Pet
+                petId={equippedPetId}
+                position={chicken}
+                cellW={cellSize.w}
+                cellH={cellSize.h}
+                animClass={petAnim}
+                mood={chickenAnim === 'explode' || chickenAnim === 'death' ? 'sad' : chickenAnim === 'celebrate' ? 'happy' : 'normal'}
+              />
+            )}
+          </div>
         </div>
 
         {floatingSeeds.map(fs => (

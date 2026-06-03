@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { gameStore } from '../store/gameStore';
 
 export default function TutorialOverlay({ onComplete }) {
@@ -38,19 +39,29 @@ export default function TutorialOverlay({ onComplete }) {
 
   return (
     <div className="tutorial-overlay">
-      <div className="tutorial-card">
-        <div className="tutorial-icon">{steps[step].icon}</div>
-        <div className="tutorial-title">{steps[step].title}</div>
-        <div className="tutorial-text">{steps[step].text}</div>
-        <button className="btn-primary" onClick={nextStep}>
-          {step === steps.length - 1 ? "LET'S GO!" : "NEXT"}
-        </button>
-        <div className="tutorial-dots">
-          {steps.map((_, i) => (
-            <div key={i} className={`dot ${i === step ? 'active' : ''}`} />
-          ))}
-        </div>
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={step}
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: -20 }}
+          className="tutorial-card"
+        >
+          <div className="tutorial-icon">{steps[step].icon}</div>
+          <div className="tutorial-title">{steps[step].title}</div>
+          <div className="tutorial-text">{steps[step].text}</div>
+          
+          <button className="mo-btn mo-btn--retry w-full mt-4" onClick={nextStep}>
+            {step === steps.length - 1 ? "LET'S GO!" : "NEXT"}
+          </button>
+          
+          <div className="tutorial-dots mt-6">
+            {steps.map((_, i) => (
+              <div key={i} className={`dot ${i === step ? 'active' : ''}`} />
+            ))}
+          </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

@@ -70,14 +70,16 @@ export default function GameOverModal({ level, seeds, onRetry, onHome, skinId = 
 
         {/* Stats */}
         <div className="mo-stats">
-          <div className="mo-stat-row">
-            <span className="mo-stat-label">FINAL SCORE:</span>
-            <span className="mo-stat-val">{(level * seeds).toLocaleString()}</span>
-          </div>
-          <div className="mo-stat-divider"/>
-          <div className="mo-stat-row">
-            <span className="mo-stat-label">SEEDS COLLECTED:</span>
-            <span className="mo-stat-val">{seeds} 🌾</span>
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-secondary">FINAL SCORE</span>
+              <span className="font-bold text-primary">{(level * seeds).toLocaleString()}</span>
+            </div>
+            <div className="h-px bg-white/10 my-1" />
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-secondary">SEEDS COLLECTED</span>
+              <span className="font-bold text-gold">{seeds} 🌾</span>
+            </div>
           </div>
         </div>
 

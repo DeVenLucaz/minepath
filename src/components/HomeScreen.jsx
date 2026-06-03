@@ -33,6 +33,7 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
   const [feats, setFeats]   = useState(0);
   const [isGolden, setIsGolden] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [focus, setFocus]       = useState(null);
   const clickTimes = useRef([]);
   const equippedSkin        = useMemo(() => gameStore.getEquippedSkin(), []);
 
@@ -50,10 +51,14 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
     }
   }, []);
 
-  // Smooth bounce animation
+  // Smooth bounce animation + random eye scanning
   useEffect(() => {
-    const t = setInterval(() => setBounce(b => !b), 900);
-    return () => clearInterval(t);
+    const bounceT = setInterval(() => setBounce(b => !b), 900);
+    const focusT  = setInterval(() => {
+      const dirs = ['left', 'right', null, null]; // More weight to null for idle feel
+      setFocus(dirs[Math.floor(Math.random() * dirs.length)]);
+    }, 2000);
+    return () => { clearInterval(bounceT); clearInterval(focusT); };
   }, []);
 
   const handleChickenClick = () => {
@@ -117,6 +122,7 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
             mood="normal"
             size={150}
             className="home-chicken-svg"
+            focus={focus}
           />
           {/* Subtle glow under chicken */}
           <div className="home-chicken-shadow"/>

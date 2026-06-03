@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { gameStore } from '../store/gameStore';
 import { audio } from '../audio/engine';
 import ChickenSVG from './ChickenSVG';
+import PetSVG from './PetSVG';
 import { PETS } from '../data/pets';
 import HelpModal from './HelpModal';
 
@@ -14,28 +15,19 @@ const STARS = Array.from({ length: 28 }, (_, i) => ({
   dur:   `${1.6 + (i % 5) * 0.3}s`,
 }));
 
-const LOGO_LETTERS = [
-  { ch: 'M', color: '#FF5C5C' },
-  { ch: 'I', color: '#FF9A3C' },
-  { ch: 'N', color: '#FFD700' },
-  { ch: 'E', color: '#5CFF8F' },
-  { ch: 'P', color: '#5CB8FF' },
-  { ch: 'A', color: '#A78BFA' },
-  { ch: 'T', color: '#FF5CDB' },
-  { ch: 'H', color: '#FFD700' },
-];
-
 export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboard, onSettings, onDaily, onAchievements, onSkillTree, onHubUpgrades }) {
-  const [seeds, setSeeds] = useState(0);
-  const [equippedSkin, setEquippedSkin] = useState('classic');
-  const [equippedPet, setEquippedPet] = useState(null);
-  const [isGolden, setIsGolden] = useState(false);
+  const [seeds, setSeeds] = useState(gameStore.getSeeds());
+  const [equippedSkin, setEquippedSkin] = useState(gameStore.getEquippedSkin());
+  const [equippedPet, setEquippedPet] = useState(gameStore.getEquippedPet());
+  const [isGolden, setIsGolden] = useState(gameStore.hasGoldenHomeMascot());
   const [bounce, setBounce] = useState(false);
   const [hasReadyEggs, setHasReadyEggs] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [dailyStatus, setDailyStatus] = useState({ played: false });
+  const [dailyStatus, setDailyStatus] = useState(gameStore.getDailyChallenge());
+  const [focus, setFocus] = useState(null);
 
   useEffect(() => {
+    // Fresh pull on every mount/nav
     setSeeds(gameStore.getSeeds());
     setEquippedSkin(gameStore.getEquippedSkin());
     setEquippedPet(gameStore.getEquippedPet());
@@ -47,11 +39,14 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
     const now = Date.now();
     setHasReadyEggs(eggs.some(e => e.status === 'ready' || now >= e.hatchTime));
 
-    const t = setInterval(() => setBounce(b => !b), 900);
-    return () => clearInterval(t);
-  }, []);
+    const bounceT = setInterval(() => setBounce(b => !b), 900);
+    const focusT  = setInterval(() => {
+      const dirs = ['left', 'right', null, null];
+      setFocus(dirs[Math.floor(Math.random() * dirs.length)]);
+    }, 2500);
 
-  const activePet = PETS.find(p => p.id === equippedPet);
+    return () => { clearInterval(bounceT); clearInterval(focusT); };
+  }, []);
 
   return (
     <div className="sanctuary-screen">
@@ -67,21 +62,10 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
       </div>
 
       {/* TOP ACTIONS */}
-      <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10, display: 'flex', gap: '8px' }}>
+      <div className="absolute top-4 right-4 z-10 flex gap-2">
         <button 
           onClick={onSettings}
-          style={{ 
-            background: 'rgba(255,255,255,0.1)', 
-            border: '2px solid rgba(255,255,255,0.2)', 
-            borderRadius: '12px', 
-            padding: '10px',
-            fontSize: '20px',
-            width: '46px',
-            height: '46px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
+          className="w-11 h-11 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl flex items-center justify-center text-xl shadow-lg active:scale-90 transition-transform"
         >
           ⚙️
         </button>
@@ -89,44 +73,28 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
 
       <button 
         onClick={() => setShowHelp(true)}
-        style={{ 
-          position: 'fixed',
-          bottom: '80px',
-          right: '16px',
-          background: 'rgba(255,255,255,0.2)', 
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.3)', 
-          borderRadius: '50%', 
-          width: '32px',
-          height: '32px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          fontWeight: '900',
-          fontSize: '14px',
-          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-          zIndex: 110,
-          cursor: 'pointer'
-        }}
+        className="fixed bottom-[80px] right-4 w-8 h-8 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg z-[110] active:scale-90 transition-transform"
       >
         ?
       </button>
 
-      <div className="sanctuary-content" style={{ justifyContent: 'center', gap: '10px' }}>
+      <div className="sanctuary-content">
         {/* LOGO */}
-        <div className="home-logo" style={{ transform: 'scale(0.85)' }}>
-          {LOGO_LETTERS.map((l, i) => (
-            <span key={i} className="home-logo-letter" style={{ color: l.color }}>{l.ch}</span>
+        <div className="home-logo">
+          {"MINEPATH".split('').map((char, i) => (
+            <span key={i} className="home-logo-letter">{char}</span>
           ))}
         </div>
 
         {/* CHICKEN & PET */}
-        <div className={`home-chicken-wrap ${bounce ? 'bounce-up' : 'bounce-down'} ${isGolden ? 'golden-mascot' : ''}`} style={{ margin: '10px 0' }}>
-          <ChickenSVG skinId={isGolden ? 'classic' : equippedSkin} size={130} />
-          {activePet && (
-            <div className="pet-entity" style={{ position: 'absolute', right: -30, bottom: 20, fontSize: '30px' }}>
-              {activePet.emoji}
+        <div className={`home-chicken-wrap ${bounce ? 'bounce-up' : 'bounce-down'} ${isGolden ? 'golden-mascot' : ''} my-2`}>
+          <ChickenSVG skinId={isGolden ? 'classic' : equippedSkin} size={140} focus={focus} />
+          {equippedPet && (
+            <div 
+              className="absolute -right-6 bottom-4 filter drop-shadow-xl"
+              style={{ width: 60, height: 60, transform: 'scaleX(-1)' }} // Mirror pet to face chicken
+            >
+              <PetSVG petId={equippedPet} size="100%" mood="normal" />
             </div>
           )}
         </div>
@@ -138,62 +106,54 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
         </div>
 
         {/* NAVIGATION GRID */}
-        <div className="sanctuary-nav" style={{ marginTop: '5px' }}>
+        <div className="sanctuary-nav">
           <button className="sanctuary-btn-main" onClick={() => { audio.init(); onPlay(); }}>
             <span>🎮</span> PLAY
           </button>
 
-          <button className="sanctuary-btn-main" 
-            style={{ 
-              background: 'linear-gradient(135deg, #2196F3, #1565C0)', 
-              fontSize: '18px',
-              position: 'relative'
-            }} 
-            onClick={onDaily}
-            disabled={dailyStatus.played}
-          >
-            <span>📅</span> DAILY
-            {!dailyStatus.played && <div className="egg-indicator-dot" />}
-          </button>
+          <div className="flex gap-2 w-full">
+            <button className="sanctuary-btn-main flex-1 !text-lg relative" 
+              style={{ background: 'linear-gradient(135deg, #3b82f6, #1e40af)' }} 
+              onClick={onDaily}
+              disabled={dailyStatus.played}
+            >
+              <span>📅</span> DAILY
+              {!dailyStatus.played && <div className="egg-indicator-dot" />}
+            </button>
 
-          <button className="sanctuary-btn-main" 
-            style={{ 
-              background: 'linear-gradient(135deg, #FF9800, #F57C00)', 
-              fontSize: '18px'
-            }} 
-            onClick={() => { audio.init(); onEndless(); }}
-          >
-            <span>🌀</span> ENDLESS
-          </button>
+            <button className="sanctuary-btn-main flex-1 !text-lg" 
+              style={{ background: 'linear-gradient(135deg, #f59e0b, #b45309)' }} 
+              onClick={() => { audio.init(); onEndless(); }}
+            >
+              <span>🌀</span> ENDLESS
+            </button>
+          </div>
           
-          <button className="sanctuary-btn-main" 
-            style={{ 
-              background: 'linear-gradient(135deg, #4CAF50, #2E7D32)', 
-              fontSize: '18px',
-              gridColumn: 'span 3',
-              position: 'relative'
-            }} 
+          <button className="sanctuary-btn-main w-full !text-lg relative" 
+            style={{ background: 'linear-gradient(135deg, #22c55e, #166534)' }} 
             onClick={onHubUpgrades}
           >
             <span>🏙️</span> MY HUB & HATCHERY
             {hasReadyEggs && <div className="egg-indicator-dot" />}
           </button>
           
-          <button className="sanctuary-btn-sq" onClick={onShop}>
-            <span className="sanctuary-btn-sq-icon">🛒</span>
-            <span className="sanctuary-btn-sq-label">SHOP</span>
-          </button>
-          <button className="sanctuary-btn-sq" onClick={onSkillTree}>
-            <span className="sanctuary-btn-sq-icon">🌳</span>
-            <span className="sanctuary-btn-sq-label">SKILLS</span>
-          </button>
-          <button className="sanctuary-btn-sq" onClick={onAchievements}>
-            <span className="sanctuary-btn-sq-icon">🏆</span>
-            <span className="sanctuary-btn-sq-label">FEATS</span>
-          </button>
+          <div className="flex gap-2 w-full">
+            <button className="sanctuary-btn-sq flex-1" onClick={onShop}>
+              <span className="text-xl">🛒</span>
+              <span className="sanctuary-btn-sq-label">SHOP</span>
+            </button>
+            <button className="sanctuary-btn-sq flex-1" onClick={onSkillTree}>
+              <span className="text-xl">🌳</span>
+              <span className="sanctuary-btn-sq-label">SKILLS</span>
+            </button>
+            <button className="sanctuary-btn-sq flex-1" onClick={onAchievements}>
+              <span className="text-xl">🏆</span>
+              <span className="sanctuary-btn-sq-label">FEATS</span>
+            </button>
+          </div>
         </div>
         
-        <div className="home-hint" style={{ opacity: 0.5, fontSize: '10px' }}>
+        <div className="home-hint">
           Tap tiles to move • Long press to peek
         </div>
       </div>

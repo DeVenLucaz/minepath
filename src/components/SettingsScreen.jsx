@@ -24,7 +24,6 @@ function SettingToggle({ value, onChange }) {
       onClick={onChange}
     >
       <span className="st-toggle-knob"/>
-      <span className="st-toggle-label">{value ? 'ON' : 'OFF'}</span>
     </button>
   );
 }
@@ -182,7 +181,7 @@ export default function SettingsScreen({ onBack }) {
 
         {/* Footer */}
         <div className="st-footer">
-          MINEPATH <span style={{ color: '#FFD700' }}>KIDS</span> SETTINGS &nbsp;·&nbsp; v3.0
+          MINEPATH SETTINGS &nbsp;·&nbsp; v3.0
         </div>
 
       </div>

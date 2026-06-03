@@ -128,7 +128,11 @@ function GhostGlow() {
 // ─────────────────────────────────────────────
 //  MOOD EYES
 // ─────────────────────────────────────────────
-function Eyes({ mood, eyeColor, cheekColor }) {
+function Eyes({ mood, eyeColor, cheekColor, focus = null }) {
+  // Focus offsets for irises
+  const shiftX = focus === 'left' ? -2 : focus === 'right' ? 2 : 0;
+  const shiftY = focus === 'up' ? -1 : focus === 'down' ? 1 : 0;
+
   if (mood === 'happy') {
     // Closed crescent eyes — celebrating
     return (
@@ -146,14 +150,14 @@ function Eyes({ mood, eyeColor, cheekColor }) {
       <g>
         {/* Left eye */}
         <ellipse cx="41" cy="51" rx="5.5" ry="6" fill="white"/>
-        <ellipse cx="41" cy="52" rx="3.5" ry="4" fill={eyeColor}/>
-        <circle cx="39.5" cy="50" r="1.5" fill="white" opacity="0.8"/>
+        <ellipse cx={`${41 + shiftX}`} cy={`${52 + shiftY}`} rx="3.5" ry="4" fill={eyeColor}/>
+        <circle cx={`${39.5 + shiftX}`} cy={`${50 + shiftY}`} r="1.5" fill="white" opacity="0.8"/>
         {/* Sad brow */}
         <path d="M36 45 Q41 43 46 45" stroke={eyeColor} strokeWidth="2" fill="none" strokeLinecap="round"/>
         {/* Right eye */}
         <ellipse cx="59" cy="51" rx="5.5" ry="6" fill="white"/>
-        <ellipse cx="59" cy="52" rx="3.5" ry="4" fill={eyeColor}/>
-        <circle cx="57.5" cy="50" r="1.5" fill="white" opacity="0.8"/>
+        <ellipse cx={`${59 + shiftX}`} cy={`${52 + shiftY}`} rx="3.5" ry="4" fill={eyeColor}/>
+        <circle cx={`${57.5 + shiftX}`} cy={`${50 + shiftY}`} r="1.5" fill="white" opacity="0.8"/>
         {/* Sad brow */}
         <path d="M54 45 Q59 43 64 45" stroke={eyeColor} strokeWidth="2" fill="none" strokeLinecap="round"/>
         {/* Tear drops */}
@@ -171,17 +175,17 @@ function Eyes({ mood, eyeColor, cheekColor }) {
       {/* Left eye white */}
       <ellipse cx="41" cy="50" rx="6" ry="7" fill="white"/>
       {/* Left iris */}
-      <ellipse cx="41" cy="51" rx="4" ry="5" fill={eyeColor}/>
+      <ellipse cx={`${41 + shiftX}`} cy={`${51 + shiftY}`} rx="4" ry="5" fill={eyeColor}/>
       {/* Left shine */}
-      <circle cx="39" cy="48" r="2" fill="white" opacity="0.9"/>
-      <circle cx="43" cy="52" r="1" fill="white" opacity="0.5"/>
+      <circle cx={`${39 + shiftX}`} cy={`${48 + shiftY}`} r="2" fill="white" opacity="0.9"/>
+      <circle cx={`${43 + shiftX}`} cy={`${52 + shiftY}`} r="1" fill="white" opacity="0.5"/>
       {/* Right eye white */}
       <ellipse cx="59" cy="50" rx="6" ry="7" fill="white"/>
       {/* Right iris */}
-      <ellipse cx="59" cy="51" rx="4" ry="5" fill={eyeColor}/>
+      <ellipse cx={`${59 + shiftX}`} cy={`${51 + shiftY}`} rx="4" ry="5" fill={eyeColor}/>
       {/* Right shine */}
-      <circle cx="57" cy="48" r="2" fill="white" opacity="0.9"/>
-      <circle cx="61" cy="52" r="1" fill="white" opacity="0.5"/>
+      <circle cx={`${57 + shiftX}`} cy={`${48 + shiftY}`} r="2" fill="white" opacity="0.9"/>
+      <circle cx={`${61 + shiftX}`} cy={`${52 + shiftY}`} r="1" fill="white" opacity="0.5"/>
       {/* Cheeks */}
       <ellipse cx="36" cy="57" rx="5" ry="2.5" fill={cheekColor}/>
       <ellipse cx="64" cy="57" rx="5" ry="2.5" fill={cheekColor}/>
@@ -252,80 +256,98 @@ export default function ChickenSVG({
   style = {},
   className = '',
   animClass = '',
+  focus = null,
 }) {
   const skin = SKIN_CONFIGS[skinId] || SKIN_CONFIGS.classic;
 
   return (
     <svg
       width={size}
-      height={size}
+      height={size * 1.2}
       viewBox="0 0 100 120"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="xMidYMid meet"
       style={{ transformBox: 'fill-box', transformOrigin: 'center bottom', ...style }}
       className={`${className} ${animClass}`.trim()}
     >
-      {/* ── COMB ── */}
-      <g>
-        <ellipse cx="44" cy="26" rx="5" ry="8" fill={skin.combColor} stroke={skin.combShade} strokeWidth="1.5"/>
-        <ellipse cx="50" cy="21" rx="5.5" ry="9" fill={skin.combColor} stroke={skin.combShade} strokeWidth="1.5"/>
-        <ellipse cx="56" cy="26" rx="5" ry="8" fill={skin.combColor} stroke={skin.combShade} strokeWidth="1.5"/>
+      {/* ── DYNAMIC SHADOW ── */}
+      <ellipse 
+        cx="50" cy="112" rx="20" ry="4" 
+        fill="rgba(0,0,0,0.4)" 
+        style={{ 
+          animation: mood === 'sad' ? 'none' : 'dynamicShadow 0.9s infinite alternate ease-in-out',
+          transformOrigin: 'center center'
+        }}
+      />
+
+      <g style={{ animation: mood === 'sad' ? 'none' : 'squashStretch 0.9s infinite alternate ease-in-out', transformOrigin: 'center bottom' }}>
+        {/* ── COMB ── */}
+        <g>
+          <ellipse cx="44" cy="26" rx="5" ry="8" fill={skin.combColor} stroke={skin.combShade} strokeWidth="1.5"/>
+          <ellipse cx="50" cy="21" rx="5.5" ry="9" fill={skin.combColor} stroke={skin.combShade} strokeWidth="1.5"/>
+          <ellipse cx="56" cy="26" rx="5" ry="8" fill={skin.combColor} stroke={skin.combShade} strokeWidth="1.5"/>
+        </g>
+
+        {/* ── WINGS (behind body) ── */}
+        <Wings mood={mood} wingColor={skin.wingColor}/>
+
+        {/* ── MAIN BODY ── */}
+        <ellipse cx="50" cy="85" rx="28" ry="24" fill={skin.bodyColor} stroke="rgba(0,0,0,0.12)" strokeWidth="1.5"/>
+        {/* Body shading */}
+        <ellipse cx="50" cy="90" rx="20" ry="16" fill={skin.bodyShade} opacity="0.25"/>
+        {/* Rim Light for depth */}
+        <ellipse cx="40" cy="75" rx="10" ry="6" fill="white" opacity="0.2" transform="rotate(-15, 40, 75)"/>
+        {/* Belly highlight */}
+        <ellipse cx="50" cy="80" rx="14" ry="11" fill={skin.bellyColor} opacity="0.6"/>
+
+        {/* ── HEAD ── */}
+        <ellipse cx="50" cy="47" rx="22" ry="22" fill={skin.bodyColor} stroke="rgba(0,0,0,0.12)" strokeWidth="1.5"/>
+        {/* Head shading */}
+        <ellipse cx="50" cy="52" rx="16" ry="14" fill={skin.bodyShade} opacity="0.2"/>
+        {/* Rim Light for depth */}
+        <ellipse cx="40" cy="37" rx="8" ry="5" fill="white" opacity="0.2" transform="rotate(-15, 40, 37)"/>
+
+        {/* ── ACCESSORY (on top of head) ── */}
+        {skin.accessory === 'helmet' && <Helmet/>}
+        {skin.accessory === 'bandana' && <Bandana/>}
+        {skin.accessory === 'crown' && <Crown/>}
+        {skin.accessory === 'ghost' && <GhostGlow/>}
+
+        {/* ── EYES + CHEEKS ── */}
+        <Eyes mood={mood} eyeColor={skin.eyeColor} cheekColor={skin.cheekColor} focus={focus}/>
+
+        {/* ── BEAK ── */}
+        <ellipse cx="50" cy="60" rx="5" ry="3.5" fill={skin.beakColor} stroke="rgba(0,0,0,0.2)" strokeWidth="1"/>
+        {/* Mouth line */}
+        {mood !== 'sad' && (
+          <path d="M46 61 Q50 64 54 61" stroke="rgba(0,0,0,0.25)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+        )}
+        {mood === 'sad' && (
+          <path d="M46 63 Q50 60 54 63" stroke="rgba(0,0,0,0.25)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+        )}
+
+        {/* ── FEET ── */}
+        <g fill={skin.footColor} stroke="rgba(0,0,0,0.2)" strokeWidth="1">
+          {/* Left foot */}
+          <ellipse cx="40" cy="109" rx="7" ry="3.5"/>
+          <line x1="34" y1="109" x2="32" y2="113" stroke={skin.footColor} strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="37" y1="110" x2="35" y2="115" stroke={skin.footColor} strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="40" y1="110" x2="40" y2="116" stroke={skin.footColor} strokeWidth="2.5" strokeLinecap="round"/>
+          {/* Right foot */}
+          <ellipse cx="60" cy="109" rx="7" ry="3.5"/>
+          <line x1="54" y1="109" x2="52" y2="113" stroke={skin.footColor} strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="57" y1="110" x2="57" y2="115" stroke={skin.footColor} strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="62" y1="110" x2="64" y2="115" stroke={skin.footColor} strokeWidth="2.5" strokeLinecap="round"/>
+        </g>
+
+        {/* ── PICKAXE (game over only) ── */}
+        {mood === 'sad' && <Pickaxe/>}
+
+        {/* ── BODY OUTLINE (on top for crispness) ── */}
+        <ellipse cx="50" cy="85" rx="28" ry="24" fill="none" stroke="rgba(0,0,0,0.10)" strokeWidth="1"/>
+        <ellipse cx="50" cy="47" rx="22" ry="22" fill="none" stroke="rgba(0,0,0,0.10)" strokeWidth="1"/>
       </g>
-
-      {/* ── WINGS (behind body) ── */}
-      <Wings mood={mood} wingColor={skin.wingColor}/>
-
-      {/* ── MAIN BODY ── */}
-      <ellipse cx="50" cy="85" rx="28" ry="24" fill={skin.bodyColor} stroke="rgba(0,0,0,0.12)" strokeWidth="1.5"/>
-      {/* Body shading */}
-      <ellipse cx="50" cy="90" rx="20" ry="16" fill={skin.bodyShade} opacity="0.25"/>
-      {/* Belly highlight */}
-      <ellipse cx="50" cy="80" rx="14" ry="11" fill={skin.bellyColor} opacity="0.6"/>
-
-      {/* ── HEAD ── */}
-      <ellipse cx="50" cy="47" rx="22" ry="22" fill={skin.bodyColor} stroke="rgba(0,0,0,0.12)" strokeWidth="1.5"/>
-      {/* Head shading */}
-      <ellipse cx="50" cy="52" rx="16" ry="14" fill={skin.bodyShade} opacity="0.2"/>
-
-      {/* ── ACCESSORY (on top of head) ── */}
-      {skin.accessory === 'helmet' && <Helmet/>}
-      {skin.accessory === 'bandana' && <Bandana/>}
-      {skin.accessory === 'crown' && <Crown/>}
-      {skin.accessory === 'ghost' && <GhostGlow/>}
-
-      {/* ── EYES + CHEEKS ── */}
-      <Eyes mood={mood} eyeColor={skin.eyeColor} cheekColor={skin.cheekColor}/>
-
-      {/* ── BEAK ── */}
-      <ellipse cx="50" cy="60" rx="5" ry="3.5" fill={skin.beakColor} stroke="rgba(0,0,0,0.2)" strokeWidth="1"/>
-      {/* Mouth line */}
-      {mood !== 'sad' && (
-        <path d="M46 61 Q50 64 54 61" stroke="rgba(0,0,0,0.25)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
-      )}
-      {mood === 'sad' && (
-        <path d="M46 63 Q50 60 54 63" stroke="rgba(0,0,0,0.25)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
-      )}
-
-      {/* ── FEET ── */}
-      <g fill={skin.footColor} stroke="rgba(0,0,0,0.2)" strokeWidth="1">
-        {/* Left foot */}
-        <ellipse cx="40" cy="109" rx="7" ry="3.5"/>
-        <line x1="34" y1="109" x2="32" y2="113" stroke={skin.footColor} strokeWidth="2.5" strokeLinecap="round"/>
-        <line x1="37" y1="110" x2="35" y2="115" stroke={skin.footColor} strokeWidth="2.5" strokeLinecap="round"/>
-        <line x1="40" y1="110" x2="40" y2="116" stroke={skin.footColor} strokeWidth="2.5" strokeLinecap="round"/>
-        {/* Right foot */}
-        <ellipse cx="60" cy="109" rx="7" ry="3.5"/>
-        <line x1="54" y1="109" x2="52" y2="113" stroke={skin.footColor} strokeWidth="2.5" strokeLinecap="round"/>
-        <line x1="57" y1="110" x2="57" y2="115" stroke={skin.footColor} strokeWidth="2.5" strokeLinecap="round"/>
-        <line x1="62" y1="110" x2="64" y2="115" stroke={skin.footColor} strokeWidth="2.5" strokeLinecap="round"/>
-      </g>
-
-      {/* ── PICKAXE (game over only) ── */}
-      {mood === 'sad' && <Pickaxe/>}
-
-      {/* ── BODY OUTLINE (on top for crispness) ── */}
-      <ellipse cx="50" cy="85" rx="28" ry="24" fill="none" stroke="rgba(0,0,0,0.10)" strokeWidth="1"/>
-      <ellipse cx="50" cy="47" rx="22" ry="22" fill="none" stroke="rgba(0,0,0,0.10)" strokeWidth="1"/>
     </svg>
   );
 }

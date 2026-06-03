@@ -126,19 +126,19 @@ export default function AchievementsScreen({ onBack }) {
       {/* Summary card */}
       <div className="af-summary">
         <div className="af-summary-top">
-          <span className="af-summary-label">TOTAL FEATS</span>
+          <span className="af-summary-label">Total Feats</span>
           <span className="af-summary-count">
             <span className="af-summary-done">{completed}</span>
             <span className="af-summary-sep">/{total}</span>
           </span>
-          <span className="af-summary-pct">Completed</span>
+          <span className="af-summary-pct">{progressPct}%</span>
         </div>
         <div className="af-progress-track">
           {Array.from({ length: total }, (_, i) => (
             <div
               key={i}
               className="af-progress-seg"
-              style={{ background: i < completed ? '#FFD700' : 'rgba(255,255,255,0.15)' }}
+              style={{ background: i < completed ? 'var(--gold)' : 'rgba(255,255,255,0.05)' }}
             />
           ))}
         </div>

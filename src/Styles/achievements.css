@@ -10,12 +10,15 @@
 
 .af-title {
   text-align: center;
-  font-size: clamp(18px, 5vw, 24px);
+  font-size: clamp(18px, 6vw, 24px);
   font-weight: 900;
-  color: #FFD700;
-  letter-spacing: 2px;
-  padding: 10px 16px 4px;
-  text-shadow: 2px 2px 0 rgba(0,0,0,0.4), 0 0 16px rgba(255,215,0,0.3);
+  color: #FFFFFF;
+  background: linear-gradient(to bottom, #FFFFFF 30%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1px;
+  padding: 12px 16px 4px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
   flex-shrink: 0;
   position: relative;
   z-index: 2;
@@ -23,54 +26,60 @@
 
 /* ── SUMMARY CARD ── */
 .af-summary {
-  margin: 6px 12px 8px;
-  background: rgba(255,255,255,0.10);
-  border: 1.5px solid rgba(255,255,255,0.15);
-  border-radius: 16px;
-  padding: 12px 14px;
+  margin: 8px 16px 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+  border-radius: var(--card-radius);
+  padding: 16px 20px;
   flex-shrink: 0;
   position: relative;
   z-index: 2;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
 }
 
 .af-summary-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .af-summary-label {
   font-size: 13px;
-  font-weight: 900;
-  color: white;
+  font-weight: 800;
+  color: var(--text-secondary);
   letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .af-summary-count {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 900;
 }
-.af-summary-done { color: #FFD700; }
-.af-summary-sep  { color: rgba(255,255,255,0.4); }
+.af-summary-done { color: var(--gold); }
+.af-summary-sep  { color: var(--text-muted); }
 
 .af-summary-pct {
   font-size: 12px;
-  color: rgba(255,255,255,0.5);
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
 }
 
 .af-progress-track {
   display: flex;
-  gap: 3px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 
 .af-progress-seg {
   flex: 1;
-  min-width: 12px;
-  height: 10px;
-  border-radius: 5px;
-  transition: background 0.3s;
+  min-width: 10px;
+  height: 8px;
+  border-radius: 4px;
+  transition: all 0.3s;
+  background: rgba(255,255,255,0.05);
 }
 
 /* ── SCROLLABLE LIST ── */
@@ -78,10 +87,10 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 4px 12px 24px;
+  padding: 4px 16px 32px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   -webkit-overflow-scrolling: touch;
   position: relative;
   z-index: 2;
@@ -91,28 +100,29 @@
 .af-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: rgba(255,255,255,0.08);
-  border: 1.5px solid rgba(255,255,255,0.10);
-  border-radius: 18px;
-  padding: 12px 10px 12px 12px;
-  transition: background 0.2s, border-color 0.2s;
+  gap: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  padding: 14px 16px;
+  transition: all 0.2s;
 }
 
 .af-card--done {
-  background: rgba(255,255,255,0.12);
-  border-color: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.04);
 }
 
 .af-card--claimed {
-  background: rgba(255,215,0,0.07);
-  border-color: rgba(255,215,0,0.2);
+  opacity: 0.6;
+  filter: grayscale(0.5);
 }
 
 /* ── BADGE ── */
 .af-badge {
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   position: relative;
   flex-shrink: 0;
   display: flex;
@@ -124,31 +134,32 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 3px solid var(--badge-color);
-  box-shadow: 0 0 8px var(--badge-glow);
-  background: radial-gradient(circle, rgba(255,255,255,0.05) 60%, transparent 100%);
+  border: 2px solid var(--badge-color);
+  box-shadow: 0 0 12px var(--badge-glow);
+  background: rgba(255,255,255,0.03);
 }
 
 .af-badge-inner {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.3);
+  background: rgba(0,0,0,0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   z-index: 1;
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
-.af-badge-icon { font-size: 20px; line-height: 1; }
-.af-badge-lock { font-size: 16px; opacity: 0.4; }
+.af-badge-icon { font-size: 22px; line-height: 1; }
+.af-badge-lock { font-size: 16px; opacity: 0.3; color: white; }
 
 .af-badge-arc {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset: -2px;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
   z-index: 2;
 }
 
@@ -156,10 +167,9 @@
 .af-card-info { flex: 1; min-width: 0; }
 
 .af-card-name {
-  font-size: 14px;
-  font-weight: 900;
-  color: white;
-  letter-spacing: 0.5px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
   margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -167,37 +177,35 @@
 }
 
 .af-card-desc {
-  font-size: 11px;
-  color: rgba(255,255,255,0.55);
-  line-height: 1.35;
-  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 8px;
 }
 
 .af-bar-track {
-  height: 14px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 7px;
-  overflow: hidden;
+  height: 6px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 3px;
+  overflow: visible;
   position: relative;
 }
 
 .af-bar-fill {
   height: 100%;
-  border-radius: 7px;
-  transition: width 0.6s ease-out;
+  border-radius: 3px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 4px;
+  box-shadow: 0 0 8px rgba(255,255,255,0.1);
 }
 
 .af-bar-label {
   position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  font-weight: 900;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  right: 0;
+  top: -16px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-muted);
   letter-spacing: 0.5px;
 }
 
@@ -207,6 +215,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-left: 8px;
 }
 
 .af-claim-btn {
@@ -214,44 +223,45 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  background: linear-gradient(135deg, #FFD740, #FFA000);
-  color: #3E2000;
+  background: linear-gradient(135deg, var(--gold), #CA8A04);
+  color: #000;
   border: none;
   border-radius: 14px;
-  padding: 8px 10px;
-  font-weight: 900;
+  padding: 10px 12px;
+  font-weight: 800;
   font-size: 12px;
-  box-shadow: 0 4px 0 #E65100;
-  min-width: 56px;
+  box-shadow: var(--btn-shadow-gold);
+  text-shadow: var(--text-stroke-white);
+  min-width: 64px;
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.1s;
-  letter-spacing: 0.5px;
+  transition: all 0.2s;
 }
 
 .af-claim-btn:active {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 #E65100;
+  transform: translateY(2px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .af-claim-reward {
   font-size: 10px;
-  font-weight: 700;
-  opacity: 0.8;
+  font-weight: 900;
+  opacity: 0.9;
 }
 
 .af-stamp {
   font-size: 10px;
   font-weight: 900;
-  color: #4CAF50;
-  border: 2px solid #4CAF50;
-  border-radius: 6px;
-  padding: 4px 6px;
+  color: var(--accent-green);
+  border: 1.5px solid rgba(34, 197, 94, 0.4);
+  border-radius: 8px;
+  padding: 4px 8px;
   letter-spacing: 1px;
-  opacity: 0.8;
-  transform: rotate(-5deg);
+  text-transform: uppercase;
+  background: rgba(34, 197, 94, 0.05);
 }
 
 .af-lock {
   font-size: 20px;
-  opacity: 0.35;
+  opacity: 0.2;
+  color: white;
 }

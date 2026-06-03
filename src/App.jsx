@@ -142,14 +142,15 @@ export default function App() {
         <ChickenSVG skinId="classic" />
       </div>
 
-      <AnimatePresence mode="sync">
+      <AnimatePresence mode="wait">
         {/* ── SANCTUARY (HOME) ── */}
         {screen === 'home' && (
           <motion.div
             key="home"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
             style={{ width: '100%', height: '100%' }}
           >
             <SanctuaryScreen
@@ -172,7 +173,8 @@ export default function App() {
             key="game"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
             style={{ position: 'relative', width: '100%', height: '100%' }}
           >
             <GameplayScreen
@@ -270,6 +272,14 @@ export default function App() {
       </AnimatePresence>
 
       {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete}/>}
+
+      <RewardModal
+        isOpen={reward.open}
+        title={reward.title}
+        message={reward.message}
+        rewardEmoji={reward.emoji}
+        onConfirm={() => setReward({ ...reward, open: false })}
+      />
     </div>
   );
 }

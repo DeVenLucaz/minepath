@@ -68,6 +68,7 @@ function playTone(freq, duration, type = 'sine', gainVal = 0.3, delay = 0) {
   g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + delay + duration);
   osc.start(c.currentTime + delay);
   osc.stop(c.currentTime + delay + duration);
+  return osc; // Return for GC tracking
 }
 
 function playFreqSeq(freqs, noteDuration, type = 'square', gainVal = 0.2) {
@@ -88,8 +89,9 @@ export const audio = {
   },
 
   safeTap() {
-    playTone(520, 0.08, 'sine', 0.25);
-    playTone(780, 0.06, 'sine', 0.15, 0.07);
+    // Pro Glass Click
+    playTone(1200, 0.05, 'sine', 0.15);
+    playTone(1800, 0.03, 'sine', 0.1, 0.02);
   },
 
   mineExplosion() {
@@ -153,8 +155,9 @@ export const audio = {
   },
 
   peek() {
-    playTone(300, 0.1, 'sine', 0.15);
-    playTone(400, 0.1, 'sine', 0.1, 0.1);
+    // Pro Glass Ping
+    playTone(900, 0.1, 'sine', 0.1);
+    playTone(1400, 0.08, 'sine', 0.05, 0.05);
   },
 
   startBackground(force = false) {
@@ -222,6 +225,11 @@ export const audio = {
         return;
       }
 
+      // GC Pass: Remove nodes that are no longer strictly in the future
+      bgNodes = bgNodes.filter(n => {
+        try { return n.context.currentTime < n._stopTime; } catch { return false; }
+      });
+
       const melody = melodies[Math.floor(Math.random() * melodies.length)];
       const loopDuration = beat * melody.length;
 
@@ -237,7 +245,9 @@ export const audio = {
           g.gain.setValueAtTime(0.3, t);
           g.gain.exponentialRampToValueAtTime(0.001, t + beat * 0.8);
           osc.start(t);
-          osc.stop(t + beat * 0.85);
+          const stopT = t + beat * 0.85;
+          osc.stop(stopT);
+          osc._stopTime = stopT;
           bgNodes.push(osc);
         }
       });
@@ -254,7 +264,9 @@ export const audio = {
           g.gain.setValueAtTime(0.5, t);
           g.gain.exponentialRampToValueAtTime(0.001, t + beat * 0.9);
           osc.start(t);
-          osc.stop(t + beat * 0.95);
+          const stopT = t + beat * 0.95;
+          osc.stop(stopT);
+          osc._stopTime = stopT;
           bgNodes.push(osc);
         }
       });
@@ -428,6 +440,11 @@ export const audio = {
         return;
       }
 
+      // GC Pass: Only keep active nodes
+      bgEndlessNodes = bgEndlessNodes.filter(n => {
+        try { return n.context.currentTime < n._stopTime; } catch { return false; }
+      });
+
       const loopDuration = beat * melody.length;
 
       melody.forEach((freq, i) => {
@@ -442,7 +459,9 @@ export const audio = {
           g.gain.setValueAtTime(0.3, t);
           g.gain.exponentialRampToValueAtTime(0.001, t + beat * 0.8);
           osc.start(t);
-          osc.stop(t + beat * 0.85);
+          const stopT = t + beat * 0.85;
+          osc.stop(stopT);
+          osc._stopTime = stopT;
           bgEndlessNodes.push(osc);
         }
       });
@@ -459,7 +478,9 @@ export const audio = {
           g.gain.setValueAtTime(0.5, t);
           g.gain.exponentialRampToValueAtTime(0.001, t + beat * 0.9);
           osc.start(t);
-          osc.stop(t + beat * 0.95);
+          const stopT = t + beat * 0.95;
+          osc.stop(stopT);
+          osc._stopTime = stopT;
           bgEndlessNodes.push(osc);
         }
       });
@@ -479,7 +500,9 @@ export const audio = {
         gNoise.gain.setValueAtTime(0.05, t);
         gNoise.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
         src.start(t);
-        src.stop(t + 0.05);
+        const stopT = t + 0.05;
+        src.stop(stopT);
+        src._stopTime = stopT;
         bgEndlessNodes.push(src);
       }
 

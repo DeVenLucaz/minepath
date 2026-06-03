@@ -171,7 +171,7 @@ export default function HubUpgradesScreen({ onBack }) {
     switch(id) {
       case 'silo': return `+${10 + lvl * 10} seeds/hr`;
       case 'nest': return `-${lvl * 10}% hatch time`;
-      case 'playground': return `+${lvl * 25}% ability power`;
+      case 'playground': return `+${lvl * 25}% power`;
       default: return '';
     }
   };
@@ -185,7 +185,7 @@ export default function HubUpgradesScreen({ onBack }) {
 
   return (
     <div className="sanctuary-screen">
-      <TopBar title="MY HUB" onBack={onBack} />
+      <TopBar title="MY HUB" onBack={onBack} seeds={seeds} />
 
       <div className="sanctuary-content">
         {/* Buildings Section */}

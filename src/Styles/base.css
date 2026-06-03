@@ -63,12 +63,12 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px;
+  padding: 0 16px;
   height: var(--topbar-height);
   background: var(--topbar-bg);
   backdrop-filter: var(--topbar-blur);
   -webkit-backdrop-filter: var(--topbar-blur);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  border-bottom: 1px solid var(--card-border);
   flex-shrink: 0;
   position: relative;
   z-index: 10;
@@ -77,33 +77,31 @@ html, body {
 .topbar-back {
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: rgba(33, 150, 243, 0.85);
-  border: none;
-  border-radius: 22px;
-  padding: 8px 14px 8px 10px;
-  color: white;
-  font-weight: 800;
-  font-size: 15px;
-  box-shadow: 0 3px 0 #1565C0, 0 4px 12px rgba(0,0,0,0.3);
-  min-width: 80px;
-  transition: transform 0.1s, box-shadow 0.1s;
+  gap: 6px;
+  background: var(--card-bg);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 8px 16px 8px 12px;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.2s;
 }
 
 .topbar-back:active {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 #1565C0;
+  transform: scale(0.95);
+  background: var(--card-bg-hover);
 }
 
 .topbar-back-arrow {
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
-  margin-top: -2px;
 }
 
 .topbar-back-text {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .topbar-title {
@@ -116,13 +114,13 @@ html, body {
 }
 
 .topbar-title-letter {
-  font-size: clamp(22px, 6vw, 30px);
+  font-size: clamp(24px, 7vw, 32px);
   font-weight: 900;
-  letter-spacing: 1px;
-  text-shadow:
-    2px 2px 0 rgba(0, 0, 0, 0.5),
-    -1px -1px 0 rgba(0, 0, 0, 0.3),
-    0 0 12px rgba(255, 255, 255, 0.2);
+  letter-spacing: -0.5px;
+  background: linear-gradient(to bottom, #FFFFFF 30%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
   line-height: 1;
   display: inline-block;
 }
@@ -130,26 +128,25 @@ html, body {
 .topbar-seeds {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(255, 165, 0, 0.25);
-  border: 2px solid rgba(255, 215, 0, 0.5);
-  border-radius: 22px;
-  padding: 6px 12px;
-  min-width: 70px;
+  gap: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  min-width: 80px;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(255, 165, 0, 0.2);
 }
 
 .topbar-seeds-icon {
   font-size: 16px;
   line-height: 1;
+  color: var(--gold);
 }
 
 .topbar-seeds-val {
   font-size: 15px;
-  font-weight: 900;
-  color: var(--gold);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  font-weight: 800;
+  color: var(--text-primary);
 }
 
 .topbar-seeds-spacer {

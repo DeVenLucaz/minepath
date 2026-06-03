@@ -219,8 +219,6 @@
 
 /* Chicken */
 .chicken-entity {
-  width: 36px;
-  height: 42px;
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -348,8 +346,6 @@
 }
 
 .pet-entity {
-  width: 24px;
-  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
