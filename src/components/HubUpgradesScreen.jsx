@@ -87,6 +87,7 @@ export default function HubUpgradesScreen({ onBack }) {
         if (Math.random() < 0.40) {
           const fAmt = Math.floor(Math.random() * 3) + 2;
           playerStore.addFeathers(fAmt);
+          audio.featherEarned();
           resultMsg += ` Also found ${fAmt} 🪶 Feathers!`;
         }
       } else {
@@ -97,13 +98,14 @@ export default function HubUpgradesScreen({ onBack }) {
         if (Math.random() < 0.20) {
           const fAmt = Math.floor(Math.random() * 2) + 1;
           playerStore.addFeathers(fAmt);
+          audio.featherEarned();
           resultMsg += ` Also found ${fAmt} 🪶 Feathers!`;
         }
       }
 
       // START HATCH SEQUENCE
       setHatchState({ index, stage: 'shake', reward: rewardEmoji });
-      audio.mineExplosion(); // For shake sound
+      audio.eggHatch(); // For shake sound
 
       setTimeout(() => {
         setHatchState(prev => ({ ...prev, stage: 'explode' }));

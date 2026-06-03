@@ -16,6 +16,7 @@ import TopBar from './components/TopBar';
 import ChickenSVG from './components/ChickenSVG';
 import { gameStore } from './store/gameStore';
 import { playerStore } from './store/playerStore';
+import { audio } from './audio/engine';
 import './Styles/game.css';
 
 export default function App() {
@@ -26,15 +27,19 @@ export default function App() {
 
   // ── Navigation helpers ──
   const goHome = useCallback(() => {
+    audio.init();
+    if (screen === 'game' || screen === 'endless') audio.fadeOutBackground();
     setCurrentLevel(1);
     setIsDaily(false);
     setScreen('home');
-  }, []);
+  }, [screen]);
 
   const goPlay = useCallback(() => {
     if (!gameStore.isTutorialComplete()) {
       setShowTutorial(true);
     } else {
+      audio.init();
+      audio.fadeInBackground();
       setCurrentLevel(1);
       setIsDaily(false);
       setScreen('game');
@@ -44,6 +49,8 @@ export default function App() {
   const goDaily = useCallback(() => {
     const daily = gameStore.getDailyChallenge();
     if (!daily.played) {
+      audio.init();
+      audio.fadeInBackground();
       setIsDaily(true);
       setCurrentLevel(10);
       setScreen('game');
@@ -56,7 +63,11 @@ export default function App() {
   const goAchievements  = useCallback(() => setScreen('achievements'), []);
   const goSkillTree     = useCallback(() => setScreen('skilltree'), []);
   const goHubUpgrades    = useCallback(() => setScreen('hub_upgrades'), []);
-  const goEndless       = useCallback(() => setScreen('endless'), []);
+  const goEndless       = useCallback(() => {
+    audio.init();
+    audio.fadeInBackground();
+    setScreen('endless');
+  }, []);
 
   React.useEffect(() => {
     // Collect passive income
@@ -123,6 +134,8 @@ export default function App() {
 
   const handleTutorialComplete = () => {
     setShowTutorial(false);
+    audio.init();
+    audio.fadeInBackground();
     setCurrentLevel(1);
     setIsDaily(false);
     setScreen('game');
@@ -203,7 +216,7 @@ export default function App() {
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             style={{ width: '100%', height: '100%' }}
           >
-            <ShopScreen onBack={() => setScreen('home')}/>
+            <ShopScreen onBack={goHome}/>
           </motion.div>
         )}
         {screen === 'leaderboard' && (
@@ -214,7 +227,7 @@ export default function App() {
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             style={{ width: '100%', height: '100%' }}
           >
-            <LeaderboardScreen onBack={() => setScreen('home')}/>
+            <LeaderboardScreen onBack={goHome}/>
           </motion.div>
         )}
         {screen === 'settings' && (
@@ -225,7 +238,7 @@ export default function App() {
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             style={{ width: '100%', height: '100%' }}
           >
-            <SettingsScreen onBack={() => setScreen('home')}/>
+            <SettingsScreen onBack={goHome}/>
           </motion.div>
         )}
         {screen === 'achievements' && (

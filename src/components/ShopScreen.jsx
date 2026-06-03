@@ -158,7 +158,7 @@ export default function ShopScreen({ onBack }) {
       const price = getPrice(skin.price);
       if (gameStore.spendSeeds(price)) {
         gameStore.unlockSkin(skin.id); gameStore.setEquippedSkin(skin.id);
-        refresh(); audio.powerupCollect(); showToast(`Unlocked ${skin.name}! 🎉`);
+        refresh(); audio.purchase(); showToast(`Unlocked ${skin.name}! 🎉`);
       } else showToast('Not enough seeds! 🌾');
     }
   };
@@ -171,7 +171,7 @@ export default function ShopScreen({ onBack }) {
       const price = getPrice(style.price);
       if (gameStore.spendSeeds(price)) {
         gameStore.unlockTile(style.id); gameStore.setEquippedTile(style.id);
-        refresh(); audio.powerupCollect(); showToast(`Unlocked ${style.name}! 🎉`);
+        refresh(); audio.purchase(); showToast(`Unlocked ${style.name}! 🎉`);
       } else showToast('Not enough seeds! 🌾');
     }
   };
@@ -184,7 +184,7 @@ export default function ShopScreen({ onBack }) {
       const price = getPrice(trail.price);
       if (gameStore.spendSeeds(price)) {
         gameStore.unlockTrail(trail.id); gameStore.setEquippedTrail(trail.id);
-        refresh(); audio.powerupCollect(); showToast(`Unlocked ${trail.name}! 🎉`);
+        refresh(); audio.purchase(); showToast(`Unlocked ${trail.name}! 🎉`);
       } else showToast('Not enough seeds! 🌾');
     }
   };
@@ -199,7 +199,7 @@ export default function ShopScreen({ onBack }) {
       const price = getPrice(pet.price);
       if (gameStore.spendSeeds(price)) {
         gameStore.unlockPet(pet.id); gameStore.setEquippedPet(pet.id);
-        refresh(); audio.powerupCollect(); showToast(`Unlocked ${pet.name}! 🎉`);
+        refresh(); audio.purchase(); showToast(`Unlocked ${pet.name}! 🎉`);
       } else showToast('Not enough seeds! 🌾');
     }
   };

@@ -95,6 +95,7 @@ export default function EndlessTileScreen({ onBack }) {
   const triggerGameOver = () => {
     setIsGameOver(true);
     isGameOverRef.current = true;
+    audio.stopEndlessBackground();
     audio.gameOver();
     if (floor > gameStore.getBestLevel()) {
         gameStore.updateBestLevel(floor);
@@ -171,6 +172,9 @@ export default function EndlessTileScreen({ onBack }) {
 
             // Speed and Difficulty scaling
             if (nextF !== prevF) {
+                if (nextF % 5 === 0) {
+                    audio.safeFloor();
+                }
                 // Speed increases by 7% every 10 floors starting at Floor 60
                 if (nextF >= 60 && nextF % 10 === 0) {
                     setScrollSpeed(s => s * 1.07);
@@ -263,7 +267,7 @@ export default function EndlessTileScreen({ onBack }) {
     isPausedRef.current = false;
     lastUpdateRef.current = Date.now();
     requestRef.current = requestAnimationFrame(gameLoop);
-    audio.startBackground();
+    audio.startEndlessBackground();
   };
 
   useEffect(() => {
@@ -362,7 +366,7 @@ export default function EndlessTileScreen({ onBack }) {
             </button>
         )}
         {!isSafeFloor && !isGameOver && (
-            <button className="btn-end" onClick={() => { onBack(); }}>END RUN</button>
+            <button className="btn-end" onClick={() => { audio.stopEndlessBackground(); onBack(); }}>END RUN</button>
         )}
       </div>
 
@@ -371,7 +375,7 @@ export default function EndlessTileScreen({ onBack }) {
               <h2>PAUSED</h2>
               <p>Safe Floor {floor}</p>
               <button onClick={() => { setIsPaused(false); isPausedRef.current = false; }}>RESUME</button>
-              <button onClick={onBack}>QUIT</button>
+              <button onClick={() => { audio.stopEndlessBackground(); onBack(); }}>QUIT</button>
           </div>
       )}
 

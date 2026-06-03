@@ -28,7 +28,7 @@ export default function SkillTreeScreen({ onBack }) {
       playerStore.unlockSkill(skill.id);
       setFeathers(playerStore.getFeathers());
       setUnlockedSkills(playerStore.getSkills());
-      audio.powerupCollect();
+      audio.skillUnlock();
     }
   };
 
