@@ -4,7 +4,7 @@ import { playerStore } from './playerStore';
 import { inventoryStore } from './inventoryStore';
 import { settingsStore } from './settingsStore';
 import { hubStore } from './hubStore';
-import { DEFAULT_ACHIEVEMENTS } from '../data/achievements';
+import { DEFAULT_ACHIEVEMENTS, FEATS } from '../data/achievements';
 
 export const gameStore = {
   // Settings
@@ -42,6 +42,13 @@ export const gameStore = {
       ach._claimed[key] = true;
       playerStore.setAchievements(ach);
       playerStore.addSeeds(reward);
+      
+      // Bonus: Add feathers if feat has featherReward
+      const featData = FEATS.find(f => f.key === key);
+      if (featData && featData.featherReward) {
+        playerStore.addFeathers(featData.featherReward);
+      }
+      
       return true;
     }
     return false;

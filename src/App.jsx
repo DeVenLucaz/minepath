@@ -12,18 +12,22 @@ import LeaderboardScreen from './components/LeaderboardScreen';
 import SettingsScreen from './components/SettingsScreen';
 import AchievementsScreen from './components/AchievementsScreen';
 import TutorialOverlay from './components/TutorialOverlay';
+import RewardModal from './components/RewardModal';
 import TopBar from './components/TopBar';
 import ChickenSVG from './components/ChickenSVG';
 import { gameStore } from './store/gameStore';
 import { playerStore } from './store/playerStore';
 import { audio } from './audio/engine';
-import './Styles/game.css';
+import './Styles/index.css';
 
 export default function App() {
   const [screen, setScreen]             = useState('home');
   const [currentLevel, setCurrentLevel] = useState(1);
   const [showTutorial, setShowTutorial] = useState(false);
   const [isDaily, setIsDaily]           = useState(false);
+  
+  // Reward Modal State
+  const [reward, setReward] = useState({ open: false, title: '', message: '', emoji: '' });
 
   // ── Navigation helpers ──
   const goHome = useCallback(() => {
@@ -80,7 +84,12 @@ export default function App() {
     // Collect passive income
     const passive = gameStore.collectPassiveIncome();
     if (passive > 0) {
-      alert(`While you were away, your Seed Silo gathered ${passive} seeds! 🌾`);
+      setReward({
+        open: true,
+        title: 'WELCOME BACK!',
+        message: `While you were away, your Seed Silo gathered ${passive} seeds!`,
+        emoji: '🌾'
+      });
     }
   }, []);
 
@@ -114,32 +123,6 @@ export default function App() {
     // V4: Add XP on level clear
     const xpGained = Math.floor(data.level * 20 * xpMult);
     playerStore.addXP(xpGained);
-
-    // V4: Chance to find an egg
-    let foundEgg = null;
-    if (Math.random() < 0.40) {
-      const level = data.level;
-      const roll = Math.random() * 100;
-      let type = 'brown_egg';
-
-      if (level <= 5) {
-        if (roll < 3) type = 'golden_egg';
-        else if (roll < 13) type = 'blue_egg';
-      } else if (level <= 15) {
-        if (roll < 7) type = 'golden_egg';
-        else if (roll < 25) type = 'blue_egg';
-      } else if (level <= 30) {
-        if (roll < 12) type = 'golden_egg';
-        else if (roll < 37) type = 'blue_egg';
-      } else {
-        if (roll < 18) type = 'golden_egg';
-        else if (roll < 50) type = 'blue_egg';
-      }
-      
-      foundEgg = type;
-      gameStore.addEgg(type);
-    }
-    data.eggFound = foundEgg;
   }, [isDaily]);
 
   const handleTutorialComplete = () => {

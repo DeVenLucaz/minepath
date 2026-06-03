@@ -194,7 +194,9 @@ export default function AchievementsScreen({ onBack }) {
                     onClick={() => handleClaim(feat)}
                   >
                     <span>CLAIM</span>
-                    <span className="af-claim-reward">+{feat.reward}🌾</span>
+                    <span className="af-claim-reward">
+                      +{feat.reward}🌾 {feat.featherReward ? `+${feat.featherReward}🪶` : ''}
+                    </span>
                   </button>
                 ) : (
                   <div className="af-lock">🔒</div>

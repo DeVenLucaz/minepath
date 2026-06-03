@@ -35,7 +35,8 @@ export default function LevelClearModal({
   tileSeedsCollected = 0,
   baseLevelReward = 0,
   petBonusSeeds = 0,
-  skillBonusSeeds = 0
+  skillBonusSeeds = 0,
+  multiplierBonusSeeds = 0
 }) {
   // Time bonus string
   const timeBonusStr = timeLeft > 0 ? `+${timeLeft}s` : '—';
@@ -102,6 +103,12 @@ export default function LevelClearModal({
               <span style={{ color: '#666' }}>⭐ Level Reward:</span>
               <span style={{ fontWeight: 'bold' }}>{baseLevelReward}</span>
             </div>
+            {multiplierBonusSeeds > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', color: '#FFA000' }}>
+                <span>🔥 Multipliers:</span>
+                <span style={{ fontWeight: 'bold' }}>+{multiplierBonusSeeds}</span>
+              </div>
+            )}
             {petBonusSeeds > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', color: '#4CAF50' }}>
                 <span>🐾 Pet Bonus:</span>
@@ -119,7 +126,7 @@ export default function LevelClearModal({
             
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: '900' }}>
               <span>TOTAL:</span>
-              <span style={{ color: '#F9A825' }}>{tileSeedsCollected + baseLevelReward + petBonusSeeds + skillBonusSeeds}</span>
+              <span style={{ color: '#F9A825' }}>{tileSeedsCollected + baseLevelReward + petBonusSeeds + skillBonusSeeds + multiplierBonusSeeds}</span>
             </div>
           </div>
         </div>

@@ -1,0 +1,40 @@
+:root {
+  /* Background — shared across ALL screens */
+  --bg-gradient: linear-gradient(160deg, #1a237e 0%, #4a148c 45%, #1b5e20 100%);
+
+  /* Card surfaces */
+  --card-bg: rgba(255, 255, 255, 0.10);
+  --card-bg-hover: rgba(255, 255, 255, 0.16);
+  --card-border: rgba(255, 255, 255, 0.15);
+  --card-border-active: rgba(255, 215, 0, 0.5);
+  --card-radius: 18px;
+
+  /* Seeds gold */
+  --gold: #FFD700;
+  --gold-dark: #B8860B;
+  --gold-shadow: rgba(255, 215, 0, 0.4);
+
+  /* Accent colors */
+  --accent-green: #4CAF50;
+  --accent-green-dark: #2E7D32;
+  --accent-blue: #2196F3;
+  --accent-blue-dark: #1565C0;
+  --accent-red: #F44336;
+  --accent-purple: #7B1FA2;
+
+  /* Text */
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.65);
+  --text-muted: rgba(255, 255, 255, 0.35);
+
+  /* TopBar */
+  --topbar-height: 64px;
+  --topbar-bg: rgba(0, 0, 0, 0.35);
+  --topbar-blur: blur(12px);
+
+  /* Buttons */
+  --btn-radius: 14px;
+  --btn-shadow-green: 0 5px 0 #2E7D32;
+  --btn-shadow-gold: 0 5px 0 #B8860B;
+  --btn-shadow-blue: 0 5px 0 #1565C0;
+}

@@ -1,0 +1,122 @@
+.skill-tree-screen {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-gradient);
+  display: flex;
+  flex-direction: column;
+}
+
+.st-header {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.st-player-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-right: 20px;
+}
+
+.st-stat-badge {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.st-xp-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.st-xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  transition: width 0.5s ease-out;
+}
+
+.st-path-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.st-path {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.st-path-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+
+.st-nodes {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 8px 4px;
+}
+
+.st-node {
+  min-width: 140px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.st-node--unlocked {
+  background: rgba(76, 175, 80, 0.15);
+  border-color: #4CAF50;
+}
+
+.st-node-icon {
+  font-size: 32px;
+}
+
+.st-node-name {
+  font-size: 13px;
+  font-weight: 900;
+  color: white;
+}
+
+.st-unlock-btn {
+  background: var(--gold);
+  color: #3E2000;
+  border: none;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-weight: 900;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.st-unlock-btn:disabled {
+  background: #555;
+  color: #999;
+}

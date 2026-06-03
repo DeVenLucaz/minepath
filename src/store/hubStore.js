@@ -68,10 +68,14 @@ export const hubStore = {
     const buildings = this.getBuildings();
     const nestLvl = buildings.nest || 0;
     
-    // Base 2 hours, reduced by 15% per level
-    const baseTime = 3600 * 1000 * 2;
+    // Tiered base times: Brown (2h), Blue (4h), Golden (6h)
+    let baseHours = 2;
+    if (eggType === 'blue_egg') baseHours = 4;
+    else if (eggType === 'golden_egg') baseHours = 6;
+
+    const baseTimeMs = 3600 * 1000 * baseHours;
     const reduction = 1 - (nestLvl * 0.15);
-    const hatchTime = Date.now() + (baseTime * Math.max(0.1, reduction));
+    const hatchTime = Date.now() + (baseTimeMs * Math.max(0.1, reduction));
 
     eggs.push({ eggType, hatchTime, status: 'incubating' });
     safeSet(STORAGE_KEYS.HATCHERY_EGGS, eggs);

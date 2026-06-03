@@ -5,6 +5,7 @@ import { audio } from '../audio/engine';
 import { PETS } from '../data/pets';
 import TopBar from './TopBar';
 import HelpModal from './HelpModal';
+import RewardModal from './RewardModal';
 
 export default function HubUpgradesScreen({ onBack }) {
   const [seeds, setSeeds] = useState(0);
@@ -12,12 +13,34 @@ export default function HubUpgradesScreen({ onBack }) {
   const [eggs, setEggs] = useState([]);
   const [hatchState, setHatchState] = useState({ index: null, stage: null, reward: null });
   const [showHelp, setShowHelp] = useState(false);
+  const [rewardModal, setRewardModal] = useState({ open: false, title: '', message: '', emoji: '' });
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
     setSeeds(gameStore.getSeeds());
     setBuildings(gameStore.getBuildings());
     
-    // Check egg statuses
+    // Heartbeat for real-time timers
+    const timerInterval = setInterval(() => {
+      const now = Date.now();
+      setCurrentTime(now);
+
+      // Check egg statuses in real-time
+      setEggs(prevEggs => {
+        let updated = false;
+        const newEggs = prevEggs.map(egg => {
+          if (egg.status === 'incubating' && now >= egg.hatchTime) {
+            updated = true;
+            return { ...egg, status: 'ready' };
+          }
+          return egg;
+        });
+        if (updated) gameStore.updateEggs(newEggs);
+        return newEggs;
+      });
+    }, 1000);
+
+    // Initial egg load
     const currentEggs = gameStore.getEggs();
     const now = Date.now();
     let updated = false;
@@ -30,6 +53,8 @@ export default function HubUpgradesScreen({ onBack }) {
     });
     if (updated) gameStore.updateEggs(processedEggs);
     setEggs(processedEggs);
+
+    return () => clearInterval(timerInterval);
   }, []);
 
   const handleUpgrade = (id) => {
@@ -50,6 +75,7 @@ export default function HubUpgradesScreen({ onBack }) {
       const abilityPower = 1 + (playgroundLvl * 0.25);
       let resultMsg = '';
       let rewardEmoji = '🎁';
+      let title = 'EGG HATCHED!';
 
       if (egg.eggType === 'golden_egg') {
         const unlocked = gameStore.getUnlockedPets();
@@ -66,12 +92,13 @@ export default function HubUpgradesScreen({ onBack }) {
           const reward = pool[Math.floor(Math.random() * pool.length)];
           gameStore.unlockPet(reward.id);
           rewardEmoji = reward.emoji;
-          resultMsg = `GOLDEN EGG: Hatched a ${reward.rarity} friend: ${reward.name} ${reward.emoji}!`;
+          resultMsg = `Hatched a ${reward.rarity} friend: ${reward.name}! Check your Shop.`;
+          title = 'NEW PET UNLOCKED!';
         } else {
           const seedsReward = Math.floor(1000 * abilityPower);
           gameStore.addSeeds(seedsReward);
           rewardEmoji = '🌾';
-          resultMsg = `GOLDEN EGG: All pets unlocked! Gained ${seedsReward} Seeds!`;
+          resultMsg = `All pets unlocked! You gained ${seedsReward} Seeds instead.`;
         }
       } else if (egg.eggType === 'blue_egg') {
         const unlocked = gameStore.getUnlockedPets();
@@ -80,11 +107,12 @@ export default function HubUpgradesScreen({ onBack }) {
           const target = unlocked[Math.floor(Math.random() * unlocked.length)];
           const petObj = PETS.find(p => p.id === target);
           const newLvl = gameStore.upgradePet(target);
-          resultMsg = `BLUE EGG: Upgraded ${petObj.name} to Level ${newLvl}! Ability boosted.`;
+          resultMsg = `Upgraded ${petObj.name} to Level ${newLvl}! Ability boosted.`;
+          title = 'PET UPGRADED!';
         } else {
           const seedsReward = Math.floor(300 * abilityPower);
           gameStore.addSeeds(seedsReward);
-          resultMsg = `BLUE EGG: No pets to upgrade. Gained ${seedsReward} Seeds!`;
+          resultMsg = `No pets to upgrade. Gained ${seedsReward} Seeds!`;
         }
         if (Math.random() < 0.40) {
           const fAmt = Math.floor(Math.random() * 3) + 2;
@@ -96,7 +124,8 @@ export default function HubUpgradesScreen({ onBack }) {
         const seedsReward = Math.floor((100 + Math.random() * 200) * abilityPower);
         gameStore.addSeeds(seedsReward);
         rewardEmoji = '🌾';
-        resultMsg = `BROWN EGG: Found ${seedsReward} Seeds inside! 🌾`;
+        resultMsg = `Found ${seedsReward} Seeds inside!`;
+        title = 'BROWN EGG BURST!';
         if (Math.random() < 0.20) {
           const fAmt = Math.floor(Math.random() * 2) + 1;
           playerStore.addFeathers(fAmt);
@@ -119,7 +148,7 @@ export default function HubUpgradesScreen({ onBack }) {
       }, 700);
 
       setTimeout(() => {
-        alert(resultMsg);
+        setRewardModal({ open: true, title, message: resultMsg, emoji: rewardEmoji });
         gameStore.removeEgg(index);
         setEggs(gameStore.getEggs());
         setSeeds(gameStore.getSeeds());
@@ -129,170 +158,90 @@ export default function HubUpgradesScreen({ onBack }) {
     }
   };
 
-  const buildingInfo = {
-    silo: { 
-      desc: "Stores seeds and generates passive income.", 
-      stat: `Passive: ${buildings.silo * 5}/hr • Bonus: +${buildings.silo * 10}%` 
-    },
-    nest: { 
-      desc: "Reduces timer speed and egg hatch time.", 
-      stat: `Timer: -${buildings.nest * 5}% • Hatch: -${buildings.nest * 15}%` 
-    },
-    playground: { 
-      desc: "Boosts pet abilities and start-level rewards.", 
-      stat: `Power: +${buildings.playground * 25}% • Luck: +${buildings.playground * 10}%` 
+  const getBuildingInfo = (id) => {
+    switch(id) {
+      case 'silo': return { name: 'Seed Silo', icon: '🌾', desc: 'Passively gathers seeds while you are away.' };
+      case 'nest': return { name: 'Hatchery Nest', icon: '🪺', desc: 'Warm nests that speed up egg hatching.' };
+      case 'playground': return { name: 'Pet Playground', icon: '🎠', desc: 'Increases the power of pet abilities.' };
+      default: return { name: '', icon: '', desc: '' };
     }
   };
 
-  const getCrackColor = (type) => {
-    if (type === 'golden_egg') return '#FFD700';
-    if (type === 'blue_egg') return '#29B6F6';
-    return '#8B4513';
+  const getBuildingStat = (id, lvl) => {
+    switch(id) {
+      case 'silo': return `+${10 + lvl * 10} seeds/hr`;
+      case 'nest': return `-${lvl * 10}% hatch time`;
+      case 'playground': return `+${lvl * 25}% ability power`;
+      default: return '';
+    }
+  };
+
+  const formatTime = (ms) => {
+    const sec = Math.ceil(ms / 1000);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   return (
-    <div className="screen-base hub-upgrades-screen">
-      <TopBar title="MY SANCTUARY" onBack={onBack} />
-      
-      <style>{`
-        @keyframes egg-wobble {
-          0%, 100% { transform: rotate(0); }
-          20% { transform: rotate(-8deg); }
-          40% { transform: rotate(8deg); }
-          60% { transform: rotate(-6deg); }
-          80% { transform: rotate(6deg); }
-        }
-        @keyframes egg-crack-appear {
-          from { opacity: 0; transform: scale(0.5); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes egg-shake-hatch {
-          0%, 100% { transform: translateX(0); }
-          20%, 60% { transform: translateX(-8px); }
-          40%, 80% { transform: translateX(8px); }
-        }
-        @keyframes egg-explode {
-          0% { transform: scale(1); opacity: 1; }
-          40% { transform: scale(1.3); opacity: 1; }
-          100% { transform: scale(0); opacity: 0; }
-        }
-        @keyframes reward-pop {
-          0% { transform: scale(0); }
-          70% { transform: scale(1.3); }
-          100% { transform: scale(1); }
-        }
-        .egg-wobble { animation: egg-wobble 0.8s ease-in-out infinite; }
-        .egg-shake-hatch { animation: egg-shake-hatch 0.4s linear infinite; }
-        .egg-explode { animation: egg-explode 0.3s ease-out forwards; }
-        .reward-pop { animation: reward-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        
-        .egg-crack {
-          position: absolute;
-          width: 20px;
-          height: 2px;
-          animation: egg-crack-appear 0.3s forwards;
-          pointer-events: none;
-        }
-        .egg-crack-1 { top: 30%; left: 20%; transform: rotate(45deg); }
-        .egg-crack-2 { top: 50%; right: 20%; transform: rotate(-30deg); }
-        .egg-crack-3 { bottom: 30%; left: 40%; transform: rotate(10deg); }
-      `}</style>
+    <div className="sanctuary-screen">
+      <TopBar title="MY HUB" onBack={onBack} />
 
       <div className="sanctuary-content">
-        {/* SEEDS CHIP */}
-        <div className="home-chip home-chip-seeds" style={{ marginBottom: '10px' }}>
-          <span className="home-chip-icon">🌾</span>
-          <span className="home-chip-val">{seeds}</span>
-        </div>
-
-        {/* BUILDINGS */}
-        <div className="sanctuary-section-title">🏙️ Sanctuary Buildings</div>
+        {/* Buildings Section */}
+        <div className="sanctuary-section-title">Sanctuary Buildings</div>
         <div className="sanctuary-grid">
-          {Object.entries(buildingInfo).map(([id, info]) => (
-            <div key={id} className="building-card">
-              <div className="building-icon">{id === 'silo' ? '🌾' : id === 'nest' ? '🪺' : '🎠'}</div>
-              <div className="building-name">
-                {id === 'silo' ? 'Seed Silo' : id === 'nest' ? 'Training Nest' : 'Pet Playground'}
+          {Object.entries(buildings).map(([id, lvl]) => {
+            const info = getBuildingInfo(id);
+            const cost = (lvl + 1) * 500;
+            return (
+              <div key={id} className="building-card">
+                <div className="building-icon">{info.icon}</div>
+                <div className="building-name">{info.name}</div>
+                <div className="building-desc">{info.desc}</div>
+                <div className="building-lvl">Level {lvl}</div>
+                <div className="building-stat">{getBuildingStat(id, lvl)}</div>
+                <button 
+                  className="building-upgrade-btn"
+                  onClick={() => handleUpgrade(id)}
+                  disabled={seeds < cost}
+                >
+                  <span>UPGRADE</span>
+                  <span>{cost}🌾</span>
+                </button>
               </div>
-              <div className="building-desc">{info.desc}</div>
-              <div className="building-stat">{info.stat}</div>
-              <div className="building-lvl">Lvl {buildings[id]}</div>
-              <button 
-                className="building-upgrade-btn" 
-                onClick={() => handleUpgrade(id)}
-                disabled={seeds < (buildings[id] + 1) * 500}
-              >
-                <span>UPGRADE</span>
-                <span>{(buildings[id] + 1) * 500} 🌾</span>
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* HATCHERY */}
-        <div className="sanctuary-section-title">🐣 Hatchery</div>
-        
-        <div style={{
-          margin: '0 20px 15px',
-          padding: '12px',
-          background: 'rgba(255,255,255,0.05)',
-          borderRadius: '12px',
-          border: '1px solid rgba(255,255,255,0.1)',
-          fontSize: '11px',
-          color: 'rgba(255,255,255,0.8)',
-          lineHeight: '1.4'
-        }}>
-          💡 Tip: Eggs drop after completing levels (40% chance). Higher levels give better egg types. Hatch them here for seeds, feathers, and pet upgrades.
-        </div>
-
+        {/* Hatchery Section */}
+        <div className="sanctuary-section-title">Hatchery & Eggs</div>
         <div className="hatchery-container">
           <div className="hatchery-list">
             {eggs.length > 0 ? eggs.map((egg, i) => {
               const isHatching = hatchState.index === i;
-              const isReady = egg.status === 'ready';
-              const readyTime = isReady ? (Date.now() - egg.hatchTime) : 0;
-              const numCracks = isReady ? (readyTime > 60000 ? 3 : readyTime > 30000 ? 2 : 1) : 0;
-              const crackColor = getCrackColor(egg.eggType);
-
-              let animClass = '';
-              if (isHatching) {
-                if (hatchState.stage === 'shake') animClass = 'egg-shake-hatch';
-                else if (hatchState.stage === 'explode') animClass = 'egg-explode';
-              } else if (isReady) {
-                animClass = 'egg-wobble';
-              }
+              const timeLeft = Math.max(0, egg.hatchTime - currentTime);
 
               return (
-                <div key={i} className={`egg-card egg-type-${egg.eggType || 'brown_egg'} ${animClass}`}>
-                  <div className="egg-icon-wrap" style={{ position: 'relative', display: 'inline-block' }}>
-                    {isHatching && hatchState.stage === 'reward' ? (
-                      <div className="reward-pop" style={{ fontSize: '40px' }}>{hatchState.reward}</div>
-                    ) : (
-                      <>
-                        <div className="egg-icon">
-                          {egg.eggType === 'golden_egg' ? '✨' : egg.eggType === 'blue_egg' ? '💎' : '🥚'}
-                        </div>
-                        {numCracks >= 1 && <div className="egg-crack egg-crack-1" style={{ backgroundColor: crackColor }} />}
-                        {numCracks >= 2 && <div className="egg-crack egg-crack-2" style={{ backgroundColor: crackColor }} />}
-                        {numCracks >= 3 && <div className="egg-crack egg-crack-3" style={{ backgroundColor: crackColor }} />}
-                      </>
-                    )}
+                <div key={i} className={`egg-card egg-type-${egg.eggType}`}>
+                  {egg.status === 'ready' && !isHatching && <div className="egg-indicator-dot" />}
+                  
+                  <div className="egg-name">{egg.eggType.replace('_', ' ')}</div>
+                  
+                  <div className={`egg-icon ${isHatching ? `hatch-${hatchState.stage}` : ''}`}>
+                    {isHatching && hatchState.stage === 'reward' ? hatchState.reward : egg.icon}
                   </div>
-                  <div className="egg-name">
-                    {egg.eggType === 'golden_egg' ? 'Golden Egg' : egg.eggType === 'blue_egg' ? 'Blue Egg' : 'Brown Egg'}
-                  </div>
-                  {egg.status === 'ready' ? (
+
+                  {egg.status === 'incubating' ? (
+                    <div className="egg-timer">{formatTime(timeLeft)}</div>
+                  ) : (
                     <button 
-                      className="egg-ready-btn" 
+                      className="egg-ready-btn"
                       onClick={() => handleHatch(i)}
-                      disabled={hatchState.index !== null}
+                      disabled={isHatching}
                     >
                       {isHatching ? '...' : 'HATCH!'}
                     </button>
-                  ) : (
-                    <div className="egg-timer">
-                      {Math.ceil((egg.hatchTime - Date.now()) / (60000))} mins left
-                    </div>
                   )}
                 </div>
               );
@@ -324,6 +273,14 @@ export default function HubUpgradesScreen({ onBack }) {
           ]}
         />
       )}
+
+      <RewardModal
+        isOpen={rewardModal.open}
+        title={rewardModal.title}
+        message={rewardModal.message}
+        rewardEmoji={rewardModal.emoji}
+        onConfirm={() => setRewardModal({ ...rewardModal, open: false })}
+      />
     </div>
   );
 }

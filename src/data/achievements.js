@@ -33,12 +33,22 @@ export const FEATS = [
     color: '#F57F17',
   },
   {
+    key: 'earlyBird',
+    name: 'Early Bird',
+    desc: 'Reach Level 5',
+    icon: '🌅',
+    target: true,
+    reward: 20,
+    color: '#4FC3F7',
+  },
+  {
     key: 'mineMaster',
     name: 'Mine Master',
     desc: 'Reach Level 10',
     icon: '⛏️',
     target: true,
     reward: 50,
+    featherReward: 2,
     color: '#78909C',
   },
   {
@@ -48,6 +58,7 @@ export const FEATS = [
     icon: '🪨',
     target: true,
     reward: 100,
+    featherReward: 5,
     color: '#546E7A',
   },
   {
@@ -145,6 +156,7 @@ export const FEATS = [
 // Default achievements state for gameStore
 export const DEFAULT_ACHIEVEMENTS = {
   firstSteps:    false,
+  earlyBird:     false,
   seedSnatcher:  false,
   bigHarvest:    false,
   mineMaster:    false,

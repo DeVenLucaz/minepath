@@ -1,0 +1,266 @@
+@keyframes twinkle {
+  0%   { opacity: 0.15; transform: scale(0.7); }
+  100% { opacity: 0.9;  transform: scale(1.3); }
+}
+
+@keyframes logoBobble {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-4px); }
+}
+
+@keyframes goldenPulse {
+  0% { transform: scale(1); filter: brightness(1.4) saturate(2) drop-shadow(0 0 10px gold); }
+  100% { transform: scale(1.05); filter: brightness(1.8) saturate(2.5) drop-shadow(0 0 20px gold); }
+}
+
+@keyframes mascotSparkle {
+  0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg) translate(0, 0); }
+  50% { opacity: 1; transform: scale(1.3) rotate(180deg) translate(5px, -5px); }
+}
+
+@keyframes dailyPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 5px 0 #01579B, 0 6px 16px rgba(0,0,0,0.3); }
+  50%       { transform: scale(1.025); box-shadow: 0 5px 0 #01579B, 0 8px 22px rgba(41,182,246,0.4); }
+}
+
+@keyframes featPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+@keyframes petFloat {
+  0% { transform: scale(1); }
+  100% { transform: translateY(-5px) scale(1.1); }
+}
+
+@keyframes trailFade {
+  0%   { transform: translate(-50%, -50%) scale(1);   opacity: inherit; }
+  100% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+}
+
+@keyframes modPulse {
+  from { opacity: 0.7; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1.05); }
+}
+
+@keyframes screenShake {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  10% { transform: translate(-8px, -4px) rotate(-1deg); }
+  20% { transform: translate(8px, 4px) rotate(1deg); }
+  30% { transform: translate(-6px, 2px) rotate(-0.5deg); }
+  40% { transform: translate(6px, -2px) rotate(0.5deg); }
+  50% { transform: translate(-4px, 4px) rotate(-0.5deg); }
+  60% { transform: translate(4px, -4px) rotate(0.5deg); }
+  70% { transform: translate(-2px, 2px) rotate(0); }
+  80% { transform: translate(2px, -2px) rotate(0); }
+  90% { transform: translate(-1px, 1px) rotate(0); }
+}
+
+@keyframes slowmoPulse { 0% { opacity: 0.7; } 100% { opacity: 1; } }
+
+@keyframes comboPop {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes magnetPulse {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+@keyframes powerupPulse {
+  0% { opacity: 0.2; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.2; }
+}
+
+@keyframes pulseAdjacent {
+  0%, 100% { box-shadow: 0 4px 0 rgba(0,0,0,0.4), 0 0 0 2px rgba(255,255,255,0.6), 0 0 12px rgba(255,255,255,0.3); }
+  50% { box-shadow: 0 4px 0 rgba(0,0,0,0.4), 0 0 0 3px rgba(255,255,255,0.9), 0 0 20px rgba(255,255,255,0.5); }
+}
+
+@keyframes pulseCheckpoint {
+  0%, 100% {
+    box-shadow: 0 4px 0 #B8860B, 0 0 20px rgba(255,215,0,0.6);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 4px 0 #B8860B, 0 0 35px rgba(255,215,0,1);
+    transform: scale(1.06);
+  }
+}
+
+@keyframes powerupGlow {
+  0% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+@keyframes tileFlip {
+  0% { transform: scaleX(0) scaleY(0.8); }
+  60% { transform: scaleX(1.05) scaleY(1.05); }
+  100% { transform: scaleX(1) scaleY(1); }
+}
+
+@keyframes tileMine {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.2) rotate(5deg); }
+  60% { transform: scale(0.95) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes powerupDot {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(1.5); opacity: 1; }
+}
+
+@keyframes shieldPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+@keyframes idleBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes walkBob {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  25% { transform: translateY(-3px) rotate(-5deg); }
+  75% { transform: translateY(-1px) rotate(5deg); }
+}
+
+@keyframes legSwing1 {
+  0%, 100% { transform: rotate(0); }
+  50% { transform: rotate(20deg); }
+}
+
+@keyframes legSwing2 {
+  0%, 100% { transform: rotate(0); }
+  50% { transform: rotate(-20deg); }
+}
+
+@keyframes explodeChicken {
+  0% { transform: translate(-50%, -50%) scale(1) rotate(0); opacity: 1; }
+  30% { transform: translate(-50%, -60%) scale(1.5) rotate(15deg); }
+  60% { transform: translate(-50%, -50%) scale(0.8) rotate(-10deg); opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(0) rotate(360deg); opacity: 0; }
+}
+
+@keyframes celebrateBounce {
+  0%, 100% { transform: translate(-50%, -50%) scale(1) rotate(0); }
+  25% { transform: translate(-50%, -65%) scale(1.1) rotate(-10deg); }
+  75% { transform: translate(-50%, -65%) scale(1.1) rotate(10deg); }
+}
+
+@keyframes shieldHit {
+  0% { transform: scale(1); }
+  20% { transform: scale(1.3); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes obstacleIn {
+  0% { opacity: 0; transform: scale(0.5); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes obstacleOut {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.8); }
+}
+
+@keyframes obstacleIconBounce {
+  0% { transform: scale(1) rotate(-5deg); }
+  100% { transform: scale(1.15) rotate(5deg); }
+}
+
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0) scale(1); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; }
+}
+
+@keyframes levelCompleteIn {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes levelTextPop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes seedsPop {
+  0% { transform: scale(0) translateY(20px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes chickenDropIn {
+  0%   { transform: translateY(-30px) scale(0.8); opacity: 0; }
+  100% { transform: translateY(0)     scale(1);   opacity: 1; }
+}
+
+@keyframes recordPop {
+  0%   { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+@keyframes sparklePulse {
+  0%   { transform: scale(0.7) rotate(-15deg); opacity: 0.4; }
+  100% { transform: scale(1.3) rotate(15deg);  opacity: 1; }
+}
+
+@keyframes chickenJump {
+  0%   { transform: translateY(20px) scale(0.85); opacity: 0; }
+  100% { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+@keyframes toastIn {
+  0%   { transform: translateX(-50%) translateY(-10px); opacity: 0; }
+  100% { transform: translateX(-50%) translateY(0);     opacity: 1; }
+}
+
+@keyframes trailPulse {
+  0%   { transform: scale(0.8); }
+  100% { transform: scale(1.2); }
+}
+
+@keyframes eggWobble {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+@keyframes readyPulse {
+  from { transform: scale(1); box-shadow: 0 0 0 gold; }
+  to { transform: scale(1.1); box-shadow: 0 0 10px gold; }
+}
+
+@keyframes fireFlicker {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.5) drop-shadow(0 0 10px #FF4500); }
+}
+
+@keyframes gateShake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-8px); }
+  40%      { transform: translateX(8px); }
+  60%      { transform: translateX(-5px); }
+  80%      { transform: translateX(5px); }
+}
+
+@keyframes tutorialIn {
+  0% { transform: scale(0.5) translateY(40px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes tutorialIconBounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-10px); }
+}

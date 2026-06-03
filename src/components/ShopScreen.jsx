@@ -89,8 +89,10 @@ function TrailPreview({ trail }) {
 }
 
 // ─── BUY / EQUIP BUTTON ──────────────────────────────────
-function ActionBtn({ owned, equipped, price, onPress, hasDiscount }) {
+function ActionBtn({ owned, equipped, price, onPress, hasDiscount, currentSeeds }) {
   const displayPrice = hasDiscount ? Math.floor(price * 0.9) : price;
+  const canAfford = currentSeeds >= displayPrice;
+
   if (equipped) {
     return (
       <button className="sp-btn sp-btn--equipped" onClick={onPress}>
@@ -105,11 +107,67 @@ function ActionBtn({ owned, equipped, price, onPress, hasDiscount }) {
       </button>
     );
   }
+
+  if (!canAfford) {
+    return (
+      <button 
+        className="sp-btn" 
+        style={{ 
+          background: 'rgba(255,255,255,0.05)', 
+          color: 'rgba(255,255,255,0.3)', 
+          cursor: 'not-allowed',
+          border: '1px solid rgba(255,255,255,0.1)',
+          flexDirection: 'column',
+          minHeight: '44px',
+          width: '80px'
+        }}
+        disabled
+      >
+        <span style={{ fontSize: '9px', fontWeight: 'bold' }}>NEED</span>
+        <span style={{ fontSize: '13px', fontWeight: '900' }}>{displayPrice}🌾</span>
+      </button>
+    );
+  }
+
   return (
-    <button className="sp-btn sp-btn--buy" onClick={onPress}>
-      <span className="sp-btn-seed">🌾</span>
-      <span>{displayPrice}</span>
+    <button className="sp-btn sp-btn--buy" onClick={onPress} style={{ flexDirection: 'column', minHeight: '44px', width: '80px' }}>
+      {hasDiscount && (
+        <span style={{ fontSize: '9px', textDecoration: 'line-through', opacity: 0.6, marginBottom: '-2px' }}>
+          {price}
+        </span>
+      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+        <span className="sp-btn-seed">🌾</span>
+        <span>{displayPrice}</span>
+      </div>
     </button>
+  );
+}
+
+const RARITY_COLORS = {
+  common: '#BDBDBD',
+  rare: '#42A5F5',
+  epic: '#AB47BC',
+  legendary: '#FFA726'
+};
+
+function RarityBadge({ rarity }) {
+  if (!rarity) return null;
+  return (
+    <div style={{
+      fontSize: '8px',
+      fontWeight: '900',
+      textTransform: 'uppercase',
+      padding: '2px 6px',
+      borderRadius: '6px',
+      background: RARITY_COLORS[rarity] || '#555',
+      color: 'white',
+      width: 'fit-content',
+      marginBottom: '4px',
+      letterSpacing: '0.5px'
+    }}>
+      {rarity}
+    </div>
   );
 }
 
@@ -130,6 +188,12 @@ export default function ShopScreen({ onBack }) {
 
   const unlockedSkills = playerStore.getSkills();
   const hasDiscount = unlockedSkills.includes('shop_discount');
+  const hasRoyalCrown = unlockedSkills.includes('royal_golden_crown');
+  const finalDiscount = hasRoyalCrown ? 0.20 : hasDiscount ? 0.10 : 0;
+
+  const buildings = gameStore.getBuildings();
+  const playgroundLvl = buildings.playground || 0;
+  const abilityPower = 1 + (playgroundLvl * 0.25);
 
   const refresh = () => {
     setSeeds(gameStore.getSeeds());
@@ -149,7 +213,7 @@ export default function ShopScreen({ onBack }) {
   };
 
   const getPrice = (originalPrice) => {
-    return hasDiscount ? Math.floor(originalPrice * 0.9) : originalPrice;
+    return Math.floor(originalPrice * (1 - finalDiscount));
   };
 
   const buySkin = (skin) => {
@@ -243,6 +307,13 @@ export default function ShopScreen({ onBack }) {
           const owned    = unlockedSkins.includes(skin.id);
           const equipped = equippedSkin === skin.id;
           const isNinja  = skin.id === 'ninja';
+          
+          // Determine rarity based on price
+          let rarity = 'common';
+          if (skin.price >= 800) rarity = 'legendary';
+          else if (skin.price >= 500) rarity = 'epic';
+          else if (skin.price >= 300) rarity = 'rare';
+
           return (
             <div
               key={skin.id}
@@ -252,13 +323,17 @@ export default function ShopScreen({ onBack }) {
                   ? `linear-gradient(135deg, ${skin.cardColor}, ${skin.cardColor}dd)`
                   : owned ? `${skin.cardColor}aa` : 'rgba(255,255,255,0.07)',
                 borderColor: equipped ? skin.cardBorder : owned ? `${skin.cardBorder}66` : 'rgba(255,255,255,0.1)',
+                position: 'relative',
+                overflow: 'hidden'
               }}
             >
+              {!owned && <div style={{ position: 'absolute', top: 5, right: 10, fontSize: '14px', opacity: 0.2 }}>🔒</div>}
               {/* Chicken SVG preview */}
               <div className="sp-card-art">
                 <ChickenSVG skinId={skin.id} mood="normal" size={72}/>
               </div>
               <div className="sp-card-info">
+                <RarityBadge rarity={rarity} />
                 <div className="sp-card-name" style={{ color: isNinja ? '#fff' : '#1a1a1a' }}>
                   {skin.name}
                 </div>
@@ -274,7 +349,8 @@ export default function ShopScreen({ onBack }) {
               <ActionBtn
                 owned={owned} equipped={equipped}
                 price={skin.price} onPress={() => buySkin(skin)}
-                hasDiscount={hasDiscount}
+                hasDiscount={finalDiscount > 0}
+                currentSeeds={seeds}
               />
             </div>
           );
@@ -291,8 +367,10 @@ export default function ShopScreen({ onBack }) {
               style={{
                 background: equipped ? 'rgba(255,215,0,0.15)' : owned ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)',
                 borderColor: equipped ? 'rgba(255,215,0,0.5)' : 'rgba(255,255,255,0.1)',
+                position: 'relative'
               }}
             >
+              {!owned && <div style={{ position: 'absolute', top: 5, right: 10, fontSize: '14px', opacity: 0.2 }}>🔒</div>}
               <TilePreview style={style}/>
               <div className="sp-card-info">
                 <div className="sp-card-name">{style.name}</div>
@@ -301,7 +379,8 @@ export default function ShopScreen({ onBack }) {
               <ActionBtn
                 owned={owned} equipped={equipped}
                 price={style.price} onPress={() => buyTile(style)}
-                hasDiscount={hasDiscount}
+                hasDiscount={finalDiscount > 0}
+                currentSeeds={seeds}
               />
             </div>
           );
@@ -320,8 +399,10 @@ export default function ShopScreen({ onBack }) {
                   ? `${trail.cardAccent}22`
                   : owned ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)',
                 borderColor: equipped ? `${trail.cardAccent}88` : 'rgba(255,255,255,0.1)',
+                position: 'relative'
               }}
             >
+              {!owned && <div style={{ position: 'absolute', top: 5, right: 10, fontSize: '14px', opacity: 0.2 }}>🔒</div>}
               <TrailPreview trail={trail}/>
               <div className="sp-card-info">
                 <div className="sp-card-name">{trail.name}</div>
@@ -332,6 +413,7 @@ export default function ShopScreen({ onBack }) {
                 owned={owned} equipped={equipped}
                 price={trail.price} onPress={() => buyTrail(trail)}
                 hasDiscount={hasDiscount}
+                currentSeeds={seeds}
               />
             </div>
           );
@@ -350,21 +432,30 @@ export default function ShopScreen({ onBack }) {
                   ? `${pet.cardAccent}22`
                   : owned ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)',
                 borderColor: equipped ? `${pet.cardAccent}88` : 'rgba(255,255,255,0.1)',
+                position: 'relative'
               }}
             >
+              {!owned && <div style={{ position: 'absolute', top: 5, right: 10, fontSize: '14px', opacity: 0.2 }}>🔒</div>}
               <div className="sp-card-art">
                 <PetSVG petId={pet.id} size={70}/>
               </div>
               <div className="sp-card-info">
+                <RarityBadge rarity={pet.rarity} />
                 <div className="sp-card-name">{pet.name}</div>
                 <div className="sp-card-desc">{pet.description}</div>
-                <div className="sp-bonus-label">⚡ {pet.bonusLabel}</div>
+                <div className="sp-bonus-label">
+                  ⚡ {pet.bonus === 'seed_bonus' ? `+${Math.round(pet.bonusVal * abilityPower * 100)}% seeds` :
+                     pet.bonus === 'time_bonus' ? `+${Math.round(pet.bonusVal * abilityPower)}s time` :
+                     pet.bonusLabel}
+                  {abilityPower > 1 && <span style={{ fontSize: '9px', opacity: 0.7, marginLeft: '4px' }}>(BOOSTED)</span>}
+                </div>
                 {equipped && <div className="sp-equipped-badge"><span>✅</span> Equipped</div>}
               </div>
               <ActionBtn
                 owned={owned} equipped={equipped}
                 price={pet.price} onPress={() => buyPet(pet)}
                 hasDiscount={hasDiscount}
+                currentSeeds={seeds}
               />
             </div>
           );

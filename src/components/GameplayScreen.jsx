@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { gameStore } from '../store/gameStore';
 import { playerStore } from '../store/playerStore';
 import { audio } from '../audio/engine';
@@ -444,7 +445,7 @@ function Confetti() {
           top: '-20px',
           color: p.color,
           background: p.type === 'square' ? p.color : 'none',
-          animation: `confetti-fall ${p.duration}s ${p.delay}s linear forwards`,
+          animation: `confettiFall ${p.duration}s ${p.delay}s linear forwards`,
           width: p.size,
           height: p.size,
           display: 'flex',
@@ -456,12 +457,6 @@ function Confetti() {
           {p.type === 'seed' ? '🌾' : p.type === 'star' ? '✦' : ''}
         </div>
       ))}
-      <style>{`
-        @keyframes confetti-fall {
-          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-        }
-      `}</style>
     </div>
   );
 }
@@ -470,6 +465,8 @@ function Confetti() {
 export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComplete, isDaily = false, frozen = false, onBack }) {
   // --- 1. STATE ---
   const [level, setLevel] = useState(startLevel);
+  const [showLevelSplash, setShowLevelSplash] = useState(false);
+  const [eggFound, setEggFound] = useState(null);
   const [tiles, setTiles] = useState([]);
   const [chicken, setChicken] = useState({ r: 0, c: 0 });
   const [timer, setTimer] = useState(30);
@@ -503,6 +500,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [equippedPetId, setEquippedPetId] = useState(gameStore.getEquippedPet());
   const [touchStart, setTouchStart] = useState(null);
   const [mineSkipCharges, setMineSkipCharges] = useState(0);
+  const [minesHitInRun, setMinesHitInRun] = useState(0);
   const [skinSkillAnim, setSkinSkillAnim] = useState(null);
   const [petAnim, setPetAnim] = useState(null);
   const [deathFlash, setDeathFlash] = useState(false);
@@ -510,6 +508,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [baseLevelReward, setBaseLevelReward] = useState(0);
   const [petBonusSeeds, setPetBonusSeeds] = useState(0);
   const [skillBonusSeeds, setSkillBonusSeeds] = useState(0);
+  const [multiplierBonusSeeds, setMultiplierBonusSeeds] = useState(0);
   const [floatingSeeds, setFloatingSeeds] = useState([]);
   const [warpStepUsed, setWarpStepUsed] = useState(false);
   const [possessionUsed, setPossessionUsed] = useState(false);
@@ -611,6 +610,9 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
 
   const handleMineHit = useCallback((tile, cause = 'mine') => {
     if (isInvincible) return;
+    
+    setMinesHitInRun(prev => prev + 1);
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
 
     // --- SKILL: Tough Feathers ---
     if (has('tough_feathers') && Math.random() < 0.05) {
@@ -690,6 +692,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
 
   const collectPowerup = useCallback((type) => {
     audio.powerupCollect();
+    if (navigator.vibrate) navigator.vibrate(50);
     if (type === 'shield') {
       setHasShield(true);
       setActivePowerup('shield');
@@ -785,20 +788,21 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     const playgroundLvl = buildings.playground || 0;
     const abilityPower = 1 + (playgroundLvl * 0.25);
 
-    // Multipliers
-    const globalMult = (doubleScore ? 2 : 1) * comboMultiplier * siloMult;
-    
-    // 2. Base Reward after global multipliers
-    const finalBase = Math.floor(baseRaw * globalMult);
+    // Multipliers (Combo, Silo, Double Score)
+    const activeMult = (doubleScore ? 2 : 1) * comboMultiplier * siloMult;
+    const finalBase = Math.floor(baseRaw * activeMult);
 
-    // 3. Pet Bonus calculation
+    // 1. Multiplier Bonus (extra from Silo, Combo, etc)
+    const mBonus = finalBase - baseRaw;
+
+    // 2. Pet Bonus calculation
     let pBonus = 0;
     if (pet?.bonus === 'seed_bonus') {
       pBonus = Math.floor(baseRaw * (pet.bonusVal * abilityPower) * (doubleScore ? 2 : 1) * comboMultiplier);
     }
 
-    // 4. Skill Bonus calculation
-    let sBonus = finalBase - baseRaw; // Start with extra from multipliers (Silo, Combo, DoubleScore)
+    // 3. Skill Bonus calculation (Only from actual skills)
+    let sBonus = 0;
     const totalBeforeSkills = finalBase + pBonus;
     
     // Seed Finder (+20%)
@@ -819,22 +823,56 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
 
     // Golden Touch (x3 total)
     if (hasGoldenSeed) {
-      // We'll treat the extra 2x as skill bonus
       sBonus += (finalBase + pBonus + sBonus) * 2;
     }
 
-    const totalEarned = finalBase + pBonus + sBonus + tileSeedsCollected;
+    // 4. Perfect Clear Bonus (+25% of total earned so far)
+    let perfectBonus = 0;
+    if (minesHitInRun === 0) {
+      perfectBonus = Math.floor((finalBase + pBonus + sBonus) * 0.25);
+    }
+
+    const totalEarned = finalBase + pBonus + sBonus + tileSeedsCollected + perfectBonus;
+
+    // 5. Chance to find an egg
+    let foundEgg = null;
+    if (!isDaily && Math.random() < 0.40) {
+      const roll = Math.random() * 100;
+      let type = 'brown_egg';
+      if (lvl <= 5) {
+        if (roll < 3) type = 'golden_egg';
+        else if (roll < 13) type = 'blue_egg';
+      } else if (lvl <= 15) {
+        if (roll < 7) type = 'golden_egg';
+        else if (roll < 25) type = 'blue_egg';
+      } else if (lvl <= 30) {
+        if (roll < 12) type = 'golden_egg';
+        else if (roll < 37) type = 'blue_egg';
+      } else {
+        if (roll < 18) type = 'golden_egg';
+        else if (roll < 50) type = 'blue_egg';
+      }
+      foundEgg = type;
+      gameStore.addEgg(type);
+      audio.powerupCollect(); // Play a sparkle-like sound
+    }
+    setEggFound(foundEgg);
 
     gameStore.setAchievement('firstSteps');
     gameStore.incrementAchievement('survivor', 1);
     gameStore.incrementAchievement('roadRunner', 1);
+    
+    // Performance Feats
+    if (totalEarned >= 100) gameStore.updateAchievement('seedSnatcher', true);
+    if (totalEarned >= 500) gameStore.updateAchievement('bigHarvest', true);
     if (lvl >= 10) gameStore.setAchievement('mineMaster');
     if (lvl >= 20) gameStore.setAchievement('deepDigger');
     if (timeLeft >= (timerMaxVal.current - 15)) gameStore.setAchievement('speedyClucker');
 
     setBaseLevelReward(baseRaw);
     setPetBonusSeeds(pBonus);
-    setSkillBonusSeeds(sBonus);
+    setSkillBonusSeeds(sBonus + perfectBonus); 
+    setMultiplierBonusSeeds(mBonus);
     setLevelSeeds(totalEarned);
     setLevelTimeLeft(timeLeft);
     setSeeds(gameStore.getSeeds());
@@ -849,10 +887,12 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         tileSeedsCollected,
         baseLevelReward: baseRaw,
         petBonusSeeds: pBonus,
-        skillBonusSeeds: sBonus
+        skillBonusSeeds: sBonus,
+        multiplierBonusSeeds: mBonus,
+        eggFound: foundEgg
       });
     }, 600);
-  }, [equippedPetId, doubleScore, comboMultiplier, tileSeedsCollected, has, hasSkinSkill, hasGoldenSeed, triggerSkinSkill]);
+  }, [equippedPetId, doubleScore, comboMultiplier, tileSeedsCollected, has, hasSkinSkill, hasGoldenSeed, triggerSkinSkill, isDaily]);
 
   const handleTileStep = useCallback((tile) => {
     if (frozen) return;
@@ -1092,6 +1132,10 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     setPetBonusSeeds(0);
     setSkillBonusSeeds(0);
     setFloatingSeeds([]);
+    setMinesHitInRun(0);
+
+    setShowLevelSplash(true);
+    setTimeout(() => setShowLevelSplash(false), 1500);
 
     clearInterval(fireTimerRef.current);
   }, [equippedTile, isDaily, has, triggerPetAnim, collectPowerup]);
@@ -1387,6 +1431,21 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         ?
       </button>
 
+      {showLevelSplash && (
+        <div className="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none">
+          <motion.div 
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1.2, opacity: 1 }}
+            exit={{ scale: 2, opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-white font-black text-6xl tracking-tighter"
+            style={{ textShadow: '0 0 20px rgba(0,0,0,0.5), 0 10px 40px rgba(255,215,0,0.4)' }}
+          >
+            LEVEL {level}
+          </motion.div>
+        </div>
+      )}
+
       {showConfetti && <Confetti />}
       <ObstacleOverlay obstacle={obstacle} onDone={() => setObstacle(null)} />
 
@@ -1579,6 +1638,8 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           baseLevelReward={baseLevelReward}
           petBonusSeeds={petBonusSeeds}
           skillBonusSeeds={skillBonusSeeds}
+          multiplierBonusSeeds={multiplierBonusSeeds}
+          eggFound={eggFound}
           onReplay={() => initLevel(level)}
           onNext={() => {
             const next = level + 1;
@@ -1595,7 +1656,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           content={[
             { heading: 'Movement', text: 'Tap adjacent tiles only. You cannot jump over tiles.' },
             { heading: 'Numbers', text: 'Revealed tiles show how many mines are in the 8 surrounding tiles.' },
-            { heading: 'Peek', text: 'Long press a hidden tile to briefly reveal it. Costs seeds.' },
+            { heading: 'Peek', text: 'Long press a hidden tile to briefly reveal it. Costs 1 second of time.' },
             { heading: 'Timer', text: 'Complete the level before time runs out. Powerups can extend your time.' },
             { heading: 'Checkpoint', text: 'Reach the flag tile to complete the level and earn seeds.' },
           ]}

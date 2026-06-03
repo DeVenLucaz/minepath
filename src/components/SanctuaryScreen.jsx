@@ -33,12 +33,14 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
   const [bounce, setBounce] = useState(false);
   const [hasReadyEggs, setHasReadyEggs] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [dailyStatus, setDailyStatus] = useState({ played: false });
 
   useEffect(() => {
     setSeeds(gameStore.getSeeds());
     setEquippedSkin(gameStore.getEquippedSkin());
     setEquippedPet(gameStore.getEquippedPet());
     setIsGolden(gameStore.hasGoldenHomeMascot());
+    setDailyStatus(gameStore.getDailyChallenge());
     
     // Check if any eggs are ready for visual feedback
     const eggs = gameStore.getEggs();
@@ -139,6 +141,19 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
         <div className="sanctuary-nav" style={{ marginTop: '5px' }}>
           <button className="sanctuary-btn-main" onClick={() => { audio.init(); onPlay(); }}>
             <span>🎮</span> PLAY
+          </button>
+
+          <button className="sanctuary-btn-main" 
+            style={{ 
+              background: 'linear-gradient(135deg, #2196F3, #1565C0)', 
+              fontSize: '18px',
+              position: 'relative'
+            }} 
+            onClick={onDaily}
+            disabled={dailyStatus.played}
+          >
+            <span>📅</span> DAILY
+            {!dailyStatus.played && <div className="egg-indicator-dot" />}
           </button>
 
           <button className="sanctuary-btn-main" 
