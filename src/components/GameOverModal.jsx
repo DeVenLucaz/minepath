@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { gameStore } from '../store/gameStore';
 import { audio } from '../audio/engine';
 import ChickenSVG from './ChickenSVG';
@@ -17,19 +18,22 @@ const CONFETTI = Array.from({ length: 28 }, (_, i) => ({
 export default function GameOverModal({ level, seeds, onRetry, onHome, skinId = 'classic' }) {
   const [totalSeeds, setTotalSeeds] = useState(0);
   const [bestLevel, setBestLevel]   = useState(0);
-  const [visible, setVisible]       = useState(false);
   const isRecord = useMemo(() => level >= bestLevel && level > 0, [level, bestLevel]);
 
   useEffect(() => {
     setTotalSeeds(gameStore.getSeeds());
     setBestLevel(gameStore.getBestLevel());
     audio.startBackground();
-    // Stagger in
-    requestAnimationFrame(() => setVisible(true));
   }, []);
 
   return (
-    <div className={`modal-backdrop ${visible ? 'modal-backdrop--visible' : ''}`}>
+    <motion.div 
+      className="modal-backdrop modal-backdrop--visible"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+    >
 
       {/* Confetti scattered behind modal */}
       {CONFETTI.map(c => (
@@ -45,7 +49,13 @@ export default function GameOverModal({ level, seeds, onRetry, onHome, skinId = 
       ))}
 
       {/* Modal card */}
-      <div className={`modal-card ${visible ? 'modal-card--in' : ''}`}>
+      <motion.div 
+        className="modal-card modal-card--in"
+        initial={{ scale: 0.8, opacity: 0, y: 40 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.8, opacity: 0 }}
+        transition={{ type: 'spring', bounce: 0.4, duration: 0.5 }}
+      >
 
         {/* OH NO title above card */}
         <div className="mo-title">OH NO!</div>
@@ -88,7 +98,7 @@ export default function GameOverModal({ level, seeds, onRetry, onHome, skinId = 
           <span>HOME</span>
         </button>
 
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

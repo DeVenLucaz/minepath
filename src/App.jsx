@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import SanctuaryScreen from './components/SanctuaryScreen';
 import HubUpgradesScreen from './components/HubUpgradesScreen';
 import SkillTreeScreen from './components/SkillTreeScreen';
@@ -135,48 +136,132 @@ export default function App() {
         <ChickenSVG skinId="classic" />
       </div>
 
-      {/* ── SANCTUARY (HOME) ── */}
-      {screen === 'home' && (
-        <SanctuaryScreen
-          onPlay={goPlay}
-          onEndless={goEndless}
-          onShop={goShop}
-          onLeaderboard={goLeaderboard}
-          onSettings={goSettings}
-          onDaily={goDaily}
-          onAchievements={goAchievements}
-          onSkillTree={goSkillTree}
-          onHubUpgrades={goHubUpgrades}
-        />
-      )}
+      <AnimatePresence mode="sync">
+        {/* ── SANCTUARY (HOME) ── */}
+        {screen === 'home' && (
+          <motion.div
+            key="home"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <SanctuaryScreen
+              onPlay={goPlay}
+              onEndless={goEndless}
+              onShop={goShop}
+              onLeaderboard={goLeaderboard}
+              onSettings={goSettings}
+              onDaily={goDaily}
+              onAchievements={goAchievements}
+              onSkillTree={goSkillTree}
+              onHubUpgrades={goHubUpgrades}
+            />
+          </motion.div>
+        )}
 
-      {/* ── GAME + OVERLAYS ── */}
-      {screen === 'game' && (
-        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          <GameplayScreen
-            key={`${isDaily ? 'daily' : 'normal'}-${currentLevel}`}
-            startLevel={currentLevel}
-            isDaily={isDaily}
-            onGameOver={handleGameOver}
-            onLevelComplete={handleLevelComplete}
-            onBack={goHome}
-            frozen={false} 
-          />
-        </div>
-      )}
+        {/* ── GAME + OVERLAYS ── */}
+        {screen === 'game' && (
+          <motion.div
+            key="game"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            style={{ position: 'relative', width: '100%', height: '100%' }}
+          >
+            <GameplayScreen
+              key={`${isDaily ? 'daily' : 'normal'}-${currentLevel}`}
+              startLevel={currentLevel}
+              isDaily={isDaily}
+              onGameOver={handleGameOver}
+              onLevelComplete={handleLevelComplete}
+              onBack={goHome}
+              frozen={false} 
+            />
+          </motion.div>
+        )}
 
-      {/* ── ENDLESS MODE ── */}
-      {screen === 'endless' && (
-        <EndlessTileScreen onBack={goHome} />
-      )}
+        {/* ── ENDLESS MODE ── */}
+        {screen === 'endless' && (
+          <motion.div
+            key="endless"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <EndlessTileScreen onBack={goHome} />
+          </motion.div>
+        )}
 
-      {/* ── OTHER SCREENS ── */}
-      {screen === 'shop' && <ShopScreen onBack={() => setScreen('home')}/>}
-      {screen === 'leaderboard' && <LeaderboardScreen onBack={() => setScreen('home')}/>}
-      {screen === 'settings' && <SettingsScreen onBack={() => setScreen('home')}/>}
-      {screen === 'achievements' && <AchievementsScreen onBack={goHome}/>}
-      {screen === 'skilltree' && <SkillTreeScreen onBack={goHome}/>}
-      {screen === 'hub_upgrades' && <HubUpgradesScreen onBack={goHome}/>}
+        {/* ── OTHER SCREENS ── */}
+        {screen === 'shop' && (
+          <motion.div
+            key="shop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <ShopScreen onBack={() => setScreen('home')}/>
+          </motion.div>
+        )}
+        {screen === 'leaderboard' && (
+          <motion.div
+            key="leaderboard"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <LeaderboardScreen onBack={() => setScreen('home')}/>
+          </motion.div>
+        )}
+        {screen === 'settings' && (
+          <motion.div
+            key="settings"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <SettingsScreen onBack={() => setScreen('home')}/>
+          </motion.div>
+        )}
+        {screen === 'achievements' && (
+          <motion.div
+            key="achievements"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <AchievementsScreen onBack={goHome}/>
+          </motion.div>
+        )}
+        {screen === 'skilltree' && (
+          <motion.div
+            key="skilltree"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <SkillTreeScreen onBack={goHome}/>
+          </motion.div>
+        )}
+        {screen === 'hub_upgrades' && (
+          <motion.div
+            key="hub_upgrades"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <HubUpgradesScreen onBack={goHome}/>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete}/>}
     </div>

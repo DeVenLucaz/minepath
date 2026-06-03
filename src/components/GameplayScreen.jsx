@@ -7,6 +7,7 @@ import { PETS } from '../data/pets';
 import { BIOMES } from '../data/biomes';
 import { SKILLS } from '../data/skills';
 import ChickenSVG from './ChickenSVG';
+import PetSVG from './PetSVG';
 import TopBar from './TopBar';
 import GameOverModal from './GameOverModal';
 import LevelClearModal from './LevelClearModal';
@@ -176,34 +177,89 @@ function TrailParticle({ x, y, trailId, index, total, particleIndex = 0 }) {
 }
 
 // ─── CHICKEN COMPONENT ─────────────────────────
-function Chicken({ skin, animState, position, cellW, cellH, isMagnetActive }) {
+function Chicken({ skin, animState, position, cellW, cellH, isMagnetActive, skinSkillAnim }) {
   const pixelX = position.c * (cellW + 2) + cellW / 2;
   const pixelY = position.r * (cellH + 2) + cellH / 2;
-  const mood = animState === 'explode' ? 'sad' : animState === 'celebrate' ? 'happy' : 'normal';
+  
+  const [trail, setTrail] = useState(null);
+  const prevPosRef = useRef(position);
+
+  useEffect(() => {
+    if (prevPosRef.current.r !== position.r || prevPosRef.current.c !== position.c) {
+      setTrail({ r: prevPosRef.current.r, c: prevPosRef.current.c, key: Date.now() });
+      prevPosRef.current = position;
+    }
+  }, [position]);
+
+  const mood = animState === 'explode' || animState === 'death' ? 'sad' : animState === 'celebrate' ? 'happy' : 'normal';
   const size = Math.min(cellW, cellH) * 1.15;
+  
+  let animClass = '';
+  if (animState === 'normal' || animState === 'idle') animClass = 'anim-idle-breathe';
+  else if (animState === 'explode' || animState === 'death') animClass = 'anim-death';
+  else if (animState === 'celebrate') animClass = 'anim-celebrate';
+  else if (animState === 'moving' || animState === 'walk') animClass = 'anim-moving';
+
+  const skillClass = skinSkillAnim ? `anim-${skinSkillAnim.replace(/_/g, '-')}` : '';
+  const skinClass = `skin-${skin}`;
+
   return (
-    <div
-      className={`chicken-entity anim-${animState}`}
-      style={{
-        position: 'absolute',
-        left: pixelX,
-        top: pixelY,
-        transform: 'translate(-50%, -50%)',
-        zIndex: 20,
-        transition: 'left 0.18s ease, top 0.18s ease',
-        pointerEvents: 'none',
-        filter: animState === 'explode' ? 'drop-shadow(0 0 8px #FF4500)' : 'drop-shadow(0 3px 6px rgba(0,0,0,0.5))',
-      }}
-    >
-      <ChickenSVG skinId={skin} mood={mood} size={size}/>
-      {animState === 'shield' && <div className="shield-bubble"/>}
-      {isMagnetActive && <div className="magnet-pulse"/>}
-    </div>
+    <>
+      {skin === 'space' && trail && (
+        <div key={trail.key} className="space-star-trail" style={{ 
+          left: trail.c * (cellW + 2) + cellW / 2,
+          top: trail.r * (cellH + 2) + cellH / 2,
+          transform: 'translate(-50%, -50%)'
+        }}>✦</div>
+      )}
+      {skin === 'ninja' && trail && (
+        <div key={trail.key} className="ninja-ghost-trail" style={{ 
+          left: trail.c * (cellW + 2) + cellW / 2,
+          top: trail.r * (cellH + 2) + cellH / 2,
+          transform: 'translate(-50%, -50%)'
+        }}>
+          <ChickenSVG skinId={skin} mood="normal" size={size} />
+        </div>
+      )}
+      <div
+        className={`chicken-entity ${skinClass} ${skillClass}`}
+        style={{
+          position: 'absolute',
+          left: pixelX,
+          top: pixelY,
+          transform: 'translate(-50%, -50%)',
+          zIndex: 20,
+          transition: 'left 0.18s ease, top 0.18s ease',
+          pointerEvents: 'none',
+          filter: (animState === 'explode' || animState === 'death') ? 'drop-shadow(0 0 8px #FF4500)' : 'drop-shadow(0 3px 6px rgba(0,0,0,0.5))',
+        }}
+      >
+        <ChickenSVG skinId={skin} mood={mood} size={size} animClass={animClass}/>
+        {animState === 'shield' && <div className="shield-bubble"/>}
+        {isMagnetActive && <div className="magnet-pulse"/>}
+        
+        {skin === 'royal' && (
+          <>
+            <div className="royal-sparkle s1">✦</div>
+            <div className="royal-sparkle s2">✦</div>
+            <div className="royal-sparkle s3">✦</div>
+          </>
+        )}
+        {skinSkillAnim === 'ninja_shadow_step' && <div className="ninja-smoke">💨</div>}
+        {skinSkillAnim === 'ghost_phase_through' && <div className="ghost-ripple" />}
+        {skinSkillAnim === 'royal_decree' && Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="royal-coin" style={{ 
+            '--dx': `${Math.cos(i * 72 * Math.PI / 180) * 40}px`,
+            '--dy': `${Math.sin(i * 72 * Math.PI / 180) * 40}px`
+          }}>🪙</div>
+        ))}
+      </div>
+    </>
   );
 }
 
 // ─── PET COMPONENT ──────────────────────────────────────────────
-function Pet({ petId, position, cellW, cellH }) {
+function Pet({ petId, position, cellW, cellH, animClass }) {
   const pet = PETS.find(p => p.id === petId);
   if (!pet) return null;
 
@@ -220,14 +276,13 @@ function Pet({ petId, position, cellW, cellH }) {
         position: 'absolute',
         left: petX,
         top: petY,
-        fontSize: '20px',
         zIndex: 19,
         transition: 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         pointerEvents: 'none',
         transform: 'translate(-50%, -50%)',
       }}
     >
-      {pet.emoji}
+      <PetSVG petId={petId} size={Math.min(cellW, cellH) * 0.8} animClass={animClass} />
     </div>
   );
 }
@@ -290,11 +345,11 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, i
   } else if (tile.state === 'hidden') {
     bg = styleData.hiddenColor;
     content = (tile.powerup && !isFoggy) ? '✨' : ((tile.hasSeed && !isFoggy) ? '🌾' : '?');
-    extraClass = `tile-hidden ${tile.powerup ? 'tile-powerup-glow' : ''} ${isAdjacent ? 'tile-adjacent' : ''} ${isFoggy ? 'tile-foggy' : ''}`;
+    extraClass = `tile-hidden ${tile.powerup ? 'tile-powerup-glow' : ''} ${isAdjacent ? 'tile-adjacent tile-adjacent-pulse' : ''} ${isFoggy ? 'tile-foggy' : ''} ${tile.isMine ? 'tile-mine-pulse' : ''}`;
   } else if (tile.state === 'revealed') {
     bg = tile.isBurning ? 'linear-gradient(to bottom, #FF4500, #B71C1C)' : styleData.safeColor;
     content = tile.isBurning ? '🔥' : (tile.powerup ? getPowerupIcon(tile.powerup) : (tile.hasSeed ? '🌾' : '✓'));
-    extraClass = `tile-revealed tile-flip-anim ${tile.isBurning ? 'tile-burning' : ''}`;
+    extraClass = `tile-revealed tile-flip-improve ${tile.isBurning ? 'tile-burning' : ''}`;
   } else if (tile.state === 'mine') {
     bg = styleData.mineColor;
     content = '💀';
@@ -302,7 +357,7 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, i
   } else if (tile.state === 'peeked') {
     bg = tile.isMine ? '#ff6b6b' : '#90EE90';
     content = tile.isMine ? '💣' : '✓';
-    extraClass = 'tile-peeked tile-flip-anim';
+    extraClass = 'tile-peeked tile-flip-improve';
   }
 
   return (
@@ -323,7 +378,7 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, i
     >
       <span className="tile-content">{content}</span>
       {tile.state === 'hidden' && tile.powerup && (
-        <div className="powerup-indicator" />
+        <div className="powerup-indicator tile-powerup-float" />
       )}
       {showShadow && (
         <div style={{ 
@@ -370,26 +425,47 @@ function ObstacleOverlay({ obstacle, onDone }) {
 
 // ─── CONFETTI ────────────────────────────────────────────────────
 function Confetti() {
-  const pieces = Array.from({ length: 40 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    color: `hsl(${Math.random() * 360}, 90%, 60%)`,
-    delay: Math.random() * 0.5,
-    duration: 1.5 + Math.random(),
-    size: 6 + Math.random() * 10,
-  }));
+  const pieces = Array.from({ length: 40 }, (_, i) => {
+    const type = Math.random() < 0.3 ? 'seed' : Math.random() < 0.6 ? 'star' : 'square';
+    const colors = ['#FFD700', '#4CAF50', '#2196F3', '#F44336', '#9C27B0'];
+    return {
+      id: i,
+      type,
+      x: Math.random() * 100,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      delay: Math.random() * 2,
+      duration: 1.5 + Math.random() * 1.5,
+      size: type === 'square' ? (6 + Math.random() * 8) : (14 + Math.random() * 6),
+      rot: Math.random() * 360,
+    };
+  });
   return (
-    <div className="confetti-container">
+    <div className="confetti-container" style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1000, overflow: 'hidden' }}>
       {pieces.map(p => (
         <div key={p.id} className="confetti-piece" style={{
+          position: 'absolute',
           left: `${p.x}%`,
-          background: p.color,
-          animationDelay: `${p.delay}s`,
-          animationDuration: `${p.duration}s`,
+          top: '-20px',
+          color: p.color,
+          background: p.type === 'square' ? p.color : 'none',
+          animation: `confetti-fall ${p.duration}s ${p.delay}s linear forwards`,
           width: p.size,
           height: p.size,
-        }} />
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: `${p.size}px`,
+          transform: `rotate(${p.rot}deg)`,
+        }}>
+          {p.type === 'seed' ? '🌾' : p.type === 'star' ? '✦' : ''}
+        </div>
       ))}
+      <style>{`
+        @keyframes confetti-fall {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -429,6 +505,19 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [equippedPetId, setEquippedPetId] = useState(gameStore.getEquippedPet());
   const [touchStart, setTouchStart] = useState(null);
   const [mineSkipCharges, setMineSkipCharges] = useState(0);
+  const [skinSkillAnim, setSkinSkillAnim] = useState(null);
+  const [petAnim, setPetAnim] = useState(null);
+  const [deathFlash, setDeathFlash] = useState(false);
+
+  const triggerSkinSkill = useCallback((id, duration) => {
+    setSkinSkillAnim(id);
+    setTimeout(() => setSkinSkillAnim(null), duration);
+  }, []);
+
+  const triggerPetAnim = useCallback((className, duration) => {
+    setPetAnim(className);
+    setTimeout(() => setPetAnim(null), duration);
+  }, []);
 
   // New Skill States
   const [warpStepUsed, setWarpStepUsed] = useState(false);
@@ -442,6 +531,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const powerupTimerRef = useRef(null);
   const obstacleTimerRef = useRef(null);
   const fireTimerRef = useRef(null);
+  const chickenAnimTimerRef = useRef(null);
   const blastResistanceUsed = useRef(false);
   const timerVal = useRef(30);
   const timerMaxVal = useRef(30);
@@ -491,12 +581,16 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     const abilityPower = 1 + (playgroundLvl * 0.25);
 
     let startTime = diff.timerMax;
-    if (pet?.bonus === 'time_bonus') startTime += (pet.bonusVal * abilityPower);
+    if (pet?.bonus === 'time_bonus') {
+      startTime += (pet.bonusVal * abilityPower);
+      triggerPetAnim('pet-bonus-bluey', 300);
+    }
 
     if (playgroundLvl > 0 && Math.random() < (0.1 * playgroundLvl)) {
       const startPowerups = ['shield', 'slowmo', 'magnet'];
       const randomPower = startPowerups[Math.floor(Math.random() * startPowerups.length)];
       setTimeout(() => collectPowerup(randomPower), 500);
+      if (equippedPetId === 'sparky') triggerPetAnim('pet-bonus-sparky', 400);
     }
 
     setRows(diff.rows);
@@ -665,12 +759,22 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const triggerGameOver = (reason) => {
     clearInterval(timerRef.current);
     clearTimeout(obstacleTimerRef.current);
-    gamePhaseRef.current = 'gameover';
-    setGamePhase('gameover');
     setChickenAnim('explode');
+    setShaking(true);
+    setDeathFlash(true);
     setTimeout(() => {
-      onGameOver({ level: levelRef.current, seeds: levelSeeds });
-    }, 900);
+      setShaking(false);
+      setDeathFlash(false);
+    }, 400);
+    
+    setTimeout(() => {
+      gamePhaseRef.current = 'gameover';
+      setGamePhase('gameover');
+      audio.gameOver();
+      setTimeout(() => {
+        onGameOver({ level: levelRef.current, seeds: levelSeeds });
+      }, 300);
+    }, 700);
   };
 
   const isAdjacent = (tile, pos) => {
@@ -727,6 +831,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, isMine: false, isSafe: true } : t));
         audio.safeTap();
         moveChicken(tile.r, tile.c);
+        triggerSkinSkill('ninja_shadow_step', 500);
         return;
       }
     }
@@ -751,16 +856,14 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       if (hasSkinSkill('space_zero_gravity', 'space') && Math.random() < 0.15) {
         setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false } : t));
         moveChicken(tile.r, tile.c);
-        setChickenAnim('shield');
-        setTimeout(() => setChickenAnim('idle'), 600);
+        triggerSkinSkill('space_zero_gravity', 1000);
         return;
       }
 
       if (hasSkinSkill('ghost_phase_through', 'ghost') && Math.random() < 0.20) {
         setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false } : t));
         moveChicken(tile.r, tile.c);
-        setChickenAnim('shield');
-        setTimeout(() => setChickenAnim('idle'), 600);
+        triggerSkinSkill('ghost_phase_through', 500);
         return;
       }
 
@@ -793,6 +896,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       const abilityPower = 1 + (playgroundLvl * 0.25);
 
       if (pet?.bonus === 'reveal_bonus' && Math.random() < (pet.bonusVal * abilityPower)) {
+        if (equippedPetId === 'chick_ninja') triggerPetAnim('pet-bonus-shadow', 300);
         setTiles(ts => ts.map(t => {
           if (isAdjacent(t, { r: tile.r, c: tile.c }) && t.state === 'hidden' && !t.isMine) {
             return { ...t, state: 'revealed' };
@@ -823,7 +927,10 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         const buildings = gameStore.getBuildings();
         const playgroundBuff = 1 + (buildings.playground * 0.2);
         let amt = 1;
-        if (pet?.bonus === 'seed_bonus' && Math.random() < (0.2 * playgroundBuff)) amt += 1;
+        if (pet?.bonus === 'seed_bonus' && Math.random() < (0.2 * playgroundBuff)) {
+          amt += 1;
+          if (equippedPetId === 'chick_yellow') triggerPetAnim('pet-bonus-yeller', 400);
+        }
         
         // --- SKILL: Seed Finder (handled per-seed too? user said "calculated on level complete") ---
         // Let's stick to level complete calculation as requested, but also keep this for now.
@@ -852,8 +959,13 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const moveChicken = (r, c) => {
     setChicken({ r, c });
     setVisitedTiles(prev => [...prev, { r, c }]);
-    setChickenAnim('walk');
-    setTimeout(() => setChickenAnim('idle'), 300);
+    setChickenAnim('moving');
+    if (chickenAnimTimerRef.current) clearTimeout(chickenAnimTimerRef.current);
+    chickenAnimTimerRef.current = setTimeout(() => {
+      if (gamePhaseRef.current === 'playing') {
+        setChickenAnim('idle');
+      }
+    }, 250);
 
     if (hasSkinSkill('ghost_haunting', 'ghost')) {
       setTiles(ts => ts.map(t => {
@@ -911,6 +1023,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
 
     if (mineSkipCharges > 0 && cause === 'mine') {
       setMineSkipCharges(prev => prev - 1);
+      if (equippedPetId === 'bunn_bunn') triggerPetAnim('pet-bonus-bunn', 500);
       audio.powerupCollect(); 
       setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, state: 'revealed', isMine: false } : t));
       moveChicken(tile.r, tile.c);
@@ -920,19 +1033,27 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     }
 
     setShaking(true);
+    setDeathFlash(true);
     setChickenAnim('explode');
     setCombo(0);
     setComboMultiplier(1);
     audio.mineExplosion();
-    setTimeout(() => setShaking(false), 600);
-    gamePhaseRef.current = 'gameover';
-    setGamePhase('gameover');
+    setTimeout(() => {
+      setShaking(false);
+      setDeathFlash(false);
+    }, 400);
+    
     clearInterval(timerRef.current);
     clearInterval(fireTimerRef.current);
     clearTimeout(obstacleTimerRef.current);
+
     setTimeout(() => {
-      onGameOver({ level: levelRef.current, seeds: levelSeeds });
-    }, 900);
+      gamePhaseRef.current = 'gameover';
+      setGamePhase('gameover');
+      setTimeout(() => {
+        onGameOver({ level: levelRef.current, seeds: levelSeeds });
+      }, 300);
+    }, 700);
   };
 
   const handleLongPress = useCallback((tile) => {
@@ -1085,7 +1206,10 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     // --- SKILL: Golden Touch ---
     if (hasGoldenSeed) earned *= 3;
     
-    if (hasSkinSkill('royal_decree', 'royal')) earned = Math.floor(earned * 1.15);
+    if (hasSkinSkill('royal_decree', 'royal')) {
+      earned = Math.floor(earned * 1.15);
+      triggerSkinSkill('royal_decree', 600);
+    }
     if (hasSkinSkill('royal_tax_collection', 'royal') && lvl % 5 === 0) {
       earned += 50;
     }
@@ -1100,10 +1224,12 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     setLevelSeeds(earned);
     setLevelTimeLeft(timeLeft);
     setSeeds(gameStore.getSeeds());
-    gamePhaseRef.current = 'levelcomplete';
-    setGamePhase('levelcomplete');
 
-    onLevelComplete({ level: lvl, seeds: earned, timeLeft });
+    setTimeout(() => {
+      gamePhaseRef.current = 'levelcomplete';
+      setGamePhase('levelcomplete');
+      onLevelComplete({ level: lvl, seeds: earned, timeLeft });
+    }, 600);
   };
 
   const handleTouchStartGrid = (e) => {
@@ -1170,6 +1296,83 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       onTouchStart={handleTouchStartGrid}
       onTouchEnd={handleTouchEndGrid}
     >
+      <div 
+        className="death-flash-overlay"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(255,0,0,0.35)',
+          zIndex: 999,
+          pointerEvents: 'none',
+          opacity: deathFlash ? 1 : 0,
+          transition: 'opacity 0.4s ease-out',
+        }}
+      />
+      <style>{`
+        @keyframes anim-idle-breathe {
+          0%, 100% { transform: scaleY(1); }
+          50% { transform: scaleY(1.04); }
+        }
+        @keyframes anim-moving {
+          0% { transform: scaleY(1); }
+          30% { transform: scaleY(0.8); }
+          70% { transform: scaleY(1.15); }
+          100% { transform: scaleY(1); }
+        }
+        @keyframes anim-death {
+          0%, 11%, 22%, 33%, 44% { transform: translateX(0); }
+          5%, 28% { transform: translateX(-6px); }
+          16%, 39% { transform: translateX(6px); }
+          45% { transform: translateX(0) scaleY(1); }
+          100% { transform: translateX(0) scaleY(0.2); }
+        }
+        @keyframes anim-celebrate {
+          0%, 100% { transform: translateY(0) scaleY(1); }
+          50% { transform: translateY(-14px) scaleY(1.2); }
+        }
+        @keyframes anim-space-star-fade { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.5); } }
+        @keyframes anim-space-skill { 0%, 100% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(176,200,232,0); } 50% { transform: translateY(-10px); box-shadow: 0 0 20px 10px rgba(176,200,232,0.6); } }
+        @keyframes anim-ninja-ghost-fade { 0% { opacity: 0; } 15% { opacity: 0.35; } 100% { opacity: 0; } }
+        @keyframes anim-ninja-skill { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes anim-ninja-smoke { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
+        @keyframes anim-royal-sparkle { 0% { transform: translateY(0) scale(0); opacity: 0; } 50% { opacity: 1; transform: translateY(-7px) scale(1); } 100% { transform: translateY(-15px) scale(0); opacity: 0; } }
+        @keyframes anim-royal-coin-burst { 0% { transform: translate(0, 0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
+        @keyframes anim-ghost-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        @keyframes anim-ghost-skill { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+        @keyframes anim-ghost-ripple { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0.5; border: 2px solid #2196F3; border-radius: 50%; } 100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; border: 1px solid #2196F3; border-radius: 50%; } }
+        
+        @keyframes tile-mine-pulse { 0%, 100% { box-shadow: 0 0 4px rgba(180,0,0,0.2); } 50% { box-shadow: 0 0 8px rgba(180,0,0,0.4); } }
+        @keyframes tile-powerup-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        @keyframes tile-flip-improve { 0% { transform: scaleX(1); } 50% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+        @keyframes tile-safe-floor-glow { 0%, 100% { box-shadow: 0 0 8px rgba(100,255,100,0.3); } 50% { box-shadow: 0 0 16px rgba(100,255,100,0.6); } }
+        @keyframes tile-adjacent-pulse { 0%, 100% { border-color: rgba(255,255,255,0.4); } 50% { border-color: rgba(255,255,255,1); } }
+
+        .anim-idle-breathe { animation: anim-idle-breathe 2s ease-in-out infinite; }
+        .anim-moving { animation: anim-moving 0.25s ease-out 1 forwards; }
+        .anim-death { animation: anim-death 0.7s forwards; }
+        .anim-celebrate { animation: anim-celebrate 0.4s 3 forwards; }
+
+        .tile-mine-pulse { animation: tile-mine-pulse 2s infinite ease-in-out; }
+        .tile-powerup-float { animation: tile-powerup-float 1.5s infinite ease-in-out; }
+        .tile-flip-improve { animation: tile-flip-improve 0.2s ease-out forwards; }
+        .tile-safe-floor-glow { animation: tile-safe-floor-glow 1.5s infinite ease-in-out; }
+        .tile-adjacent-pulse { animation: tile-adjacent-pulse 0.8s infinite ease-in-out !important; }
+        
+        .anim-space-skill { animation: anim-space-skill 1s ease-in-out; border-radius: 50%; }
+        .anim-ninja-skill { animation: anim-ninja-skill 0.5s ease-in-out; }
+        .anim-ghost-skill { animation: anim-ghost-skill 0.5s ease-in-out; }
+        .skin-ghost { animation: anim-ghost-pulse 2s ease-in-out infinite; }
+
+        .space-star-trail { position: absolute; color: #B0C8E8; font-size: 20px; animation: anim-space-star-fade 0.6s forwards; pointer-events: none; z-index: 10; }
+        .ninja-ghost-trail { position: absolute; animation: anim-ninja-ghost-fade 0.4s ease-out forwards; pointer-events: none; z-index: 5; }
+        .royal-sparkle { position: absolute; color: #FFD700; font-size: 14px; pointer-events: none; }
+        .royal-sparkle.s1 { left: -10px; top: 0; animation: anim-royal-sparkle 1.5s 0s infinite; }
+        .royal-sparkle.s2 { right: -10px; top: -10px; animation: anim-royal-sparkle 1.5s 0.5s infinite; }
+        .royal-sparkle.s3 { left: 10px; top: -20px; animation: anim-royal-sparkle 1.5s 1s infinite; }
+        .ninja-smoke { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 24px; animation: anim-ninja-smoke 0.5s forwards; }
+        .ghost-ripple { position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; animation: anim-ghost-ripple 0.5s forwards; }
+        .royal-coin { position: absolute; font-size: 20px; animation: anim-royal-coin-burst 0.6s forwards; }
+      `}</style>
       <TopBar 
         title={isDaily ? "DAILY" : biome.name.toUpperCase()} 
         onBack={onBack} 
@@ -1314,6 +1517,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             cellW={cellSize.w}
             cellH={cellSize.h}
             isMagnetActive={magnetActive}
+            skinSkillAnim={skinSkillAnim}
           />
           {equippedPetId && (
             <Pet
@@ -1321,6 +1525,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
               position={chicken}
               cellW={cellSize.w}
               cellH={cellSize.h}
+              animClass={petAnim}
             />
           )}
         </div>

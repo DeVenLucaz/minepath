@@ -251,6 +251,7 @@ export default function ChickenSVG({
   size = 120,
   style = {},
   className = '',
+  animClass = '',
 }) {
   const skin = SKIN_CONFIGS[skinId] || SKIN_CONFIGS.classic;
 
@@ -261,8 +262,8 @@ export default function ChickenSVG({
       viewBox="0 0 100 120"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      style={style}
-      className={className}
+      style={{ transformBox: 'fill-box', transformOrigin: 'center bottom', ...style }}
+      className={`${className} ${animClass}`.trim()}
     >
       {/* ── COMB ── */}
       <g>

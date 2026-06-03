@@ -6,6 +6,7 @@ import { PETS } from '../data/pets';
 import { audio } from '../audio/engine';
 import TopBar from './TopBar';
 import ChickenSVG from './ChickenSVG';
+import PetSVG from './PetSVG';
 
 // ─── TAB CONFIG ──────────────────────────────────────────
 const TABS = [
@@ -341,7 +342,9 @@ export default function ShopScreen({ onBack }) {
                 borderColor: equipped ? `${pet.cardAccent}88` : 'rgba(255,255,255,0.1)',
               }}
             >
-              <div className="sp-pet-emoji">{pet.emoji}</div>
+              <div className="sp-card-art">
+                <PetSVG petId={pet.id} size={70}/>
+              </div>
               <div className="sp-card-info">
                 <div className="sp-card-name">{pet.name}</div>
                 <div className="sp-card-desc">{pet.description}</div>

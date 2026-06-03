@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import ChickenSVG from './ChickenSVG';
 
 // Confetti for level clear — more colourful
@@ -24,17 +25,17 @@ const SPARKLES = ['✦','✦','✦','✧','✦'].map((s, i) => ({
 }));
 
 export default function LevelClearModal({ level, seeds, timeLeft, onReplay, onNext, skinId = 'classic' }) {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
-  }, []);
-
   // Time bonus string
   const timeBonusStr = timeLeft > 0 ? `+${timeLeft}s` : '—';
 
   return (
-    <div className={`modal-backdrop ${visible ? 'modal-backdrop--visible' : ''}`}>
+    <motion.div 
+      className="modal-backdrop modal-backdrop--visible"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+    >
 
       {/* Confetti */}
       {CONFETTI.map(c => (
@@ -50,7 +51,12 @@ export default function LevelClearModal({ level, seeds, timeLeft, onReplay, onNe
       ))}
 
       {/* Modal card */}
-      <div className={`modal-card ${visible ? 'modal-card--in' : ''}`}>
+      <motion.div 
+        className="modal-card modal-card--in"
+        initial={{ scale: 0.6, opacity: 0, y: 60 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ type: 'spring', bounce: 0.6, duration: 0.6 }}
+      >
 
         {/* LEVEL CLEAR title */}
         <div className="lc-title">LEVEL CLEAR!</div>
@@ -103,7 +109,7 @@ export default function LevelClearModal({ level, seeds, timeLeft, onReplay, onNe
           </button>
         </div>
 
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
