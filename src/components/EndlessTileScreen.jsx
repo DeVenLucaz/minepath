@@ -5,6 +5,7 @@ import { audio } from '../audio/engine';
 import { TILE_STYLES } from '../data/skins.js';
 import ChickenSVG from './ChickenSVG';
 import TopBar from './TopBar';
+import HelpModal from './HelpModal';
 
 const THEMES = {
   CLASSIC: { id: 'classic', name: 'Classic', color: '#4a90e2', icon: '🐔', hazard: 'none' },
@@ -36,6 +37,7 @@ export default function EndlessTileScreen({ onBack }) {
   
   const [isGameOver, setIsGameOver] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   
   // Refs for stale closures and tracking
   const isPausedRef = useRef(isPaused);
@@ -289,6 +291,14 @@ export default function EndlessTileScreen({ onBack }) {
   return (
     <div className={`endless-screen theme-${theme.id}`} style={{ backgroundColor: theme.color }}>
       <TopBar title="ENDLESS" onBack={onBack} />
+
+      <button 
+        onClick={() => setShowHelp(true)}
+        className="fixed bottom-[80px] right-4 w-8 h-8 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg z-[110] active:scale-90 transition-transform"
+        aria-label="Help"
+      >
+        ?
+      </button>
       
       <div className="endless-hud">
         <div className="hud-item">
@@ -390,6 +400,20 @@ export default function EndlessTileScreen({ onBack }) {
             <button className="btn-retry" onClick={initGame}>TRY AGAIN</button>
             <button className="btn-exit" onClick={onBack}>HOME</button>
         </div>
+      )}
+
+      {showHelp && (
+        <HelpModal
+          title="Endless Tiles"
+          onClose={() => setShowHelp(false)}
+          content={[
+            { heading: 'Goal', text: 'Survive as long as possible. Tiles scroll upward — do not fall below the death line.' },
+            { heading: 'Floor Cycle', text: 'Every 5th floor is a safe floor with no mines. Use it to breathe.' },
+            { heading: 'Themes', text: 'After each safe floor, a random theme applies with unique hazards — Lava burns, Ice slips, Jungle fogs, Galaxy pushes.' },
+            { heading: 'Difficulty', text: 'Every 25 floors, difficulty increases. Mine density and scroll speed go up.' },
+            { heading: 'Pause', text: 'You can only pause on safe floors. On active floors, only End Run is available.' },
+          ]}
+        />
       )}
 
       <style dangerouslySetInnerHTML={{ __html: `

@@ -4,12 +4,14 @@ import { playerStore } from '../store/playerStore';
 import { audio } from '../audio/engine';
 import { PETS } from '../data/pets';
 import TopBar from './TopBar';
+import HelpModal from './HelpModal';
 
 export default function HubUpgradesScreen({ onBack }) {
   const [seeds, setSeeds] = useState(0);
   const [buildings, setBuildings] = useState({ silo: 0, nest: 0, playground: 0 });
   const [eggs, setEggs] = useState([]);
   const [hatchState, setHatchState] = useState({ index: null, stage: null, reward: null });
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     setSeeds(gameStore.getSeeds());
@@ -229,6 +231,20 @@ export default function HubUpgradesScreen({ onBack }) {
 
         {/* HATCHERY */}
         <div className="sanctuary-section-title">🐣 Hatchery</div>
+        
+        <div style={{
+          margin: '0 20px 15px',
+          padding: '12px',
+          background: 'rgba(255,255,255,0.05)',
+          borderRadius: '12px',
+          border: '1px solid rgba(255,255,255,0.1)',
+          fontSize: '11px',
+          color: 'rgba(255,255,255,0.8)',
+          lineHeight: '1.4'
+        }}>
+          💡 Tip: Eggs drop after completing levels (40% chance). Higher levels give better egg types. Hatch them here for seeds, feathers, and pet upgrades.
+        </div>
+
         <div className="hatchery-container">
           <div className="hatchery-list">
             {eggs.length > 0 ? eggs.map((egg, i) => {
@@ -286,6 +302,28 @@ export default function HubUpgradesScreen({ onBack }) {
           </div>
         </div>
       </div>
+
+      <button 
+        onClick={() => setShowHelp(true)}
+        className="fixed bottom-[80px] right-4 w-8 h-8 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg z-[110] active:scale-90 transition-transform"
+        aria-label="Help"
+      >
+        ?
+      </button>
+
+      {showHelp && (
+        <HelpModal
+          title="Hatchery Guide"
+          onClose={() => setShowHelp(false)}
+          content={[
+            { heading: 'Egg Slots', text: 'Place eggs in slots to incubate them. Each slot hatches one egg at a time.' },
+            { heading: 'Brown Eggs', text: 'Common eggs. Hatch for seeds with a 20% chance of bonus feathers.' },
+            { heading: 'Blue Eggs', text: 'Rarer eggs with a chance to upgrade your pet. 40% chance of bonus feathers.' },
+            { heading: 'Golden Eggs', text: 'Rare eggs that can unlock brand new pets.' },
+            { heading: 'Finding Eggs', text: 'Eggs drop randomly on level complete (40% chance). Higher levels give rarer eggs.' },
+          ]}
+        />
+      )}
     </div>
   );
 }

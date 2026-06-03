@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { gameStore } from '../store/gameStore';
 import { audio } from '../audio/engine';
 import ChickenSVG from './ChickenSVG';
+import HelpModal from './HelpModal';
 
 // Pre-generate stars so they don't re-randomize on every render
 const STARS = Array.from({ length: 28 }, (_, i) => ({
@@ -31,6 +32,7 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
   const [daily, setDaily]   = useState({ date: '', played: false, score: 0 });
   const [feats, setFeats]   = useState(0);
   const [isGolden, setIsGolden] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const clickTimes = useRef([]);
   const equippedSkin        = useMemo(() => gameStore.getEquippedSkin(), []);
 
@@ -82,6 +84,14 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
           }}/>
         ))}
       </div>
+
+      <button 
+        onClick={() => setShowHelp(true)}
+        className="fixed bottom-[80px] right-4 w-10 h-10 bg-white/20 backdrop-blur-md border-2 border-white/30 rounded-full flex items-center justify-center text-white font-black text-xl shadow-lg z-[60] active:scale-90 transition-transform"
+        aria-label="Help"
+      >
+        ?
+      </button>
 
       {/* ── GROUND GLOW ── */}
       <div className="home-ground-glow" aria-hidden="true"/>
@@ -190,6 +200,19 @@ export default function HomeScreen({ onPlay, onShop, onLeaderboard, onSettings, 
         </div>
 
       </div>
+
+      {showHelp && (
+        <HelpModal
+          title="How to Play"
+          onClose={() => setShowHelp(false)}
+          content={[
+            { heading: 'Goal', text: 'Navigate your chicken from start to the flag without stepping on mines.' },
+            { heading: 'Controls', text: 'Tap any adjacent tile to move. Long press to peek at a tile for 1 second.' },
+            { heading: 'Seeds', text: 'Earn seeds by completing levels. Use them to buy powerups, skins, and pets in the shop.' },
+            { heading: 'Powerups', text: 'Collect powerups on tiles — shields protect you, reveals uncover safe tiles, slow-mo gives extra time.' },
+          ]}
+        />
+      )}
     </div>
   );
 }

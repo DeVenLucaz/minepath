@@ -4,6 +4,7 @@ import { inventoryStore } from '../store/inventoryStore';
 import { SKILLS } from '../data/skills';
 import TopBar from './TopBar';
 import { audio } from '../audio/engine';
+import HelpModal from './HelpModal';
 
 export default function SkillTreeScreen({ onBack }) {
   const [level, setLevel] = useState(1);
@@ -11,6 +12,7 @@ export default function SkillTreeScreen({ onBack }) {
   const [feathers, setFeathers] = useState(0);
   const [unlockedSkills, setUnlockedSkills] = useState([]);
   const [ownedSkins, setOwnedSkins] = useState([]);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     setLevel(playerStore.getPlayerLevel());
@@ -22,6 +24,7 @@ export default function SkillTreeScreen({ onBack }) {
 
   const handleUnlock = (skill) => {
     if (isLockedByTier(skill)) return;
+    if (skill.path === 'skin' && !ownedSkins.includes(skill.skinId)) return;
 
     if (feathers >= skill.cost && !unlockedSkills.includes(skill.id)) {
       playerStore.spendFeathers(skill.cost);
@@ -75,10 +78,12 @@ export default function SkillTreeScreen({ onBack }) {
   const renderSkillNode = (skill) => {
     const isUnlocked = unlockedSkills.includes(skill.id);
     const tierLocked = !isUnlocked && isLockedByTier(skill);
+    const skinLocked = skill.path === 'skin' && !ownedSkins.includes(skill.skinId);
+    const isLocked = tierLocked || skinLocked;
     const canAfford = feathers >= skill.cost;
     
     return (
-      <div key={skill.id} className={`st-node ${isUnlocked ? 'st-node--unlocked' : ''}`} style={tierLocked ? { opacity: 0.7 } : {}}>
+      <div key={skill.id} className={`st-node ${isUnlocked ? 'st-node--unlocked' : ''}`} style={isLocked ? { opacity: 0.7 } : {}}>
         <div style={{ 
           backgroundColor: rarityColors[skill.rarity],
           color: 'white',
@@ -92,7 +97,10 @@ export default function SkillTreeScreen({ onBack }) {
           {skill.rarity} • {rarityTiers[skill.rarity]}
         </div>
         <div className="st-node-icon">{skill.icon}</div>
-        <div className="st-node-name">{skill.name}</div>
+        <div className="st-node-name">
+          {isLocked && !isUnlocked && <span style={{ marginRight: '4px' }}>🔒</span>}
+          {skill.name}
+        </div>
         <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', margin: '4px 0', minHeight: '30px' }}>
           {skill.description}
         </div>
@@ -103,10 +111,10 @@ export default function SkillTreeScreen({ onBack }) {
           <button 
             className="st-unlock-btn" 
             onClick={() => handleUnlock(skill)}
-            disabled={tierLocked || !canAfford}
-            style={tierLocked ? { background: '#444', color: '#888', cursor: 'not-allowed' } : {}}
+            disabled={isLocked || !canAfford}
+            style={isLocked ? { background: '#444', color: '#888', cursor: 'not-allowed' } : {}}
           >
-            {tierLocked ? 'LOCKED' : `UNLOCK (${skill.cost}🪶)`}
+            {isLocked ? `LOCKED (${skill.cost}🪶)` : `UNLOCK (${skill.cost}🪶)`}
           </button>
         )}
       </div>
@@ -116,6 +124,14 @@ export default function SkillTreeScreen({ onBack }) {
   return (
     <div className="skill-tree-screen screen-base">
       <TopBar title="SKILL TREE" onBack={onBack} />
+
+      <button 
+        onClick={() => setShowHelp(true)}
+        className="fixed bottom-[80px] right-4 w-8 h-8 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg z-[110] active:scale-90 transition-transform"
+        aria-label="Help"
+      >
+        ?
+      </button>
       
       <div className="st-header">
         <div className="st-player-info">
@@ -141,7 +157,7 @@ export default function SkillTreeScreen({ onBack }) {
         padding: '0 20px',
         lineHeight: '1.4'
       }}>
-        🪶 Earn feathers by: leveling up (+1), hatching Brown eggs (20% chance), hatching Blue eggs (40% chance)
+        🪶 Earn feathers: Level up (+1 each) • Hatch Brown eggs (20% chance) • Hatch Blue eggs (40% chance)
       </div>
 
       <div className="st-path-container" style={{ flex: 1, overflowY: 'auto', paddingBottom: '40px' }}>
@@ -174,28 +190,27 @@ export default function SkillTreeScreen({ onBack }) {
               <div className="st-path-title" style={{ opacity: isSkinOwned ? 1 : 0.5 }}>
                 {skinNames[skinId].toUpperCase()}
               </div>
-              {!isSkinOwned ? (
-                <div style={{ 
-                  margin: '0 20px', 
-                  padding: '20px', 
-                  background: 'rgba(0,0,0,0.2)', 
-                  borderRadius: '15px',
-                  color: 'rgba(255,255,255,0.4)',
-                  fontSize: '13px',
-                  textAlign: 'center',
-                  border: '1px dashed rgba(255,255,255,0.1)'
-                }}>
-                  Own <span style={{ color: '#fff' }}>{skinNames[skinId]}</span> to unlock
-                </div>
-              ) : (
-                <div className="st-nodes">
-                  {SKILLS.filter(s => s.path === 'skin' && s.skinId === skinId).map(skill => renderSkillNode(skill))}
-                </div>
-              )}
+              <div className="st-nodes">
+                {SKILLS.filter(s => s.path === 'skin' && s.skinId === skinId).map(skill => renderSkillNode(skill))}
+              </div>
             </div>
           );
         })}
       </div>
+
+      {showHelp && (
+        <HelpModal
+          title="Skill Tree Guide"
+          onClose={() => setShowHelp(false)}
+          content={[
+            { heading: 'Paths', text: 'Three paths — Scout (information), Tank (survival), Merchant (economy). Each has 3 skills.' },
+            { heading: 'Rarity', text: 'Skills have Basic, Rare, and Epic rarity. Higher rarity = stronger effect and higher cost.' },
+            { heading: 'Tier Lock', text: 'You must unlock Basic before Rare, and Rare before Epic within each path.' },
+            { heading: 'Skin Skills', text: 'Each paid skin has 3 exclusive skills. You must own the skin AND have it equipped for these to activate.' },
+            { heading: 'Feathers', text: 'Skills cost Feathers. Earn feathers by leveling up (+1), hatching Brown eggs (20% chance), hatching Blue eggs (40% chance).' },
+          ]}
+        />
+      )}
     </div>
   );
 }

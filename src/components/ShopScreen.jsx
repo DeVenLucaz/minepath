@@ -7,6 +7,7 @@ import { audio } from '../audio/engine';
 import TopBar from './TopBar';
 import ChickenSVG from './ChickenSVG';
 import PetSVG from './PetSVG';
+import HelpModal from './HelpModal';
 
 // ─── TAB CONFIG ──────────────────────────────────────────
 const TABS = [
@@ -125,6 +126,7 @@ export default function ShopScreen({ onBack }) {
   const [equippedTrail, setETrail]  = useState(gameStore.getEquippedTrail());
   const [equippedPet, setEPet]      = useState(gameStore.getEquippedPet());
   const [toast, setToast]           = useState('');
+  const [showHelp, setShowHelp]     = useState(false);
 
   const unlockedSkills = playerStore.getSkills();
   const hasDiscount = unlockedSkills.includes('shop_discount');
@@ -207,6 +209,14 @@ export default function ShopScreen({ onBack }) {
   return (
     <div className="shop-screen">
       <TopBar title="SHOP" onBack={onBack} />
+
+      <button 
+        onClick={() => setShowHelp(true)}
+        className="fixed bottom-[80px] right-4 w-8 h-8 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg z-[110] active:scale-90 transition-transform"
+        aria-label="Help"
+      >
+        ?
+      </button>
 
       {/* Toast */}
       {toast && <div className="sp-toast">{toast}</div>}
@@ -361,6 +371,20 @@ export default function ShopScreen({ onBack }) {
         })}
 
       </div>
+
+      {showHelp && (
+        <HelpModal
+          title="Shop Guide"
+          onClose={() => setShowHelp(false)}
+          content={[
+            { heading: 'Skins', text: 'Cosmetic chicken skins. Each skin also unlocks unique skills in the Skill Tree.' },
+            { heading: 'Tiles', text: 'Changes the visual theme of your game tiles.' },
+            { heading: 'Trails', text: 'Adds a trail effect behind your chicken as it moves.' },
+            { heading: 'Pets', text: 'Pets follow you and provide passive bonuses during gameplay. Each pet has a unique ability.' },
+            { heading: 'Currency', text: 'Everything costs Seeds. Earn seeds by completing levels and hatching eggs.' },
+          ]}
+        />
+      )}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import PetSVG from './PetSVG';
 import TopBar from './TopBar';
 import GameOverModal from './GameOverModal';
 import LevelClearModal from './LevelClearModal';
+import HelpModal from './HelpModal';
 
 // ─── DIFFICULTY CONFIG ───────────────────────────────────────────
 function getDifficultyConfig(level) {
@@ -493,6 +494,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [lastMoveTime, setLastMoveTime] = useState(0);
   const [gamePhase, setGamePhase] = useState('playing'); 
   const [visitedTiles, setVisitedTiles] = useState([]); 
+  const [showHelp, setShowHelp] = useState(false);
   const [levelSeeds, setLevelSeeds] = useState(0);
   const [levelTimeLeft, setLevelTimeLeft] = useState(0);
   const [rows, setRows] = useState(6);
@@ -1379,6 +1381,14 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         showSeeds={false} 
       />
 
+      <button 
+        onClick={() => setShowHelp(true)}
+        className="fixed bottom-[80px] right-4 w-8 h-8 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg z-[110] active:scale-90 transition-transform"
+        aria-label="Help"
+      >
+        ?
+      </button>
+
       {showConfetti && <Confetti />}
       <ObstacleOverlay obstacle={obstacle} onDone={() => setObstacle(null)} />
 
@@ -1557,6 +1567,20 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             setLevel(next);
             initLevel(next);
           }}
+        />
+      )}
+
+      {showHelp && (
+        <HelpModal
+          title="Gameplay Tips"
+          onClose={() => setShowHelp(false)}
+          content={[
+            { heading: 'Movement', text: 'Tap adjacent tiles only. You cannot jump over tiles.' },
+            { heading: 'Numbers', text: 'Revealed tiles show how many mines are in the 8 surrounding tiles.' },
+            { heading: 'Peek', text: 'Long press a hidden tile to briefly reveal it. Costs seeds.' },
+            { heading: 'Timer', text: 'Complete the level before time runs out. Powerups can extend your time.' },
+            { heading: 'Checkpoint', text: 'Reach the flag tile to complete the level and earn seeds.' },
+          ]}
         />
       )}
     </div>

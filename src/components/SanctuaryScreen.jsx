@@ -3,6 +3,7 @@ import { gameStore } from '../store/gameStore';
 import { audio } from '../audio/engine';
 import ChickenSVG from './ChickenSVG';
 import { PETS } from '../data/pets';
+import HelpModal from './HelpModal';
 
 const STARS = Array.from({ length: 28 }, (_, i) => ({
   id: i,
@@ -31,6 +32,7 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
   const [isGolden, setIsGolden] = useState(false);
   const [bounce, setBounce] = useState(false);
   const [hasReadyEggs, setHasReadyEggs] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     setSeeds(gameStore.getSeeds());
@@ -64,7 +66,7 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
       </div>
 
       {/* TOP ACTIONS */}
-      <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }}>
+      <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10, display: 'flex', gap: '8px' }}>
         <button 
           onClick={onSettings}
           style={{ 
@@ -72,12 +74,43 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
             border: '2px solid rgba(255,255,255,0.2)', 
             borderRadius: '12px', 
             padding: '10px',
-            fontSize: '20px'
+            fontSize: '20px',
+            width: '46px',
+            height: '46px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
           }}
         >
           ⚙️
         </button>
       </div>
+
+      <button 
+        onClick={() => setShowHelp(true)}
+        style={{ 
+          position: 'fixed',
+          bottom: '80px',
+          right: '16px',
+          background: 'rgba(255,255,255,0.2)', 
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.3)', 
+          borderRadius: '50%', 
+          width: '32px',
+          height: '32px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          fontWeight: '900',
+          fontSize: '14px',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+          zIndex: 110,
+          cursor: 'pointer'
+        }}
+      >
+        ?
+      </button>
 
       <div className="sanctuary-content" style={{ justifyContent: 'center', gap: '10px' }}>
         {/* LOGO */}
@@ -150,6 +183,19 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
           Tap tiles to move • Long press to peek
         </div>
       </div>
+
+      {showHelp && (
+        <HelpModal
+          title="Hub Guide"
+          onClose={() => setShowHelp(false)}
+          content={[
+            { heading: 'Your Hub', text: 'This is your base. Access all game features from here.' },
+            { heading: 'Endless Mode', text: 'Challenge yourself with the endless survival mode.' },
+            { heading: 'Skill Tree', text: 'Spend feathers to unlock passive skills that help in gameplay.' },
+            { heading: 'Hatchery', text: 'Go to My Hub and Hatchery to manage your eggs and pets.' },
+          ]}
+        />
+      )}
     </div>
   );
 }

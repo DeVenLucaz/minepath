@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { gameStore } from '../store/gameStore';
 import { FEATS } from '../data/achievements';
 import TopBar from './TopBar';
+import HelpModal from './HelpModal';
 
 // Pre-generate stars
 const STARS = Array.from({ length: 20 }, (_, i) => ({
@@ -57,6 +58,7 @@ function FeatBadge({ feat, done, progress, target }) {
 export default function AchievementsScreen({ onBack }) {
   const [achievements, setAchievements] = useState(gameStore.getAchievements());
   const [claimAnim, setClaimAnim] = useState(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   const { completed, total } = useMemo(() => {
     const claimed = achievements._claimed || {};
@@ -109,6 +111,14 @@ export default function AchievementsScreen({ onBack }) {
 
       {/* Top bar — no seeds chip needed here */}
       <TopBar title="FEATS" onBack={onBack} showSeeds={false}/>
+
+      <button 
+        onClick={() => setShowHelp(true)}
+        className="fixed bottom-[80px] right-4 w-8 h-8 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg z-[110] active:scale-90 transition-transform"
+        aria-label="Help"
+      >
+        ?
+      </button>
 
       {/* Big title */}
       <div className="af-title">🐔 CHICKEN FEATS</div>
@@ -194,6 +204,19 @@ export default function AchievementsScreen({ onBack }) {
           );
         })}
       </div>
+
+      {showHelp && (
+        <HelpModal
+          title="Achievements"
+          onClose={() => setShowHelp(false)}
+          content={[
+            { heading: 'Feats', text: 'Complete challenges to earn Feats. Each feat rewards you with seeds and XP.' },
+            { heading: 'Progress', text: 'Track your progress on each feat. Some require multiple completions.' },
+            { heading: 'XP and Levels', text: 'Earning XP levels you up. Each level up rewards 1 feather.' },
+            { heading: 'Tip', text: 'Check back regularly — completing feats is one of the best ways to earn seeds quickly.' },
+          ]}
+        />
+      )}
     </div>
   );
 }
