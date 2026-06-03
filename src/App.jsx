@@ -109,6 +109,7 @@ export default function App() {
     playerStore.addXP(xpGained);
 
     // V4: Chance to find an egg
+    let foundEgg = null;
     if (Math.random() < 0.40) {
       const level = data.level;
       const roll = Math.random() * 100;
@@ -128,8 +129,10 @@ export default function App() {
         else if (roll < 50) type = 'blue_egg';
       }
       
+      foundEgg = type;
       gameStore.addEgg(type);
     }
+    data.eggFound = foundEgg;
   }, [isDaily]);
 
   const handleTutorialComplete = () => {

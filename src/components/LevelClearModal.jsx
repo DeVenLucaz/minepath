@@ -24,9 +24,29 @@ const SPARKLES = ['✦','✦','✦','✧','✦'].map((s, i) => ({
   }
 }));
 
-export default function LevelClearModal({ level, seeds, timeLeft, onReplay, onNext, skinId = 'classic' }) {
+export default function LevelClearModal({ 
+  level, 
+  seeds, 
+  timeLeft, 
+  onReplay, 
+  onNext, 
+  skinId = 'classic', 
+  eggFound = null,
+  tileSeedsCollected = 0,
+  baseLevelReward = 0,
+  petBonusSeeds = 0,
+  skillBonusSeeds = 0
+}) {
   // Time bonus string
   const timeBonusStr = timeLeft > 0 ? `+${timeLeft}s` : '—';
+
+  const eggConfig = {
+    brown_egg: { icon: '🥚', text: 'Brown Egg added to Hatchery', bg: 'rgba(121, 85, 72, 0.15)', border: '#795548' },
+    blue_egg: { icon: '🔵', text: 'Blue Egg added to Hatchery', bg: 'rgba(33, 150, 243, 0.15)', border: '#2196F3' },
+    golden_egg: { icon: '✨', text: 'Golden Egg added to Hatchery', bg: 'rgba(255, 215, 0, 0.15)', border: '#FFD700' },
+  };
+
+  const currentEgg = eggFound ? eggConfig[eggFound] : null;
 
   return (
     <motion.div 
@@ -71,24 +91,64 @@ export default function LevelClearModal({ level, seeds, timeLeft, onReplay, onNe
           <div className="lc-chicken-shadow"/>
         </div>
 
-        {/* Stats row */}
-        <div className="lc-stats-row">
-          <div className="lc-stat">
-            <span className="lc-stat-icon">🌾</span>
-            <div>
-              <div className="lc-stat-label">Seeds Collected</div>
-              <div className="lc-stat-val">{seeds}</div>
+        {/* Stats Section — Breakdown */}
+        <div className="lc-stats-section" style={{ padding: '0 25px', margin: '15px 0' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px' }}>
+              <span style={{ color: '#666' }}>🌾 Tile Seeds</span>
+              <span style={{ fontWeight: 'bold' }}>{tileSeedsCollected}</span>
             </div>
-          </div>
-          <div className="lc-stat-divider"/>
-          <div className="lc-stat">
-            <span className="lc-stat-icon">⏱️</span>
-            <div>
-              <div className="lc-stat-label">Time Bonus</div>
-              <div className="lc-stat-val">{timeBonusStr}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px' }}>
+              <span style={{ color: '#666' }}>⭐ Level Reward:</span>
+              <span style={{ fontWeight: 'bold' }}>{baseLevelReward}</span>
+            </div>
+            {petBonusSeeds > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', color: '#4CAF50' }}>
+                <span>🐾 Pet Bonus:</span>
+                <span style={{ fontWeight: 'bold' }}>+{petBonusSeeds}</span>
+              </div>
+            )}
+            {skillBonusSeeds > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', color: '#2196F3' }}>
+                <span>✨ Skill Bonus:</span>
+                <span style={{ fontWeight: 'bold' }}>+{skillBonusSeeds}</span>
+              </div>
+            )}
+            
+            <div style={{ height: '1px', background: '#eee', margin: '5px 0' }} />
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: '900' }}>
+              <span>TOTAL:</span>
+              <span style={{ color: '#F9A825' }}>{tileSeedsCollected + baseLevelReward + petBonusSeeds + skillBonusSeeds}</span>
             </div>
           </div>
         </div>
+
+        {/* Egg Found Section */}
+        {currentEgg && (
+          <motion.div 
+            className="lc-egg-found"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              margin: '10px 20px',
+              padding: '10px 14px',
+              background: currentEgg.bg,
+              border: `1px dashed ${currentEgg.border}`,
+              borderRadius: '12px',
+              textAlign: 'left'
+            }}
+          >
+            <span style={{ fontSize: '24px' }}>{currentEgg.icon}</span>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: currentEgg.border, letterSpacing: '0.5px' }}>EGG FOUND!</div>
+              <div style={{ fontSize: '14px', color: '#333' }}>{currentEgg.text}</div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Level badge */}
         <div className="lc-level-badge">Level {level} Complete!</div>
