@@ -117,7 +117,14 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
               onClick={onDaily}
               disabled={dailyStatus.played}
             >
-              <span>📅</span> DAILY
+              <div className="flex flex-col items-center leading-tight">
+                <span className="text-[10px] uppercase font-black opacity-70 tracking-widest mb-0.5">
+                  {new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                </span>
+                <div className="flex items-center gap-2">
+                  DAILY
+                </div>
+              </div>
               {!dailyStatus.played && <div className="egg-indicator-dot" />}
             </button>
 

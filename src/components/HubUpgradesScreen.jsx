@@ -7,6 +7,15 @@ import TopBar from './TopBar';
 import HelpModal from './HelpModal';
 import RewardModal from './RewardModal';
 
+const STARS = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  left: `${(i * 43.3 + 7) % 100}%`,
+  top:  `${(i * 57.7 + 13) % 100}%`,
+  size: `${(i % 3) + 2}px`,
+  delay: `${(i * 0.31) % 3}s`,
+  dur:   `${2 + (i % 4) * 0.4}s`,
+}));
+
 export default function HubUpgradesScreen({ onBack }) {
   const [seeds, setSeeds] = useState(0);
   const [buildings, setBuildings] = useState({ silo: 0, nest: 0, playground: 0 });
@@ -184,10 +193,21 @@ export default function HubUpgradesScreen({ onBack }) {
   };
 
   return (
-    <div className="sanctuary-screen">
+    <div className="hub-screen">
+      <div className="stars-bg">
+        {STARS.map(s => (
+          <div key={s.id} className="star" style={{
+            left: s.left, top: s.top,
+            width: s.size, height: s.size,
+            animationDelay: s.delay,
+            animationDuration: s.dur,
+          }}/>
+        ))}
+      </div>
+
       <TopBar title="MY HUB" onBack={onBack} seeds={seeds} />
 
-      <div className="sanctuary-content">
+      <div className="hub-content">
         {/* Buildings Section */}
         <div className="sanctuary-section-title">Sanctuary Buildings</div>
         <div className="sanctuary-grid">

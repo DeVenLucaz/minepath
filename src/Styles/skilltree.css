@@ -60,14 +60,20 @@
 .st-path-container {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 16px 40px;
+  padding: 16px 16px 48px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 24px;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
   -webkit-overflow-scrolling: touch;
+  z-index: 2;
 }
 
 .st-path {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -88,6 +94,7 @@
   overflow-x: auto;
   padding: 8px 4px 12px;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 /* Hide scrollbar but allow scrolling */

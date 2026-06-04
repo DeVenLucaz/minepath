@@ -9,13 +9,22 @@ import ChickenSVG from './ChickenSVG';
 import PetSVG from './PetSVG';
 import HelpModal from './HelpModal';
 
-// ─── TAB CONFIG ──────────────────────────────────────────
+// ─── TABS ────────────────────────────────────────────────
 const TABS = [
   { id: 'skins',  label: 'Skins',  icon: '🐔' },
   { id: 'tiles',  label: 'Tiles',  icon: '🟦' },
   { id: 'trails', label: 'Trails', icon: '✨' },
   { id: 'pets',   label: 'Pets',   icon: '🐤' },
 ];
+
+const STARS = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  left: `${(i * 37.3 + 11) % 100}%`,
+  top:  `${(i * 53.7 + 7)  % 100}%`,
+  size: `${(i % 3) + 2}px`,
+  delay: `${(i * 0.27) % 3}s`,
+  dur:   `${1.6 + (i % 5) * 0.3}s`,
+}));
 
 // ─── TILE PREVIEW ────────────────────────────────────────
 function TilePreview({ style }) {
@@ -267,6 +276,17 @@ export default function ShopScreen({ onBack }) {
 
   return (
     <div className="shop-screen">
+      <div className="stars-bg">
+        {STARS.map(s => (
+          <div key={s.id} className="star" style={{
+            left: s.left, top: s.top,
+            width: s.size, height: s.size,
+            animationDelay: s.delay,
+            animationDuration: s.dur,
+          }}/>
+        ))}
+      </div>
+
       <TopBar title="SHOP" onBack={onBack} seeds={seeds} />
 
       <button 

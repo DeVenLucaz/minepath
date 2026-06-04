@@ -11,12 +11,37 @@ let bgEndlessGain = null;
 let bgEndlessNodes = [];
 let bgEndlessPlaying = false;
 
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    if (ctx) ctx.suspend();
+const handleVisibilityChange = () => {
+  const isHidden = document.hidden || document.msHidden || document.webkitHidden;
+  if (isHidden) {
+    if (ctx && masterGain) masterGain.gain.setValueAtTime(0, ctx.currentTime);
+    if (ctx && ctx.state === 'running') ctx.suspend();
   } else {
-    if (ctx) ctx.resume();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+    if (ctx && masterGain) masterGain.gain.setTargetAtTime(0.7, ctx.currentTime, 0.1);
   }
+};
+
+document.addEventListener('visibilitychange', handleVisibilityChange);
+document.addEventListener('webkitvisibilitychange', handleVisibilityChange);
+document.addEventListener('mozvisibilitychange', handleVisibilityChange);
+document.addEventListener('msvisibilitychange', handleVisibilityChange);
+
+window.addEventListener('blur', () => { 
+  if (ctx && masterGain) masterGain.gain.setValueAtTime(0, ctx.currentTime);
+  if (ctx && ctx.state === 'running') ctx.suspend(); 
+});
+window.addEventListener('focus', () => { 
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+  if (ctx && masterGain) masterGain.gain.setTargetAtTime(0.7, ctx.currentTime, 0.1);
+});
+window.addEventListener('pagehide', () => { 
+  if (ctx && masterGain) masterGain.gain.setValueAtTime(0, ctx.currentTime);
+  if (ctx && ctx.state === 'running') ctx.suspend(); 
+});
+window.addEventListener('pageshow', () => { 
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+  if (ctx && masterGain) masterGain.gain.setTargetAtTime(0.7, ctx.currentTime, 0.1);
 });
 
 function getCtx() {

@@ -7,12 +7,37 @@ import { CHICKEN_SKINS, TILE_STYLES, TRAIL_EFFECTS } from '../data/skins';
 import { PETS } from '../data/pets';
 import { BIOMES } from '../data/biomes';
 import { SKILLS } from '../data/skills';
+import { MUTATORS } from '../data/mutators';
 import ChickenSVG from './ChickenSVG';
 import PetSVG from './PetSVG';
 import TopBar from './TopBar';
 import GameOverModal from './GameOverModal';
 import LevelClearModal from './LevelClearModal';
 import HelpModal from './HelpModal';
+
+// ─── DAILY CONFIG ──────────────────────────────────────────────
+function getDailyConfig(dateString) {
+  let seed = dateString.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
+  
+  const sRandom = () => {
+    const x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+  };
+
+  // Select 1-3 mutators
+  const mutatorCount = Math.floor(sRandom() * 3) + 1;
+  const shuffledMutators = [...MUTATORS].sort(() => sRandom() - 0.5);
+  const activeMutators = shuffledMutators.slice(0, mutatorCount);
+
+  // Select locked pet and skin
+  const lockedPet = PETS[Math.floor(sRandom() * PETS.length)];
+  const lockedSkin = CHICKEN_SKINS[Math.floor(sRandom() * CHICKEN_SKINS.length)];
+
+  // Difficulty offset (-5 to +20 levels)
+  const diffOffset = Math.floor(sRandom() * 26) - 5;
+
+  return { activeMutators, lockedPet, lockedSkin, diffOffset };
+}
 
 // ─── DIFFICULTY CONFIG ───────────────────────────────────────────
 function getDifficultyConfig(level) {
@@ -29,7 +54,7 @@ function getDifficultyConfig(level) {
 }
 
 // ─── GRID GENERATION ─────────────────────────────────────────────
-function generateGrid(rows, cols, mineRate, level, isDaily, biome) {
+function generateGrid(rows, cols, mineRate, level, isDaily, biome, activeMutators = []) {
   let seed = 12345;
   if (isDaily) {
     const today = new Date().toDateString();
@@ -44,7 +69,7 @@ function generateGrid(rows, cols, mineRate, level, isDaily, biome) {
   const tiles = [];
   const checkpointR = 0, checkpointC = cols - 1;
   const startR = rows - 1, startC = 0;
-  const powerupCount = Math.max(1, Math.floor(level / 3));
+  const powerupCount = activeMutators.includes('fragile') ? 0 : Math.max(1, Math.floor(level / 3));
   const powerupTypes = ['shield', 'slowmo', 'reveal', 'doublescore', 'magnet'];
   
   const fakeSafeCount = level >= 8 ? Math.floor(level / 8) : 0;
@@ -475,10 +500,78 @@ function Confetti() {
   );
 }
 
+function DailyIntroModal({ config, onStart }) {
+  return (
+    <div className="modal-backdrop modal-backdrop--visible" style={{ zIndex: 1000 }}>
+      <motion.div 
+        initial={{ scale: 0.8, opacity: 0, y: 40 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        className="modal-card p-6 text-center gap-6"
+      >
+        <div className="flex flex-col items-center">
+          <span className="text-4xl mb-2">📅</span>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight m-0">
+            DAILY CHALLENGE
+          </h2>
+          <p className="text-xs text-muted font-bold tracking-widest mt-1">
+            {new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+          </p>
+        </div>
+
+        <div className="w-full flex flex-col gap-4">
+          <div className="text-left">
+            <span className="text-[10px] font-black text-muted uppercase tracking-widest">Active Mutators</span>
+            <div className="flex flex-col gap-2 mt-2">
+              {config.activeMutators.map(m => (
+                <div key={m.id} className="flex items-center gap-3 bg-white/5 border border-white/10 p-3 rounded-xl">
+                  <span className="text-2xl">{m.icon}</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-black text-white">{m.name}</span>
+                    <span className="text-[10px] text-secondary font-bold">{m.description}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="flex-1 bg-white/5 border border-white/10 p-3 rounded-xl flex flex-col items-center">
+              <span className="text-[9px] font-black text-muted uppercase tracking-widest mb-2">Locked Skin</span>
+              <ChickenSVG skinId={config.lockedSkin.id} size={50} />
+              <span className="text-[10px] font-bold text-white mt-1">{config.lockedSkin.name}</span>
+            </div>
+            <div className="flex-1 bg-white/5 border border-white/10 p-3 rounded-xl flex flex-col items-center">
+              <span className="text-[9px] font-black text-muted uppercase tracking-widest mb-2">Locked Pet</span>
+              <PetSVG petId={config.lockedPet.id} size={40} />
+              <span className="text-[10px] font-bold text-white mt-1">{config.lockedPet.name}</span>
+            </div>
+          </div>
+        </div>
+
+        <button 
+          className="mo-btn mo-btn--retry w-full mt-2" 
+          onClick={onStart}
+          style={{ textShadow: 'var(--text-stroke-white)' }}
+        >
+          START CHALLENGE
+        </button>
+      </motion.div>
+    </div>
+  );
+}
+
 // ─── MAIN GAMEPLAY SCREEN ─────────────────────────────────────────
 export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComplete, isDaily = false, frozen = false, onBack }) {
+  // --- 3b. DAILY CHALLENGE OVERRIDES (Pre-computed for state initialization) ---
+  const dailyConfig = useMemo(() => {
+    if (!isDaily) return null;
+    return getDailyConfig(new Date().toDateString());
+  }, [isDaily]);
+
+  const finalStartLevel = isDaily ? Math.max(1, startLevel + dailyConfig.diffOffset) : startLevel;
+
   // --- 1. STATE ---
-  const [level, setLevel] = useState(startLevel);
+  const [level, setLevel] = useState(finalStartLevel);
   const [showLevelSplash, setShowLevelSplash] = useState(false);
   const [eggFound, setEggFound] = useState(null);
   const [tiles, setTiles] = useState([]);
@@ -541,7 +634,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const timerVal = useRef(30);
   const timerMaxVal = useRef(30);
   const slowMoRef = useRef(false);
-  const levelRef = useRef(startLevel);
+  const levelRef = useRef(finalStartLevel);
   const gamePhaseRef = useRef('playing');
   const pauseRef = useRef(false);
   const diffRef = useRef(null);
@@ -562,6 +655,12 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
 
   const has = useCallback((id) => unlockedSkills.includes(id), [unlockedSkills]);
   const hasSkinSkill = useCallback((id, skinId) => unlockedSkills.includes(id) && equippedSkin === skinId, [unlockedSkills, equippedSkin]);
+
+  // Overrides for Daily Mode
+  const finalSkin = isDaily ? dailyConfig.lockedSkin.id : equippedSkin;
+  const finalPet = isDaily ? dailyConfig.lockedPet.id : equippedPetId;
+
+  const [showDailyIntro, setShowDailyIntro] = useState(isDaily);
 
   // --- 4. CALLBACKS ---
   const triggerSkinSkill = useCallback((id, duration) => {
@@ -591,13 +690,15 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       }
     }, 250);
 
-    if (hasSkinSkill('ghost_haunting', 'ghost')) {
-      setTiles(ts => ts.map(t => {
-        if (isAdjacent(t, { r, c }) && t.state === 'hidden' && t.isMine) {
-          return { ...t, state: 'peeked' };
-        }
-        return t;
-      }));
+    if (!isDaily || !dailyConfig.activeMutators.some(m => m.id === 'blind')) {
+      if (hasSkinSkill('ghost_haunting', 'ghost')) {
+        setTiles(ts => ts.map(t => {
+          if (isAdjacent(t, { r, c }) && t.state === 'hidden' && t.isMine) {
+            return { ...t, state: 'peeked' };
+          }
+          return t;
+        }));
+      }
     }
   }, [hasSkinSkill, isAdjacent]);
 
@@ -909,7 +1010,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   }, [equippedPetId, doubleScore, comboMultiplier, tileSeedsCollected, has, hasSkinSkill, hasGoldenSeed, triggerSkinSkill, isDaily]);
 
   const handleTileStep = useCallback((tile) => {
-    if (frozen) return;
+    if (frozen || showDailyIntro) return;
     if (gamePhase !== 'playing') return;
 
     if (tile.state === 'revealed' && !isAdjacent(tile, chicken)) {
@@ -1000,8 +1101,11 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       setCombo(newCombo);
       setLastMoveTime(now);
 
+      // --- MUTATOR: Blind ---
+      const isBlind = isDaily && dailyConfig.activeMutators.some(m => m.id === 'blind');
+
       // --- SKILL: Hazard Sense ---
-      if (has('hazard_sense') && Math.random() < 0.1) {
+      if (!isBlind && has('hazard_sense') && Math.random() < 0.1) {
         setTiles(ts => ts.map(t => {
           if (isAdjacent(t, { r: tile.r, c: tile.c }) && t.state === 'hidden' && t.isMine) {
             return { ...t, state: 'mine' };
@@ -1015,7 +1119,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       const playgroundLvl = buildings.playground || 0;
       const abilityPower = 1 + (playgroundLvl * 0.25);
 
-      if (pet?.bonus === 'reveal_bonus' && Math.random() < (pet.bonusVal * abilityPower)) {
+      if (!isBlind && pet?.bonus === 'reveal_bonus' && Math.random() < (pet.bonusVal * abilityPower)) {
         if (equippedPetId === 'chick_ninja') triggerPetAnim('pet-bonus-shadow', 300);
         setTiles(ts => ts.map(t => {
           if (isAdjacent(t, { r: tile.r, c: tile.c }) && t.state === 'hidden' && !t.isMine) {
@@ -1052,6 +1156,11 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           if (equippedPetId === 'chick_yellow') triggerPetAnim('pet-bonus-yeller', 400);
         }
         
+        // --- MUTATOR: Wealthy ---
+        if (isDaily && dailyConfig.activeMutators.some(m => m.id === 'wealthy')) {
+          amt *= 2;
+        }
+        
         setSeeds(s => s + amt);
         setTileSeedsCollected(prev => prev + amt);
 
@@ -1066,10 +1175,15 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         setTiles(ts => ts.map(t => t.r === tile.r && t.c === tile.c ? { ...t, hasSeed: false } : t));
       }
     }
-  }, [frozen, gamePhase, chicken, hasShield, shieldHits, tiles, biome, equippedPetId, lastMoveTime, combo, magnetActive, cellSize, hasSkinSkill, has, warpStepUsed, shadowStepUsed, triggerPetAnim, triggerSkinSkill, collectPowerup, moveChicken, handleLevelComplete, handleMineHit, isAdjacent]);
+  }, [frozen, gamePhase, chicken, hasShield, shieldHits, tiles, biome, equippedPetId, lastMoveTime, combo, magnetActive, cellSize, hasSkinSkill, has, warpStepUsed, shadowStepUsed, triggerPetAnim, triggerSkinSkill, collectPowerup, moveChicken, handleLevelComplete, handleMineHit, isAdjacent, showDailyIntro]);
 
   const initLevel = useCallback((lvl) => {
+    const activeMutatorIds = isDaily ? dailyConfig.activeMutators.map(m => m.id) : [];
+
     const diff = getDifficultyConfig(lvl);
+    if (activeMutatorIds.includes('minefield')) diff.mineRate += 0.15;
+    if (activeMutatorIds.includes('rush_hour')) diff.timerMax *= 0.5;
+    
     diffRef.current = diff;
 
     const currentBiome = BIOMES.find(b => b.tileStyle === equippedTile) || BIOMES[0];
@@ -1078,7 +1192,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     const activeMods = [];
     setModifiers(activeMods);
 
-    const newTiles = generateGrid(diff.rows, diff.cols, diff.mineRate, lvl, isDaily, currentBiome);
+    const newTiles = generateGrid(diff.rows, diff.cols, diff.mineRate, lvl, isDaily, currentBiome, activeMutatorIds);
 
     // --- SKILL: Golden Touch ---
     if (has('golden_touch') && Math.random() < 0.05) {
@@ -1200,7 +1314,21 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       const nr = cur.r + dir[0];
       const nc = cur.c + dir[1];
       const adjTile = tiles.find(t => t.r === nr && t.c === nc);
-      if (adjTile) handleTileStep(adjTile);
+      if (adjTile) {
+        handleTileStep(adjTile);
+
+        // --- MUTATOR: Slippery ---
+        if (isDaily && dailyConfig.activeMutators.some(m => m.id === 'slippery')) {
+          if (Math.random() < 0.1) {
+            const snr = nr + dir[0];
+            const snc = nc + dir[1];
+            const slideTile = tiles.find(t => t.r === snr && t.c === snc);
+            if (slideTile) {
+              setTimeout(() => handleTileStep(slideTile), 200);
+            }
+          }
+        }
+      }
     }
     setTouchStart(null);
   };
@@ -1261,7 +1389,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     const nestBuff = 1 - (buildings.nest * 0.05);
 
     timerRef.current = setInterval(() => {
-      if (pauseRef.current) return;
+      if (pauseRef.current || showDailyIntro) return;
       if (gamePhaseRef.current !== 'playing') return;
       const diff = diffRef.current;
       const drainRate = diff ? diff.timerSpeed : 1;
@@ -1296,7 +1424,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       }
     }, 100);
     return () => clearInterval(timerRef.current);
-  }, [gamePhase, possessionUsed, modifiers, hasSkinSkill, triggerGameOver]);
+  }, [gamePhase, possessionUsed, modifiers, hasSkinSkill, triggerGameOver, showDailyIntro]);
 
   useEffect(() => {
     if (gamePhase !== 'playing') return;
@@ -1435,6 +1563,13 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         showSeeds={false} 
       />
 
+      {showDailyIntro && (
+        <DailyIntroModal 
+          config={dailyConfig} 
+          onStart={() => setShowDailyIntro(false)} 
+        />
+      )}
+
       <button 
         onClick={() => setShowHelp(true)}
         className="fixed bottom-[80px] right-4 w-8 h-8 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg z-[110] active:scale-90 transition-transform"
@@ -1504,6 +1639,13 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             {slowMoActive && <div className="hud-badge hud-badge--slow">⏱️</div>}
             {mineSkipCharges > 0 && <div className="hud-badge hud-badge--skip">👟 {mineSkipCharges}</div>}
             {modifiers.includes('speed') && <div className="hud-badge hud-badge--speed">⚡</div>}
+            
+            {/* DAILY MUTATORS */}
+            {isDaily && dailyConfig.activeMutators.map(m => (
+              <div key={m.id} className="hud-badge bg-white/10" title={m.name}>
+                {m.icon}
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -1581,7 +1723,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             }}
           >
             <Chicken
-              skin={equippedSkin}
+              skin={finalSkin}
               trail={equippedTrail}
               animState={chickenAnim}
               position={chicken}
@@ -1592,9 +1734,9 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
               isMagnetActive={magnetActive}
               skinSkillAnim={skinSkillAnim}
             />
-            {equippedPetId && (
+            {finalPet && (
               <Pet
-                petId={equippedPetId}
+                petId={finalPet}
                 position={chicken}
                 cellW={cellSize.w}
                 cellH={cellSize.h}
