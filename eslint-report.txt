@@ -1,0 +1,19 @@
+
+/data/data/com.termux/files/home/minepath/src/audio/engine.js
+  363:55  error  Empty block statement  no-empty
+  565:55  error  Empty block statement  no-empty
+
+/data/data/com.termux/files/home/minepath/src/store/hubStore.js
+  23:11  error  Empty block statement  no-empty
+
+/data/data/com.termux/files/home/minepath/src/store/inventoryStore.js
+  30:11  error  Empty block statement  no-empty
+
+/data/data/com.termux/files/home/minepath/src/store/playerStore.js
+  30:11  error  Empty block statement  no-empty
+
+/data/data/com.termux/files/home/minepath/src/store/settingsStore.js
+  21:11  error  Empty block statement  no-empty
+
+✖ 6 problems (6 errors, 0 warnings)
+

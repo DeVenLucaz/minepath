@@ -867,16 +867,18 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       // --- SKILL: Shield Master ---
       setShieldHits(has('shield_master') ? 2 : 1);
     } else if (type === 'slowmo') {
+      if (powerupTimerRef.current) clearInterval(powerupTimerRef.current);
+      setMagnetActive(false);
       setActivePowerup('slowmo');
       setSlowMoActive(true);
       slowMoRef.current = true;
       setPowerupTimer(8);
       let t = 8;
-      const interval = setInterval(() => {
+      powerupTimerRef.current = setInterval(() => {
         t -= 1;
         setPowerupTimer(t);
         if (t <= 0) {
-          clearInterval(interval);
+          clearInterval(powerupTimerRef.current);
           setSlowMoActive(false);
           slowMoRef.current = false;
           setActivePowerup(null);
@@ -913,15 +915,18 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       setDoubleScore(true);
       setActivePowerup('doublescore');
     } else if (type === 'magnet') {
+      if (powerupTimerRef.current) clearInterval(powerupTimerRef.current);
+      setSlowMoActive(false);
+      slowMoRef.current = false;
       setMagnetActive(true);
       setActivePowerup('magnet');
       setPowerupTimer(12);
       let t = 12;
-      const interval = setInterval(() => {
+      powerupTimerRef.current = setInterval(() => {
         t -= 1;
         setPowerupTimer(t);
         if (t <= 0) {
-          clearInterval(interval);
+          clearInterval(powerupTimerRef.current);
           setMagnetActive(false);
           setActivePowerup(null);
         }
