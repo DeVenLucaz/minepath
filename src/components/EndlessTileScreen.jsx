@@ -6,6 +6,7 @@ import { TILE_STYLES } from '../data/skins.js';
 import ChickenSVG from './ChickenSVG';
 import TopBar from './TopBar';
 import HelpModal from './HelpModal';
+import { FeatIcon, MineIcon, SlowMoIcon, SeedIcon, EndlessIcon, CheckIcon } from './Icons';
 import '../Styles/endless.css';
 
 const THEMES = {
@@ -17,6 +18,14 @@ const THEMES = {
 };
 
 const THEME_LIST = Object.values(THEMES);
+
+const BIOME_ICONS = {
+  classic: FeatIcon,
+  lava: MineIcon,
+  ice: SlowMoIcon,
+  jungle: SeedIcon,
+  galaxy: EndlessIcon
+};
 
 const GRID_SIZE = 6;
 const ROWS_PER_FLOOR = 6;
@@ -52,151 +61,141 @@ export default function EndlessTileScreen({ onBack }) {
   useEffect(() => { isGameOverRef.current = isGameOver; }, [isGameOver]);
   useEffect(() => { chickenPosRef.current = chicken; }, [chicken]);
 
+  const equippedSkin = useMemo(() => gameStore.getEquippedSkin(), []);
+  
+  const requestRef = useRef(null);
+  const lastUpdateRef = useRef(Date.now());
+  
+  const lavaStartTimeRef = useRef(null);
   const [lavaTimer, setLavaTimer] = useState(0);
   
-  const lastUpdateRef = useRef(Date.now());
-  const requestRef = useRef();
-  const lavaStartTimeRef = useRef(null);
+  const isTransitioningRef = useRef(false);
   const updateRef = useRef();
-  
-  const equippedSkin = useMemo(() => gameStore.getEquippedSkin(), []);
 
-  const generateRow = useCallback((rowNum) => {
-    const currentFloor = Math.ceil(rowNum / ROWS_PER_FLOOR);
-    const isSafeFloor = currentFloor % 5 === 0;
-    
-    let mineRate = 0;
-    if (!isSafeFloor) {
-      if (currentFloor <= 25) {
-        mineRate = 0.10;
-      } else if (currentFloor <= 50) {
-        mineRate = 0.25;
-      } else if (currentFloor <= 60) {
-        mineRate = 0.35;
-      } else {
-        const blocks = Math.floor((currentFloor - 61) / 10) + 1;
-        mineRate = 0.35 + (blocks * 0.05);
+  // Triggering visual movement / generation
+  const generateRow = (rowNum) => {
+    const isSpecialFloor = rowNum % ROWS_PER_FLOOR === 0 && rowNum > 0;
+    const isSafe = (Math.floor(rowNum / ROWS_PER_FLOOR) + 1) % 5 === 0;
+
+    let mineCount = 1;
+    if (!isSafe && !isSpecialFloor) {
+      const baseDiff = (difficulty / 100); // e.g. 0.4 to 1.2
+      if (Math.random() < 0.25 * baseDiff) mineCount = 2;
+    }
+
+    const row = Array.from({ length: GRID_SIZE }, (_, idx) => ({
+      id: `${rowNum}-${idx}`,
+      state: isSafe || isSpecialFloor ? 'revealed' : 'hidden',
+      isMine: false,
+      hasSeed: !isSafe && !isSpecialFloor && Math.random() < 0.25,
+      powerup: null
+    }));
+
+    if (!isSafe && !isSpecialFloor) {
+      let placed = 0;
+      while (placed < mineCount) {
+        const c = Math.floor(Math.random() * GRID_SIZE);
+        if (!row[c].isMine) {
+          row[c].isMine = true;
+          row[c].hasSeed = false;
+          placed++;
+        }
       }
     }
-    mineRate = Math.min(mineRate, 0.75);
 
-    const newRow = [];
-    for (let c = 0; c < GRID_SIZE; c++) {
-      const isMine = !isSafeFloor && Math.random() < mineRate;
-      newRow.push({
-        id: Math.random().toString(36).substr(2, 9),
-        isMine,
-        state: 'hidden', 
-        rowNum,
-      });
+    return row;
+  };
+
+  const moveChicken = (dr, dc) => {
+    const nr = chicken.r + dr;
+    const nc = chicken.c + dc;
+    if (nr < 0 || nc < 0 || nc >= GRID_SIZE) return;
+    
+    // Bounds limits
+    if (nr >= rows.length) return;
+    
+    const destTile = rows[nr][nc];
+    
+    // Auto reveal
+    if (destTile.state === 'hidden') {
+      destTile.state = 'revealed';
+      audio.safeTap();
+      
+      if (destTile.isMine) {
+        triggerGameOver();
+        return;
+      }
+    } else {
+      audio.safeTap();
     }
-    return newRow;
-  }, []);
+    
+    setChicken({ r: nr, c: nc });
+    chickenPosRef.current = { r: nr, c: nc };
+    
+    if (destTile.hasSeed) {
+      destTile.hasSeed = false;
+      gameStore.addSeeds(1);
+      audio.seedCollect();
+    }
+  };
 
   const triggerGameOver = () => {
     setIsGameOver(true);
     isGameOverRef.current = true;
-    audio.stopEndlessBackground();
     audio.gameOver();
-    if (floor > gameStore.getBestLevel()) {
-        gameStore.updateBestLevel(floor);
-    }
-  };
-
-  const moveChicken = (dr, dc) => {
-    if (isGameOverRef.current) return;
-    
-    setChicken(prev => {
-        const nextR = Math.min(rows.length - 1, Math.max(-1, prev.r + dr));
-        const nextC = Math.min(GRID_SIZE - 1, Math.max(0, prev.c + dc));
-        
-        const targetRow = rows[nextR];
-        if (targetRow) {
-            const tile = targetRow[nextC];
-            if (tile.isMine) {
-                triggerGameOver();
-            } else {
-                if (tile.state === 'hidden') {
-                    audio.safeTap();
-                    setRows(currentRows => {
-                        const newRows = [...currentRows];
-                        newRows[nextR][nextC].state = 'revealed';
-                        if (theme.hazard === 'ice' && Math.random() < 0.3) {
-                            setTimeout(() => moveChicken(dr, dc), 150);
-                        }
-                        return newRows;
-                    });
-                }
-                
-                // Focus direction
-                if (dr < 0) setFocus('up');
-                else if (dr > 0) setFocus('down');
-                else if (dc < 0) setFocus('left');
-                else if (dc > 0) setFocus('right');
-                setTimeout(() => setFocus(null), 300);
-
-                lavaStartTimeRef.current = Date.now();
-                const nextPos = { r: nextR, c: nextC };
-                chickenPosRef.current = nextPos;
-                return nextPos;
-            }
-        }
-        return prev;
-    });
+    // Record run in leaderboard
+    gameStore.addLeaderboardEntry({ level: floor, seeds: floor * 10 });
+    gameStore.updateBestLevel(floor);
   };
 
   const update = (dt) => {
-    setScrollPos(prev => {
-      let next = prev + scrollSpeed * dt;
-      if (next >= 1) {
-        next -= 1;
-        
-        totalRowsRef.current += 1;
-        const nextRowNum = totalRowsRef.current + rows.length;
-        
-        setRows(currentRows => {
-          const newRows = [...currentRows.slice(1), generateRow(nextRowNum)];
-          return newRows;
+    // Game state tracking
+    const speed = scrollSpeed; // rows per sec
+    const nextScroll = scrollPos + speed * dt;
+    if (nextScroll >= 1) {
+        setScrollPos(nextScroll - 1);
+        // Shift rows
+        setRows(prev => {
+            const next = prev.slice(1);
+            next.push(generateRow(totalRowsRef.current + 10));
+            totalRowsRef.current++;
+            return next;
         });
-        setChicken(prevC => ({ ...prevC, r: prevC.r - 1 }));
-        setRowCount(totalRowsRef.current);
         
-        setFloor(prevF => {
-            const nextF = Math.ceil(totalRowsRef.current / ROWS_PER_FLOOR);
-            
-            if (nextF % 5 === 0) {
-                setTheme(THEMES.CLASSIC);
-            } else if (nextF % 5 === 1 && nextF !== prevF) {
-                const nextTheme = SPECIAL_THEMES[Math.floor(Math.random() * SPECIAL_THEMES.length)];
-                activeSpecialThemeRef.current = nextTheme;
-                setTheme(nextTheme);
-            } else if (nextF % 5 !== 0) {
-                setTheme(activeSpecialThemeRef.current);
+        // Push chicken down
+        setChicken(prev => {
+            const next = { ...prev, r: prev.r - 1 };
+            chickenPosRef.current = next;
+            if (next.r < 0) {
+                triggerGameOver();
             }
-
-            if (nextF !== prevF) {
-                if (nextF % 5 === 0) audio.safeFloor();
-                if (nextF >= 60 && nextF % 10 === 0) setScrollSpeed(s => s * 1.07);
-
-                let newDiff = 40;
-                if (nextF > 25 && nextF <= 50) newDiff = 100;
-                else if (nextF > 50 && nextF <= 60) newDiff = 140;
-                else if (nextF > 60) {
-                    const blocks = Math.floor((nextF - 61) / 10) + 1;
-                    newDiff = 140 + (blocks * 20);
-                }
-                setDifficulty(newDiff);
-            }
-            return nextF;
+            return next;
         });
-      }
-      return next;
-    });
-
-    const chickenVisualY = chickenPosRef.current.r * 60 - scrollPos * 60;
-    if (chickenVisualY < -10) {
-      triggerGameOver();
-      return;
+        
+        setRowCount(prev => {
+            const next = prev + 1;
+            if (next % ROWS_PER_FLOOR === 0) {
+                setFloor(f => {
+                    const nextFloor = f + 1;
+                    if (nextFloor % 5 === 0) {
+                        // Safe floor transition
+                        setTheme(THEMES.CLASSIC);
+                    } else if ((nextFloor - 1) % 5 === 0) {
+                        // Change active theme
+                        const randomTheme = SPECIAL_THEMES[Math.floor(Math.random() * SPECIAL_THEMES.length)];
+                        setTheme(randomTheme);
+                    }
+                    if (nextFloor % 25 === 0) {
+                        setDifficulty(d => Math.min(200, d + 20));
+                        setScrollSpeed(s => Math.min(1.5, s + 0.1));
+                    }
+                    return nextFloor;
+                });
+            }
+            return next;
+        });
+    } else {
+        setScrollPos(nextScroll);
     }
 
     if (theme.hazard === 'lava') {
@@ -236,6 +235,9 @@ export default function EndlessTileScreen({ onBack }) {
   };
 
   const initGame = () => {
+    if (requestRef.current) {
+      cancelAnimationFrame(requestRef.current);
+    }
     totalRowsRef.current = 1;
     activeSpecialThemeRef.current = THEMES.CLASSIC;
     
@@ -243,16 +245,18 @@ export default function EndlessTileScreen({ onBack }) {
     for (let i = 1; i <= 10; i++) {
       initialRows.push(generateRow(i));
     }
-    initialRows[2].forEach(t => t.isMine = false);
-    initialRows[2][2].state = 'revealed';
     setRows(initialRows);
     setChicken({ r: 2, c: 2 });
     chickenPosRef.current = { r: 2, c: 2 };
+    setScrollPos(0);
     setFloor(1);
     setRowCount(1);
     setTheme(THEMES.CLASSIC);
     setDifficulty(40);
     setScrollSpeed(INITIAL_SCROLL_SPEED);
+    setLavaTimer(0);
+    lavaStartTimeRef.current = null;
+    setFocus(null);
     setIsGameOver(false);
     isGameOverRef.current = false;
     setIsPaused(false);
@@ -296,7 +300,13 @@ export default function EndlessTileScreen({ onBack }) {
         </div>
         <div className="hud-item items-center">
             <span className="hud-label">Theme</span>
-            <span className="hud-val flex items-center gap-1.5">{theme.icon} {theme.name}</span>
+            <span className="hud-val flex items-center gap-1.5">
+              {(() => {
+                const ThemeIcon = BIOME_ICONS[theme.id] || FeatIcon;
+                return <ThemeIcon size={16} className="text-gold" />;
+              })()} 
+              {theme.name}
+            </span>
         </div>
         <div className="hud-item items-end">
             <span className="hud-label">Diff</span>
@@ -338,8 +348,12 @@ export default function EndlessTileScreen({ onBack }) {
                             onClick={() => handleTileClick(actualR, cIdx)}
                             style={tileVisual}
                         >
-                            {tile.state === 'revealed' && !tile.isMine && <span className="tile-check">✓</span>}
-                            {isGameOver && tile.isMine && '💣'}
+                            {tile.state === 'revealed' && !tile.isMine && (
+                              <CheckIcon size={16} className="text-white mx-auto" />
+                            )}
+                            {isGameOver && tile.isMine && (
+                              <MineIcon size={16} className="text-white mx-auto" />
+                            )}
                             {isChickenHere && (
                                 <div className="chicken-wrap">
                                     <ChickenSVG skinId={equippedSkin} size={45} mood={isGameOver ? 'sad' : 'normal'} focus={focus} />

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import ChickenSVG from './ChickenSVG';
+import { SeedIcon, FeatIcon, DoubleScoreIcon, ReloadIcon, PlayIcon, PawIcon, StarIcon, EggIcon } from './Icons';
 
 // Confetti for level clear — more colourful
 const CONFETTI = Array.from({ length: 36 }, (_, i) => ({
@@ -42,9 +43,9 @@ export default function LevelClearModal({
   const timeBonusStr = timeLeft > 0 ? `+${timeLeft}s` : '—';
 
   const eggConfig = {
-    brown_egg: { icon: '🥚', text: 'Brown Egg added to Hatchery', bg: 'rgba(121, 85, 72, 0.15)', border: '#795548' },
-    blue_egg: { icon: '🔵', text: 'Blue Egg added to Hatchery', bg: 'rgba(33, 150, 243, 0.15)', border: '#2196F3' },
-    golden_egg: { icon: '✨', text: 'Golden Egg added to Hatchery', bg: 'rgba(255, 215, 0, 0.15)', border: '#FFD700' },
+    brown_egg: { text: 'Brown Egg added to Hatchery', bg: 'rgba(121, 85, 72, 0.15)', border: '#795548', color: '#8d5c1a' },
+    blue_egg: { text: 'Blue Egg added to Hatchery', bg: 'rgba(33, 150, 243, 0.15)', border: '#2196F3', color: '#2196F3' },
+    golden_egg: { text: 'Golden Egg added to Hatchery', bg: 'rgba(255, 215, 0, 0.15)', border: '#FFD700', color: '#FFD700' },
   };
 
   const currentEgg = eggFound ? eggConfig[eggFound] : null;
@@ -96,28 +97,38 @@ export default function LevelClearModal({
         <div className="lc-stats-section">
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-secondary">🌾 Tile Seeds</span>
+              <span className="text-secondary flex items-center gap-1.5">
+                <SeedIcon size={14} className="text-gold" /> Tile Seeds
+              </span>
               <span className="font-bold text-primary">{tileSeedsCollected}</span>
             </div>
             <div className="flex justify-between items-center text-sm">
-              <span className="text-secondary">⭐ Level Reward</span>
+              <span className="text-secondary flex items-center gap-1.5">
+                <FeatIcon size={14} className="text-gold" /> Level Reward
+              </span>
               <span className="font-bold text-primary">{baseLevelReward}</span>
             </div>
             {multiplierBonusSeeds > 0 && (
               <div className="flex justify-between items-center text-sm text-gold">
-                <span>🔥 Multipliers</span>
+                <span className="flex items-center gap-1.5">
+                  <DoubleScoreIcon size={14} className="text-gold" /> Multipliers
+                </span>
                 <span className="font-bold">+{multiplierBonusSeeds}</span>
               </div>
             )}
             {petBonusSeeds > 0 && (
               <div className="flex justify-between items-center text-sm text-accent-green">
-                <span>🐾 Pet Bonus</span>
+                <span className="flex items-center gap-1.5">
+                  <PawIcon size={12} className="text-accent-green" /> Pet Bonus
+                </span>
                 <span className="font-bold">+{petBonusSeeds}</span>
               </div>
             )}
             {skillBonusSeeds > 0 && (
               <div className="flex justify-between items-center text-sm text-accent-blue">
-                <span>✨ Skill Bonus</span>
+                <span className="flex items-center gap-1.5">
+                  <StarIcon size={12} className="text-accent-blue" /> Skill Bonus
+                </span>
                 <span className="font-bold">+{skillBonusSeeds}</span>
               </div>
             )}
@@ -126,8 +137,9 @@ export default function LevelClearModal({
             
             <div className="flex justify-between items-center text-lg font-black">
               <span className="text-primary">TOTAL</span>
-              <span className="text-gold" style={{ textShadow: '0 0 10px rgba(250, 204, 21, 0.4)' }}>
+              <span className="text-gold flex items-center gap-1" style={{ textShadow: '0 0 10px rgba(250, 204, 21, 0.4)' }}>
                 {tileSeedsCollected + baseLevelReward + petBonusSeeds + skillBonusSeeds + multiplierBonusSeeds}
+                <SeedIcon size={18} className="text-gold inline-block" />
               </span>
             </div>
           </div>
@@ -151,7 +163,7 @@ export default function LevelClearModal({
               textAlign: 'left'
             }}
           >
-            <span style={{ fontSize: '24px' }}>{currentEgg.icon}</span>
+            <EggIcon size={32} style={{ color: currentEgg.color, filter: currentEgg.color === '#FFD700' ? 'drop-shadow(0 0 6px rgba(255,215,0,0.6))' : 'none' }} className="inline-block" />
             <div>
               <div style={{ fontSize: '12px', fontWeight: 'bold', color: currentEgg.border, letterSpacing: '0.5px', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>EGG FOUND!</div>
               <div className="text-primary font-bold text-sm" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{currentEgg.text}</div>
@@ -165,16 +177,18 @@ export default function LevelClearModal({
         {/* Buttons */}
         <div className="lc-btns">
           <button
-            className="lc-btn lc-btn--replay"
+            className="lc-btn lc-btn--replay flex items-center justify-center gap-1.5"
             onClick={onReplay}
           >
-            REPLAY
+            <ReloadIcon size={14} />
+            <span>REPLAY</span>
           </button>
           <button
-            className="lc-btn lc-btn--next"
+            className="lc-btn lc-btn--next flex items-center justify-center gap-1.5"
             onClick={onNext}
           >
-            NEXT LEVEL
+            <PlayIcon size={14} className="text-green-950" />
+            <span>NEXT LEVEL</span>
           </button>
         </div>
 

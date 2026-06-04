@@ -146,6 +146,11 @@ export const audio = {
     playFreqSeq([523, 659, 784, 1047], 0.08, 'sine', 0.2);
   },
 
+  seedCollect() {
+    playTone(987, 0.04, 'sine', 0.15);
+    playTone(1319, 0.03, 'sine', 0.1, 0.03);
+  },
+
   levelComplete() {
     const melody = [523, 659, 784, 1047, 784, 1047, 1175, 1319];
     melody.forEach((freq, i) => {

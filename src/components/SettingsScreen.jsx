@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { gameStore } from '../store/gameStore';
 import { audio } from '../audio/engine';
 import TopBar from './TopBar';
+import { MusicIcon, SfxIcon, BellIcon, VibeIcon, GraduationIcon, LockIcon, CheckIcon, TrashIcon } from './Icons';
 
 // Math question for parental gate — regenerated each mount
 function makeQuestion() {
@@ -29,10 +30,10 @@ function SettingToggle({ value, onChange }) {
 }
 
 // Row card component
-function SettingRow({ icon, label, value, onChange }) {
+function SettingRow({ icon: Icon, label, value, onChange }) {
   return (
     <div className="st-row">
-      <span className="st-row-icon">{icon}</span>
+      <span className="st-row-icon">{Icon && <Icon size={20} className="text-secondary" />}</span>
       <span className="st-row-label">{label}</span>
       <SettingToggle value={value} onChange={onChange}/>
     </div>
@@ -126,16 +127,18 @@ export default function SettingsScreen({ onBack }) {
 
         {/* ── SOUND SETTINGS ── */}
         <div className="st-section">
-          <SettingRow icon="🎵" label="MUSIC"         value={settings.bgm}           onChange={toggleBGM}/>
-          <SettingRow icon="📢" label="SOUND EFFECTS" value={settings.sfx}           onChange={toggleSFX}/>
-          <SettingRow icon="🔔" label="NOTIFICATIONS" value={!!settings.notifications} onChange={toggleNotifs}/>
-          <SettingRow icon="📳" label="VIBRATION"     value={!!settings.vibration}   onChange={toggleVibration}/>
+          <SettingRow icon={MusicIcon} label="MUSIC"         value={settings.bgm}           onChange={toggleBGM}/>
+          <SettingRow icon={SfxIcon} label="SOUND EFFECTS" value={settings.sfx}           onChange={toggleSFX}/>
+          <SettingRow icon={BellIcon} label="NOTIFICATIONS" value={!!settings.notifications} onChange={toggleNotifs}/>
+          <SettingRow icon={VibeIcon} label="VIBRATION"     value={!!settings.vibration}   onChange={toggleVibration}/>
         </div>
 
         {/* ── MISC ── */}
         <div className="st-section">
           <div className="st-row st-row--btn">
-            <span className="st-row-icon">🎓</span>
+            <span className="st-row-icon">
+              <GraduationIcon size={20} className="text-secondary" />
+            </span>
             <span className="st-row-label">TUTORIAL</span>
             <button className="st-action-btn" onClick={resetTutorial}>
               Reset
@@ -145,8 +148,8 @@ export default function SettingsScreen({ onBack }) {
 
         {/* ── PARENTAL GATE ── */}
         <div className={`st-gate ${gateUnlocked ? 'st-gate--open' : ''} ${gateError ? 'st-gate--error' : ''}`}>
-          <div className="st-gate-title">
-            <span>🔐</span>
+          <div className="st-gate-title flex items-center gap-1.5">
+            <LockIcon size={20} className="text-primary" />
             <span>PARENTAL GATE</span>
           </div>
 
@@ -171,9 +174,13 @@ export default function SettingsScreen({ onBack }) {
             </div>
           ) : (
             <div className="st-gate-body">
-              <div className="st-gate-unlocked">✅ Gate unlocked!</div>
-              <button className="st-danger-btn" onClick={resetProgress}>
-                🗑️ Reset All Progress
+              <div className="st-gate-unlocked flex items-center justify-center gap-1.5">
+                <CheckIcon size={18} className="text-accent-green" />
+                <span>Gate unlocked!</span>
+              </div>
+              <button className="st-danger-btn flex items-center justify-center gap-1.5" onClick={resetProgress}>
+                <TrashIcon size={16} className="text-red-100" />
+                <span>Reset All Progress</span>
               </button>
             </div>
           )}

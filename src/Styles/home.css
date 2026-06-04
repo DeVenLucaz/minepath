@@ -8,6 +8,7 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
+  font-family: var(--font-body);
 }
 
 /* Stars */
@@ -23,7 +24,7 @@
   background: white;
   border-radius: 50%;
   animation: twinkle 2s ease-in-out infinite alternate;
-  opacity: 0.55;
+  opacity: 0.4;
 }
 
 /* Bottom green glow — hints at a ground/meadow */
@@ -32,52 +33,59 @@
   bottom: 0;
   left: 0; right: 0;
   height: 38%;
-  background: radial-gradient(ellipse at 50% 100%, rgba(27,94,32,0.55) 0%, transparent 70%);
+  background: radial-gradient(ellipse at 50% 100%, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
 
 /* Content column */
-.home-content {
+.sanctuary-content {
   position: relative;
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 16px 20px 20px;
+  gap: 16px;
+  padding: 24px 20px;
   width: 100%;
   max-width: 400px;
+  background: rgba(3, 7, 18, 0.4);
+  border-radius: 32px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
 /* ── LOGO ── */
 .home-logo {
   display: flex;
   align-items: center;
-  gap: 0px;
-  margin-bottom: 8px;
+  gap: 2px;
+  margin-bottom: 4px;
 }
 
 .home-logo-letter {
-  font-size: clamp(38px, 12vw, 60px);
+  font-family: var(--font-header);
+  font-size: clamp(36px, 11vw, 52px);
   font-weight: 900;
-  letter-spacing: -1px;
+  letter-spacing: -2px;
   line-height: 1;
-  background: linear-gradient(to bottom, #FFFFFF 30%, var(--gold) 100%);
+  background: linear-gradient(to bottom, #FFFFFF 40%, var(--gold) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 4px 10px rgba(251, 191, 36, 0.2));
   display: inline-block;
   animation: logoBobble 3s ease-in-out infinite;
 }
 
-.home-logo-letter:nth-child(2) { animation-delay: 0.1s; }
-.home-logo-letter:nth-child(3) { animation-delay: 0.2s; }
-.home-logo-letter:nth-child(4) { animation-delay: 0.3s; }
-.home-logo-letter:nth-child(5) { animation-delay: 0.4s; }
-.home-logo-letter:nth-child(6) { animation-delay: 0.5s; }
-.home-logo-letter:nth-child(7) { animation-delay: 0.6s; }
-.home-logo-letter:nth-child(8) { animation-delay: 0.7s; }
+.home-logo-letter:nth-child(2) { animation-delay: 0.08s; }
+.home-logo-letter:nth-child(3) { animation-delay: 0.16s; }
+.home-logo-letter:nth-child(4) { animation-delay: 0.24s; }
+.home-logo-letter:nth-child(5) { animation-delay: 0.32s; }
+.home-logo-letter:nth-child(6) { animation-delay: 0.40s; }
+.home-logo-letter:nth-child(7) { animation-delay: 0.48s; }
+.home-logo-letter:nth-child(8) { animation-delay: 0.56s; }
 
 /* ── CHICKEN ── */
 .home-chicken-wrap {
@@ -86,18 +94,19 @@
   justify-content: center;
   align-items: flex-end;
   transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1);
-  filter: drop-shadow(0 12px 24px rgba(0,0,0,0.6));
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.5));
+  cursor: pointer;
+}
+.home-chicken-wrap:active {
+  transform: scale(0.96);
 }
 
-.home-chicken-wrap.bounce-up   { transform: translateY(-12px) rotate(1deg); }
+.home-chicken-wrap.bounce-up   { transform: translateY(-8px) rotate(0.5deg); }
 .home-chicken-wrap.bounce-down { transform: translateY(2px)   rotate(-0.5deg); }
 
 /* ── GOLDEN MASCOT EASTER EGG ── */
 .golden-mascot .home-chicken-svg {
-  filter: 
-    brightness(1.2) 
-    contrast(1.1) 
-    drop-shadow(0 0 15px rgba(250, 204, 21, 0.6)) !important;
+  filter: brightness(1.2) contrast(1.1) drop-shadow(0 0 16px rgba(250, 204, 21, 0.7)) !important;
   animation: goldenPulse 2s infinite alternate ease-in-out;
 }
 
@@ -116,161 +125,137 @@
   position: absolute;
   bottom: -4px;
   left: 50%; transform: translateX(-50%);
-  width: 100px; height: 12px;
-  background: rgba(0,0,0,0.4);
+  width: 90px; height: 10px;
+  background: rgba(0,0,0,0.35);
   border-radius: 50%;
-  filter: blur(8px);
+  filter: blur(6px);
 }
 
 /* ── STAT CHIPS ── */
-.home-chips {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin: 4px 0;
-}
-
 .home-chip {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 20px;
-  border-radius: 20px;
+  padding: 6px 16px;
+  border-radius: 100px;
   font-weight: 700;
-  font-size: 15px;
-  background: var(--card-bg);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--card-border);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.home-chip-seeds .home-chip-icon { color: var(--gold); }
-.home-chip-feats .home-chip-icon { color: var(--accent-purple); }
-
-.home-chip-feats {
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.home-chip-feats:active {
-  transform: scale(0.95);
-  background: var(--card-bg-hover);
+.home-chip-val {
+  font-family: var(--font-header);
+  font-size: 15px;
+  font-weight: 800;
 }
 
-.home-chip-icon { font-size: 16px; line-height: 1; }
-.home-chip-val  { font-size: 16px; font-weight: 800; }
-
-/* ── BUTTONS ── */
-.home-buttons {
+/* ── NAVIGATION GRID ── */
+.sanctuary-nav {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
+  margin-top: 8px;
 }
 
-/* Daily Challenge button */
-.home-btn-daily {
+.sanctuary-btn-main {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  width: 100%;
   padding: 14px 20px;
   border-radius: var(--btn-radius);
   border: 1px solid rgba(255,255,255,0.1);
-  background: linear-gradient(135deg, #38bdf8, #0284c7);
-  color: white;
-  font-weight: 800;
-  font-size: 14px;
-  letter-spacing: 0.5px;
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
-  transition: all 0.2s;
-}
-.home-btn-daily:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
-}
-
-/* Daily done state */
-.home-daily-done {
-  width: 100%;
-  padding: 12px 20px;
-  border-radius: var(--btn-radius);
-  background: rgba(255,255,255,0.04);
-  border: 1px dashed rgba(255,255,255,0.15);
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 600;
-  text-align: center;
-}
-
-/* PLAY button */
-.home-btn-play {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  padding: 18px 20px;
-  border-radius: var(--btn-radius);
-  border: 1px solid rgba(255,255,255,0.15);
-  background: linear-gradient(135deg, #4ade80, #16a34a);
-  color: #052e16;
+  background: linear-gradient(135deg, #10B981, #047857);
+  color: #022c22;
+  font-family: var(--font-header);
   font-weight: 900;
-  font-size: clamp(24px, 8vw, 32px);
-  letter-spacing: 1px;
+  font-size: 20px;
+  letter-spacing: 0.5px;
   box-shadow: var(--btn-shadow-green);
-  text-shadow: var(--text-stroke-white);
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
-.home-btn-play:active {
-  transform: translateY(3px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+.sanctuary-btn-main:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+.sanctuary-btn-main:disabled {
+  opacity: 0.4;
+  filter: grayscale(0.8);
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
-/* Bottom square buttons row */
-.home-btn-row {
-  display: flex;
-  gap: 12px;
-  width: 100%;
-}
-
-.home-btn-sq {
+.sanctuary-btn-sq {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 14px 8px;
+  padding: 12px 6px;
   border-radius: var(--btn-radius);
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.06);
   background: var(--card-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   color: var(--text-primary);
-  font-weight: 700;
   transition: all 0.2s;
+  cursor: pointer;
 }
-.home-btn-sq:active {
+.sanctuary-btn-sq:active {
   transform: scale(0.95);
   background: var(--card-bg-hover);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
-.home-btn-sq--yellow { border-color: rgba(250, 204, 21, 0.2); }
-.home-btn-sq--purple { border-color: rgba(168, 85, 247, 0.2); }
-.home-btn-sq--red    { border-color: rgba(239, 68, 68, 0.2); }
-
-.home-btn-sq-icon  { font-size: 20px; line-height: 1; }
-.home-btn-sq-label { font-size: 11px; font-weight: 800; color: var(--text-secondary); }
+.sanctuary-btn-sq-label {
+  font-family: var(--font-header);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+}
 
 /* ── HINT ── */
 .home-hint {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-muted);
   text-align: center;
   letter-spacing: 0.5px;
   margin-top: 4px;
+}
+
+.egg-indicator-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  background: var(--accent-red);
+  border: 2px solid #030712;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
+  z-index: 5;
+}
+
+/* Animations */
+@keyframes logoBobble {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes goldenPulse {
+  0% { filter: brightness(1.1) contrast(1.1) drop-shadow(0 0 8px rgba(250, 204, 21, 0.4)); }
+  100% { filter: brightness(1.3) contrast(1.1) drop-shadow(0 0 20px rgba(250, 204, 21, 0.8)); }
+}
+
+@keyframes mascotSparkle {
+  0%, 100% { transform: scale(0.8); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 1; }
 }

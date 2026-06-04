@@ -8,13 +8,14 @@ import TopBar from './TopBar';
 import ChickenSVG from './ChickenSVG';
 import PetSVG from './PetSVG';
 import HelpModal from './HelpModal';
+import { FeatIcon, HubIcon, StarIcon, PawIcon, LockIcon, CheckIcon, SeedIcon, MineIcon, SkullIcon, AlertIcon, MusicIcon } from './Icons';
 
 // ─── TABS ────────────────────────────────────────────────
 const TABS = [
-  { id: 'skins',  label: 'Skins',  icon: '🐔' },
-  { id: 'tiles',  label: 'Tiles',  icon: '🟦' },
-  { id: 'trails', label: 'Trails', icon: '✨' },
-  { id: 'pets',   label: 'Pets',   icon: '🐤' },
+  { id: 'skins',  label: 'Skins',  icon: FeatIcon },
+  { id: 'tiles',  label: 'Tiles',  icon: HubIcon },
+  { id: 'trails', label: 'Trails', icon: StarIcon },
+  { id: 'pets',   label: 'Pets',   icon: PawIcon },
 ];
 
 const STARS = Array.from({ length: 20 }, (_, i) => ({
@@ -31,8 +32,12 @@ function TilePreview({ style }) {
   return (
     <div className="sp-tile-preview">
       <div className="sp-tp-tile" style={{ background: style.hiddenColor, borderColor: style.borderColor }}>?</div>
-      <div className="sp-tp-tile" style={{ background: style.safeColor,   borderColor: style.borderColor }}>✓</div>
-      <div className="sp-tp-tile" style={{ background: style.mineColor,   borderColor: style.borderColor }}>💣</div>
+      <div className="sp-tp-tile" style={{ background: style.safeColor,   borderColor: style.borderColor }}>
+        <CheckIcon size={14} className="text-white" />
+      </div>
+      <div className="sp-tp-tile" style={{ background: style.mineColor,   borderColor: style.borderColor }}>
+        <MineIcon size={14} className="text-white" />
+      </div>
     </div>
   );
 }
@@ -40,7 +45,7 @@ function TilePreview({ style }) {
 // ─── TRAIL VISUAL PREVIEW ────────────────────────────────
 function TrailPreview({ trail }) {
   if (trail.id === 'none') {
-    return <div className="sp-trail-preview sp-trail-none">✗</div>;
+    return <div className="sp-trail-preview sp-trail-none">None</div>;
   }
   
   const isFlower = trail.id === 'flower';
@@ -66,18 +71,34 @@ function TrailPreview({ trail }) {
           };
           
           if (isFlower) {
-            content = ['🌸', '🌼', '🌻'][i % 3];
+            const currentSize = 16 - i * 2;
+            content = (
+              <svg viewBox="0 0 24 24" style={{ width: currentSize, height: currentSize, fill: 'none', stroke: color, strokeWidth: 1.5, opacity: 0.85 }}>
+                <path d="M12 2 Q12 12 2 12 Q12 12 12 22 Q12 12 22 12 Q12 12 12 2 Z" />
+                <path d="M5 5 Q12 12 19 19 Q12 12 5 19 Q12 12 19 5" />
+              </svg>
+            );
             style.background = 'none';
-            style.fontSize = `${16 - i * 2}px`;
           } else if (isMusic) {
-            content = ['🎵', '🎶', '♪'][i % 3];
+            const currentSize = 16 - i * 2;
+            content = (
+              <svg viewBox="0 0 24 24" style={{ width: currentSize, height: currentSize, fill: 'none', stroke: color, strokeWidth: 2, opacity: 0.9 }}>
+                {i % 2 === 0 ? (
+                  <path d="M9 18V5l12-2v13 M9 9l12-2 M6 18a3 3 0 1 0 6 0a3 3 0 1 0-6 0 M18 16a3 3 0 1 0 6 0a3 3 0 1 0-6 0" />
+                ) : (
+                  <path d="M9 17 V3 M6 17a3 3 0 1 0 6 0a3 3 0 1 0-6 0 M9 7 C14 7 15 3 15 3" />
+                )}
+              </svg>
+            );
             style.background = 'none';
-            style.color = color;
-            style.fontSize = `${16 - i * 2}px`;
           } else if (isSparkle) {
-            content = '✨';
+            const currentSize = 16 - i * 2;
+            content = (
+              <svg viewBox="0 0 24 24" style={{ width: currentSize, height: currentSize, fill: '#FFF176', opacity: 0.9 }}>
+                <polygon points="12,2 14,10 22,12 14,14 12,22 10,14 2,12 10,10" />
+              </svg>
+            );
             style.background = 'none';
-            style.fontSize = `${16 - i * 2}px`;
           } else if (isBubble) {
             style.background = 'rgba(255,255,255,0.2)';
             style.border = `1.5px solid ${color}`;
@@ -98,14 +119,14 @@ function TrailPreview({ trail }) {
 }
 
 // ─── BUY / EQUIP BUTTON ──────────────────────────────────
-function ActionBtn({ owned, equipped, price, onPress, hasDiscount, currentSeeds }) {
-  const displayPrice = hasDiscount ? Math.floor(price * 0.9) : price;
-  const canAfford = currentSeeds >= displayPrice;
+function ActionBtn({ owned, equipped, price, discountedPrice, onPress, currentSeeds }) {
+  const canAfford = currentSeeds >= discountedPrice;
+  const hasDiscount = discountedPrice < price;
 
   if (equipped) {
     return (
       <button className="sp-btn sp-btn--equipped" onClick={onPress}>
-        <span>✓</span>
+        <CheckIcon size={18} className="text-black" />
       </button>
     );
   }
@@ -133,7 +154,10 @@ function ActionBtn({ owned, equipped, price, onPress, hasDiscount, currentSeeds 
         disabled
       >
         <span style={{ fontSize: '9px', fontWeight: 'bold' }}>NEED</span>
-        <span style={{ fontSize: '13px', fontWeight: '900' }}>{displayPrice}🌾</span>
+        <span className="flex items-center gap-0.5" style={{ fontSize: '13px', fontWeight: '900' }}>
+          {discountedPrice}
+          <SeedIcon size={12} className="text-gold inline-block" />
+        </span>
       </button>
     );
   }
@@ -146,8 +170,8 @@ function ActionBtn({ owned, equipped, price, onPress, hasDiscount, currentSeeds 
         </span>
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-        <span className="sp-btn-seed">🌾</span>
-        <span>{displayPrice}</span>
+        <SeedIcon size={14} className="text-black inline-block" />
+        <span>{discountedPrice}</span>
       </div>
     </button>
   );
@@ -302,16 +326,19 @@ export default function ShopScreen({ onBack }) {
 
       {/* Tab bar */}
       <div className="sp-tabs">
-        {TABS.map(t => (
-          <button
-            key={t.id}
-            className={`sp-tab ${tab === t.id ? 'sp-tab--active' : ''}`}
-            onClick={() => setTab(t.id)}
-          >
-            <span className="sp-tab-icon">{t.icon}</span>
-            <span className="sp-tab-label">{t.label}</span>
-          </button>
-        ))}
+        {TABS.map(t => {
+          const Icon = t.icon;
+          return (
+            <button
+              key={t.id}
+              className={`sp-tab ${tab === t.id ? 'sp-tab--active' : ''}`}
+              onClick={() => setTab(t.id)}
+            >
+              <span className="sp-tab-icon"><Icon size={18} /></span>
+              <span className="sp-tab-label">{t.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Items list */}
@@ -332,7 +359,11 @@ export default function ShopScreen({ onBack }) {
               key={skin.id}
               className={`sp-card ${equipped ? 'sp-card--equipped' : ''}`}
             >
-              {!owned && <div className="absolute top-2 right-3 text-xs opacity-20">🔒</div>}
+              {!owned && (
+                <div className="absolute top-2 right-3 text-xs opacity-40">
+                  <LockIcon size={14} className="text-slate-500" />
+                </div>
+              )}
               <div className="sp-card-art">
                 <ChickenSVG skinId={skin.id} mood="normal" size={72} focus={equipped ? 'right' : null}/>
               </div>
@@ -340,12 +371,17 @@ export default function ShopScreen({ onBack }) {
                 <RarityBadge rarity={rarity} />
                 <div className="sp-card-name">{skin.name}</div>
                 <div className="sp-card-desc">{skin.description}</div>
-                {equipped && <div className="sp-equipped-badge"><span>✅</span> Equipped</div>}
+                {equipped && (
+                  <div className="sp-equipped-badge flex items-center gap-1">
+                    <CheckIcon size={12} className="text-accent-green" />
+                    <span>Equipped</span>
+                  </div>
+                )}
               </div>
               <ActionBtn
                 owned={owned} equipped={equipped}
-                price={skin.price} onPress={() => buySkin(skin)}
-                hasDiscount={finalDiscount > 0}
+                price={skin.price} discountedPrice={getPrice(skin.price)}
+                onPress={() => buySkin(skin)}
                 currentSeeds={seeds}
               />
             </div>
@@ -361,16 +397,25 @@ export default function ShopScreen({ onBack }) {
               key={style.id}
               className={`sp-card ${equipped ? 'sp-card--equipped' : ''}`}
             >
-              {!owned && <div className="absolute top-2 right-3 text-xs opacity-20">🔒</div>}
+              {!owned && (
+                <div className="absolute top-2 right-3 text-xs opacity-40">
+                  <LockIcon size={14} className="text-slate-500" />
+                </div>
+              )}
               <TilePreview style={style}/>
               <div className="sp-card-info">
                 <div className="sp-card-name">{style.name}</div>
-                {equipped && <div className="sp-equipped-badge"><span>✅</span> Equipped</div>}
+                {equipped && (
+                  <div className="sp-equipped-badge flex items-center gap-1">
+                    <CheckIcon size={12} className="text-accent-green" />
+                    <span>Equipped</span>
+                  </div>
+                )}
               </div>
               <ActionBtn
                 owned={owned} equipped={equipped}
-                price={style.price} onPress={() => buyTile(style)}
-                hasDiscount={finalDiscount > 0}
+                price={style.price} discountedPrice={getPrice(style.price)}
+                onPress={() => buyTile(style)}
                 currentSeeds={seeds}
               />
             </div>
@@ -386,17 +431,26 @@ export default function ShopScreen({ onBack }) {
               key={trail.id}
               className={`sp-card ${equipped ? 'sp-card--equipped' : ''}`}
             >
-              {!owned && <div className="absolute top-2 right-3 text-xs opacity-20">🔒</div>}
+              {!owned && (
+                <div className="absolute top-2 right-3 text-xs opacity-40">
+                  <LockIcon size={14} className="text-slate-500" />
+                </div>
+              )}
               <TrailPreview trail={trail}/>
               <div className="sp-card-info">
                 <div className="sp-card-name">{trail.name}</div>
                 <div className="sp-card-desc">{trail.description}</div>
-                {equipped && <div className="sp-equipped-badge"><span>✅</span> Equipped</div>}
+                {equipped && (
+                  <div className="sp-equipped-badge flex items-center gap-1">
+                    <CheckIcon size={12} className="text-accent-green" />
+                    <span>Equipped</span>
+                  </div>
+                )}
               </div>
               <ActionBtn
                 owned={owned} equipped={equipped}
-                price={trail.price} onPress={() => buyTrail(trail)}
-                hasDiscount={hasDiscount}
+                price={trail.price} discountedPrice={getPrice(trail.price)}
+                onPress={() => buyTrail(trail)}
                 currentSeeds={seeds}
               />
             </div>
@@ -412,7 +466,11 @@ export default function ShopScreen({ onBack }) {
               key={pet.id}
               className={`sp-card ${equipped ? 'sp-card--equipped' : ''}`}
             >
-              {!owned && <div className="absolute top-2 right-3 text-xs opacity-20">🔒</div>}
+              {!owned && (
+                <div className="absolute top-2 right-3 text-xs opacity-40">
+                  <LockIcon size={14} className="text-slate-500" />
+                </div>
+              )}
               <div className="sp-card-art">
                 <PetSVG petId={pet.id} size={70} mood={equipped ? 'happy' : 'normal'}/>
               </div>
@@ -420,17 +478,25 @@ export default function ShopScreen({ onBack }) {
                 <RarityBadge rarity={pet.rarity} />
                 <div className="sp-card-name">{pet.name}</div>
                 <div className="sp-card-desc">{pet.description}</div>
-                <div className="sp-bonus-label">
-                  ⚡ {pet.bonus === 'seed_bonus' ? `+${Math.round(pet.bonusVal * abilityPower * 100)}% seeds` :
+                <div className="sp-bonus-label flex items-center gap-1 text-[11px] font-bold text-accent-blue mt-1">
+                  <StarIcon size={12} className="text-accent-blue" />
+                  <span>
+                    {pet.bonus === 'seed_bonus' ? `+${Math.round(pet.bonusVal * abilityPower * 100)}% seeds` :
                      pet.bonus === 'time_bonus' ? `+${Math.round(pet.bonusVal * abilityPower)}s time` :
                      pet.bonusLabel}
+                  </span>
                 </div>
-                {equipped && <div className="sp-equipped-badge"><span>✅</span> Equipped</div>}
+                {equipped && (
+                  <div className="sp-equipped-badge flex items-center gap-1 mt-1">
+                    <CheckIcon size={12} className="text-accent-green" />
+                    <span>Equipped</span>
+                  </div>
+                )}
               </div>
               <ActionBtn
                 owned={owned} equipped={equipped}
-                price={pet.price} onPress={() => buyPet(pet)}
-                hasDiscount={hasDiscount}
+                price={pet.price} discountedPrice={getPrice(pet.price)}
+                onPress={() => buyPet(pet)}
                 currentSeeds={seeds}
               />
             </div>

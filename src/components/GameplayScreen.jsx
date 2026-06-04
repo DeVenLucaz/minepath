@@ -14,6 +14,21 @@ import TopBar from './TopBar';
 import GameOverModal from './GameOverModal';
 import LevelClearModal from './LevelClearModal';
 import HelpModal from './HelpModal';
+import { GoalIcon, SkullIcon, AlertIcon, CheckIcon, TorchIcon, DiskIcon, FoxIcon, ScrambleIcon, StarIcon, SeedIcon, MineIcon, ShieldIcon, SlowMoIcon, RevealIcon, DoubleScoreIcon, ClockIcon, PlayIcon, DailyIcon, GemIcon, SmokeIcon, MagnetIcon } from './Icons';
+
+function MutatorIcon({ icon, size = 24 }) {
+  const map = {
+    '💔': SkullIcon,
+    '⚡': ClockIcon,
+    '💣': MineIcon,
+    '🙈': RevealIcon,
+    '🧊': SlowMoIcon,
+    '💎': GemIcon,
+  };
+  const Icon = map[icon];
+  if (Icon) return <Icon size={size} className="text-gold" />;
+  return <span style={{ fontSize: size }}>{icon}</span>;
+}
 
 // ─── DAILY CONFIG ──────────────────────────────────────────────
 function getDailyConfig(dateString) {
@@ -156,21 +171,33 @@ function TrailParticle({ x, y, trailId, index, total, particleIndex = 0 }) {
   let customStyle = {};
 
   if (isFlower) {
-    const flowers = ['🌸', '🌼', '🌻', '🌺', '🌷'];
-    content = flowers[(index + particleIndex) % flowers.length];
-    customStyle = { fontSize: `${size}px`, background: 'none', boxShadow: 'none', transform: `rotate(${rotation}deg)` };
+    content = (
+      <svg viewBox="0 0 24 24" style={{ width: size, height: size, fill: 'none', stroke: color, strokeWidth: 1.5, opacity: 0.85 }}>
+        <path d="M12 2 Q12 12 2 12 Q12 12 12 22 Q12 12 22 12 Q12 12 12 2 Z" />
+        <path d="M5 5 Q12 12 19 19 Q12 12 5 19 Q12 12 19 5" />
+      </svg>
+    );
+    customStyle = { background: 'none', boxShadow: 'none', transform: `rotate(${rotation}deg)` };
   } else if (isMusic) {
-    const notes = ['🎵', '🎶', '♪', '♫', '♬'];
-    content = notes[(index + particleIndex) % notes.length];
-    customStyle = { fontSize: `${size}px`, background: 'none', boxShadow: 'none', color, transform: `rotate(${rotation}deg)` };
+    content = (
+      <svg viewBox="0 0 24 24" style={{ width: size, height: size, fill: 'none', stroke: color, strokeWidth: 2, opacity: 0.9 }}>
+        {index % 2 === 0 ? (
+          <path d="M9 18V5l12-2v13 M9 9l12-2 M6 18a3 3 0 1 0 6 0a3 3 0 1 0-6 0 M18 16a3 3 0 1 0 6 0a3 3 0 1 0-6 0" />
+        ) : (
+          <path d="M9 17 V3 M6 17a3 3 0 1 0 6 0a3 3 0 1 0-6 0 M9 7 C14 7 15 3 15 3" />
+        )}
+      </svg>
+    );
+    customStyle = { background: 'none', boxShadow: 'none', transform: `rotate(${rotation}deg)` };
   } else if (isSparkle) {
-    content = '✦';
+    content = (
+      <svg viewBox="0 0 24 24" style={{ width: size, height: size, fill: '#FFF176', opacity: 0.9, filter: 'drop-shadow(0 0 4px gold)' }}>
+        <polygon points="12,2 14,10 22,12 14,14 12,22 10,14 2,12 10,10" />
+      </svg>
+    );
     customStyle = { 
-      fontSize: `${size}px`, 
       background: 'none', 
       boxShadow: 'none', 
-      color: '#FFF176',
-      textShadow: '0 0 10px gold',
       transform: `rotate(${rotation}deg) scale(${0.5 + ageFactor * 0.5})`
     };
   } else if (isBubble) {
@@ -215,7 +242,7 @@ function TrailParticle({ x, y, trailId, index, total, particleIndex = 0 }) {
 }
 
 // ─── CHICKEN COMPONENT ─────────────────────────
-function Chicken({ skin, animState, position, cellW, cellH, isMagnetActive, skinSkillAnim }) {
+function Chicken({ skin, animState, position, cellW, cellH, isMagnetActive, skinSkillAnim, tiles = [] }) {
   const pixelX = position.c * (cellW + 2) + cellW / 2;
   const pixelY = position.r * (cellH + 2) + cellH / 2;
   
@@ -238,11 +265,22 @@ function Chicken({ skin, animState, position, cellW, cellH, isMagnetActive, skin
     }
   }, [position]);
 
-  const mood = animState === 'explode' || animState === 'death' ? 'sad' : animState === 'celebrate' ? 'happy' : 'normal';
+  // Near mine fear detection
+  const isDangerNear = useMemo(() => {
+    if (animState === 'explode' || animState === 'death' || animState === 'celebrate') return false;
+    return tiles.some(t => 
+      t.isMine && 
+      t.state === 'hidden' && 
+      Math.abs(t.r - position.r) <= 1 && 
+      Math.abs(t.c - position.c) <= 1
+    );
+  }, [tiles, position, animState]);
+
+  const mood = animState === 'explode' || animState === 'death' ? 'sad' : isDangerNear ? 'scared' : animState === 'celebrate' ? 'happy' : 'normal';
   const size = Math.min(cellW, cellH) * 1.15; // Reverted to original tactical size
   
   let animClass = '';
-  if (animState === 'normal' || animState === 'idle') animClass = 'anim-idle-breathe';
+  if (animState === 'normal' || animState === 'idle') animClass = isDangerNear ? 'anim-shiver' : 'anim-idle-breathe';
   else if (animState === 'explode' || animState === 'death') animClass = 'anim-death';
   else if (animState === 'celebrate') animClass = 'anim-celebrate';
   else if (animState === 'moving' || animState === 'walk') animClass = 'anim-moving';
@@ -292,7 +330,11 @@ function Chicken({ skin, animState, position, cellW, cellH, isMagnetActive, skin
             <div className="royal-sparkle s3">✦</div>
           </>
         )}
-        {skinSkillAnim === 'ninja_shadow_step' && <div className="ninja-smoke">💨</div>}
+        {skinSkillAnim === 'ninja_shadow_step' && (
+          <div className="ninja-smoke flex items-center justify-center">
+            <SmokeIcon size={18} className="text-slate-300" />
+          </div>
+        )}
         {skinSkillAnim === 'ghost_phase_through' && <div className="ghost-ripple" />}
         {skinSkillAnim === 'royal_decree' && Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="royal-coin" style={{ 
@@ -378,23 +420,23 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, s
 
   if (tile.state === 'checkpoint') {
     bg = '#FFD700';
-    content = '🏁';
+    content = <GoalIcon size={20} className="text-white mx-auto" />;
     extraClass = 'tile-checkpoint';
   } else if (tile.state === 'hidden') {
     bg = styleData.hiddenColor;
-    content = tile.powerup ? '✨' : (tile.hasSeed ? '🌾' : '?');
+    content = tile.powerup ? <StarIcon size={16} className="text-gold animate-pulse mx-auto" /> : (tile.hasSeed ? <SeedIcon size={16} className="text-gold mx-auto" /> : '?');
     extraClass = `tile-hidden ${tile.powerup ? 'tile-powerup-glow' : ''} ${isAdjacent ? 'tile-adjacent tile-adjacent-pulse' : ''} ${tile.isMine ? 'tile-mine-pulse' : ''}`;
   } else if (tile.state === 'revealed') {
     bg = styleData.safeColor;
-    content = tile.powerup ? getPowerupIcon(tile.powerup) : (tile.hasSeed ? '🌾' : '✓');
+    content = tile.powerup ? getPowerupIcon(tile.powerup) : (tile.hasSeed ? <SeedIcon size={16} className="text-gold mx-auto" /> : <CheckIcon size={16} className="text-white/80 mx-auto" />);
     extraClass = `tile-revealed tile-3d-flip`;
   } else if (tile.state === 'mine') {
     bg = styleData.mineColor;
-    content = '💀';
+    content = <SkullIcon size={20} className="text-white mx-auto" />;
     extraClass = 'tile-mine tile-shake';
   } else if (tile.state === 'peeked') {
     bg = tile.isMine ? '#ff6b6b' : '#90EE90';
-    content = tile.isMine ? '💣' : '✓';
+    content = tile.isMine ? <MineIcon size={18} className="text-white mx-auto" /> : <CheckIcon size={16} className="text-white/80 mx-auto" />;
     extraClass = 'tile-peeked tile-3d-flip';
   }
 
@@ -433,8 +475,18 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, s
 }
 
 function getPowerupIcon(type) {
-  const icons = { shield: '🛡️', slowmo: '⏱️', reveal: '👁️', doublescore: '⭐', magnet: '🧲', light: '🕯️', golden_seed: '📀' };
-  return icons[type] || '✨';
+  const map = {
+    shield: ShieldIcon,
+    slowmo: SlowMoIcon,
+    reveal: RevealIcon,
+    doublescore: DoubleScoreIcon,
+    magnet: MagnetIcon,
+    light: TorchIcon,
+    golden_seed: DiskIcon
+  };
+  const Icon = map[type];
+  if (Icon) return <Icon size={20} className="text-white mx-auto" />;
+  return <StarIcon size={20} className="text-gold mx-auto" />;
 }
 
 // ─── OBSTACLE OVERLAY ────────────────────────────────────────────
@@ -446,10 +498,10 @@ function ObstacleOverlay({ obstacle, onDone }) {
 
   if (!obstacle) return null;
   const msgs = {
-    thief: { icon: '🦊', text: 'THIEF FOX!', sub: 'Stole your powerup!', cls: 'obstacle-thief' },
-    scramble: { icon: '🔀', text: 'SCRAMBLER!', sub: 'Tiles re-hidden!', cls: 'obstacle-scramble' },
+    thief: { icon: <FoxIcon size={44} className="text-white mx-auto" />, text: 'THIEF FOX!', sub: 'Stole your powerup!', cls: 'obstacle-thief' },
+    scramble: { icon: <ScrambleIcon size={44} className="text-white mx-auto" />, text: 'SCRAMBLER!', sub: 'Tiles re-hidden!', cls: 'obstacle-scramble' },
   };
-  const m = msgs[obstacle] || { icon: '⚠️', text: 'OBSTACLE!', sub: '', cls: '' };
+  const m = msgs[obstacle] || { icon: <AlertIcon size={44} className="text-white mx-auto" />, text: 'OBSTACLE!', sub: '', cls: '' };
   return (
     <div className={`obstacle-overlay ${m.cls}`}>
       <div className="obstacle-icon">{m.icon}</div>
@@ -493,7 +545,7 @@ function Confetti() {
           fontSize: `${p.size}px`,
           transform: `rotate(${p.rot}deg)`,
         }}>
-          {p.type === 'seed' ? '🌾' : p.type === 'star' ? '✦' : ''}
+          {p.type === 'seed' ? <SeedIcon size={p.size} className="text-gold" /> : p.type === 'star' ? '✦' : ''}
         </div>
       ))}
     </div>
@@ -509,7 +561,7 @@ function DailyIntroModal({ config, onStart }) {
         className="modal-card p-6 text-center gap-6"
       >
         <div className="flex flex-col items-center">
-          <span className="text-4xl mb-2">📅</span>
+          <DailyIcon size={48} className="text-gold mb-2" />
           <h2 className="text-2xl font-black text-white uppercase tracking-tight m-0">
             DAILY CHALLENGE
           </h2>
@@ -524,7 +576,7 @@ function DailyIntroModal({ config, onStart }) {
             <div className="flex flex-col gap-2 mt-2">
               {config.activeMutators.map(m => (
                 <div key={m.id} className="flex items-center gap-3 bg-white/5 border border-white/10 p-3 rounded-xl">
-                  <span className="text-2xl">{m.icon}</span>
+                  <MutatorIcon icon={m.icon} size={24} />
                   <div className="flex flex-col">
                     <span className="text-sm font-black text-white">{m.name}</span>
                     <span className="text-[10px] text-secondary font-bold">{m.description}</span>
@@ -586,6 +638,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const [chickenAnim, setChickenAnim] = useState('idle');
   const [shaking, setShaking] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [victoryWaves, setVictoryWaves] = useState([]);
   const [obstacle, setObstacle] = useState(null);
   const [doubleScore, setDoubleScore] = useState(false);
   const [magnetActive, setMagnetActive] = useState(false);
@@ -653,12 +706,12 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
   const equippedTrail = useMemo(() => gameStore.getEquippedTrail(), []);
   const unlockedSkills = useMemo(() => playerStore.getSkills(), []);
 
-  const has = useCallback((id) => unlockedSkills.includes(id), [unlockedSkills]);
-  const hasSkinSkill = useCallback((id, skinId) => unlockedSkills.includes(id) && equippedSkin === skinId, [unlockedSkills, equippedSkin]);
-
   // Overrides for Daily Mode
   const finalSkin = isDaily ? dailyConfig.lockedSkin.id : equippedSkin;
   const finalPet = isDaily ? dailyConfig.lockedPet.id : equippedPetId;
+
+  const has = useCallback((id) => unlockedSkills.includes(id), [unlockedSkills]);
+  const hasSkinSkill = useCallback((id, skinId) => unlockedSkills.includes(id) && finalSkin === skinId, [unlockedSkills, finalSkin]);
 
   const [showDailyIntro, setShowDailyIntro] = useState(isDaily);
 
@@ -887,6 +940,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     audio.levelComplete();
     setShowConfetti(true);
     setChickenAnim('celebrate');
+    setVictoryWaves([Date.now(), Date.now() + 200, Date.now() + 400]);
 
     const lvl = levelRef.current;
     const baseSeeds = lvl * 10;
@@ -1246,6 +1300,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     setSlowMoActive(false);
     slowMoRef.current = false;
     setShowConfetti(false);
+    setVictoryWaves([]);
     setObstacle(null);
     setChickenAnim('idle');
     levelRef.current = lvl;
@@ -1502,15 +1557,34 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           100% { transform: scaleY(1); }
         }
         @keyframes anim-death {
-          0%, 11%, 22%, 33%, 44% { transform: translateX(0); }
-          5%, 28% { transform: translateX(-6px); }
-          16%, 39% { transform: translateX(6px); }
-          45% { transform: translateX(0) scaleY(1); }
-          100% { transform: translateX(0) scaleY(0.2); }
+          0% { transform: scale(1) rotate(0) translateY(0); opacity: 1; filter: none; }
+          20% { transform: scale(1.1) rotate(-15deg) translateY(-5px); filter: hue-rotate(90deg) brightness(1.5) drop-shadow(0 0 12px #FF4500); }
+          40% { transform: scale(0.9) rotate(15deg) translateY(0); filter: hue-rotate(180deg) brightness(2) drop-shadow(0 0 20px #FF1744); }
+          100% { transform: scale(0) rotate(720deg) translateY(-60px); opacity: 0; filter: hue-rotate(360deg) brightness(0.5); }
         }
         @keyframes anim-celebrate {
-          0%, 100% { transform: translateY(0) scaleY(1); }
-          50% { transform: translateY(-14px) scaleY(1.2); }
+          0% { transform: translateY(0) scale(1) rotate(0); }
+          30% { transform: translateY(-40px) scaleX(0.85) scaleY(1.2) rotate(180deg); }
+          50% { transform: translateY(-40px) scaleX(1) scaleY(1) rotate(360deg); }
+          75% { transform: translateY(5px) scaleX(1.3) scaleY(0.75); }
+          100% { transform: translateY(0) scale(1) rotate(360deg); }
+        }
+        @keyframes anim-shiver {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          20% { transform: translate(-1.5px, 0.5px) scale(0.99); }
+          40% { transform: translate(1px, -1px) scale(1.01); }
+          60% { transform: translate(-1px, -0.5px) scale(0.99); }
+          80% { transform: translate(1.5px, 1px) scale(1.01); }
+        }
+        @keyframes sweat-drip {
+          0% { transform: translateY(0); opacity: 0; }
+          30% { opacity: 0.8; }
+          100% { transform: translateY(8px); opacity: 0; }
+        }
+        @keyframes success-ring {
+          0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; border: 4px solid #FFD700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+          50% { border-color: #00E5FF; }
+          100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; border: 1px solid rgba(0, 229, 255, 0); box-shadow: 0 0 30px rgba(0, 229, 255, 0); }
         }
         @keyframes anim-space-star-fade { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.5); } }
         @keyframes anim-space-skill { 0%, 100% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(176,200,232,0); } 50% { transform: translateY(-10px); box-shadow: 0 0 20px 10px rgba(176,200,232,0.6); } }
@@ -1524,6 +1598,29 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         @keyframes anim-ghost-ripple { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0.5; border: 2px solid #2196F3; border-radius: 50%; } 100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; border: 1px solid #2196F3; border-radius: 50%; } }
         @keyframes anim-floating-seed {
           0% { transform: translate(-50%, 0); opacity: 1; }
+          100% { transform: translate(-50%, -40px); opacity: 0; }
+        }
+        
+        @keyframes tile-mine-pulse { 0%, 100% { box-shadow: 0 0 4px rgba(180,0,0,0.2); } 50% { box-shadow: 0 0 8px rgba(180,0,0,0.4); } }
+        @keyframes tile-powerup-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        @keyframes tile-safe-floor-glow { 0%, 100% { box-shadow: 0 0 8px rgba(100,255,100,0.3); } 50% { box-shadow: 0 0 16px rgba(100,255,100,0.6); } }
+        @keyframes tile-adjacent-pulse { 0%, 100% { border-color: rgba(255,255,255,0.4); } 50% { border-color: rgba(255,255,255,1); } }
+ 
+        .anim-idle-breathe { animation: anim-idle-breathe 2s ease-in-out infinite; }
+        .anim-moving { animation: anim-moving 0.25s ease-out 1 forwards; }
+        .anim-death { animation: anim-death 0.7s forwards; }
+        .anim-celebrate { animation: anim-celebrate 0.6s ease-out 3 forwards; }
+        .anim-shiver { animation: anim-shiver 0.15s infinite; }
+        .success-ring {
+          position: absolute;
+          transform: translate(-50%, -50%);
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          pointer-events: none;
+          z-index: 10;
+          animation: success-ring 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }m: translate(-50%, 0); opacity: 1; }
           100% { transform: translate(-50%, -40px); opacity: 0; }
         }
         
@@ -1610,8 +1707,8 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             </div>
           </div>
 
-          <div className="hud-seeds-chip">
-            <span className="hud-seeds-icon">🌾</span>
+          <div className="hud-seeds-chip flex items-center gap-1">
+            <SeedIcon size={14} className="text-gold" />
             <span className="hud-seeds-val">{seeds}</span>
           </div>
         </div>
@@ -1634,16 +1731,16 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
                 {combo}x <span className="hud-badge-sub">COMBO</span>
               </div>
             )}
-            {hasShield    && <div className="hud-badge hud-badge--shield">🛡️ {shieldHits > 1 ? `x${shieldHits}` : ''}</div>}
-            {doubleScore  && <div className="hud-badge hud-badge--double">⭐ 2X</div>}
-            {slowMoActive && <div className="hud-badge hud-badge--slow">⏱️</div>}
-            {mineSkipCharges > 0 && <div className="hud-badge hud-badge--skip">👟 {mineSkipCharges}</div>}
-            {modifiers.includes('speed') && <div className="hud-badge hud-badge--speed">⚡</div>}
+            {hasShield    && <div className="hud-badge hud-badge--shield flex items-center gap-1"><ShieldIcon size={14} /> <span>{shieldHits > 1 ? `x${shieldHits}` : ''}</span></div>}
+            {doubleScore  && <div className="hud-badge hud-badge--double flex items-center gap-1"><StarIcon size={14} /> <span>2X</span></div>}
+            {slowMoActive && <div className="hud-badge hud-badge--slow"><ClockIcon size={14} /></div>}
+            {mineSkipCharges > 0 && <div className="hud-badge hud-badge--skip flex items-center gap-1"><PlayIcon size={14} className="rotate-90" /> <span>{mineSkipCharges}</span></div>}
+            {modifiers.includes('speed') && <div className="hud-badge hud-badge--speed"><PlayIcon size={14} /></div>}
             
             {/* DAILY MUTATORS */}
             {isDaily && dailyConfig.activeMutators.map(m => (
-              <div key={m.id} className="hud-badge bg-white/10" title={m.name}>
-                {m.icon}
+              <div key={m.id} className="hud-badge bg-white/10 flex items-center justify-center" title={m.name} style={{ width: '28px', height: '28px', padding: 0 }}>
+                <MutatorIcon icon={m.icon} size={16} />
               </div>
             ))}
           </div>
@@ -1678,6 +1775,18 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
               />
             );
           })}
+
+          {victoryWaves.map((waveId, idx) => (
+            <div 
+              key={waveId} 
+              className="success-ring" 
+              style={{
+                left: (cols - 1) * (cellSize.w + 2) + cellSize.w / 2,
+                top: cellSize.h / 2,
+                animationDelay: `${idx * 0.2}s`
+              }}
+            />
+          ))}
 
           <div
             className="trail-overlay"
@@ -1733,6 +1842,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
               cellH={cellSize.h}
               isMagnetActive={magnetActive}
               skinSkillAnim={skinSkillAnim}
+              tiles={tiles}
             />
             {finalPet && (
               <Pet
@@ -1764,7 +1874,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
             gap: '4px',
             whiteSpace: 'nowrap'
           }}>
-            +{fs.amount} 🌾
+            +{fs.amount} <SeedIcon size={16} className="text-gold inline-block align-middle" />
           </div>
         ))}
       </div>
@@ -1777,7 +1887,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
         <GameOverModal
           level={level}
           seeds={levelSeeds}
-          skinId={equippedSkin}
+          skinId={finalSkin}
           onRetry={() => initLevel(level)}
           onHome={onBack}
         />
@@ -1788,7 +1898,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           level={level}
           seeds={levelSeeds}
           timeLeft={levelTimeLeft}
-          skinId={equippedSkin}
+          skinId={finalSkin}
           tileSeedsCollected={tileSeedsCollected}
           baseLevelReward={baseLevelReward}
           petBonusSeeds={petBonusSeeds}

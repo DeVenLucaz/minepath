@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { gameStore } from '../store/gameStore';
 import { audio } from '../audio/engine';
 import ChickenSVG from './ChickenSVG';
 import PetSVG from './PetSVG';
-import { PETS } from '../data/pets';
 import HelpModal from './HelpModal';
+import { SettingsIcon, HelpIcon, SeedIcon, PlayIcon, DailyIcon, EndlessIcon, HubIcon, ShopIcon, SkillIcon, FeatIcon } from './Icons';
 
 const STARS = Array.from({ length: 28 }, (_, i) => ({
   id: i,
@@ -25,6 +25,20 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
   const [showHelp, setShowHelp] = useState(false);
   const [dailyStatus, setDailyStatus] = useState(gameStore.getDailyChallenge());
   const [focus, setFocus] = useState(null);
+  const clickTimes = useRef([]);
+
+  const handleChickenClick = () => {
+    if (isGolden) return;
+    
+    const now = Date.now();
+    clickTimes.current = [...clickTimes.current.filter(t => now - t < 2000), now];
+    
+    if (clickTimes.current.length >= 7) {
+      gameStore.unlockGoldenMascot();
+      setIsGolden(true);
+      audio.powerupCollect(); // Play a sound for feedback
+    }
+  };
 
   useEffect(() => {
     // Fresh pull on every mount/nav
@@ -65,9 +79,9 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
       <div className="absolute top-4 right-4 z-10 flex gap-2">
         <button 
           onClick={onSettings}
-          className="w-11 h-11 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl flex items-center justify-center text-xl shadow-lg active:scale-90 transition-transform"
+          className="w-11 h-11 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl flex items-center justify-center shadow-lg active:scale-90 transition-transform"
         >
-          ⚙️
+          <SettingsIcon size={20} className="text-secondary" />
         </button>
       </div>
 
@@ -75,7 +89,7 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
         onClick={() => setShowHelp(true)}
         className="fixed bottom-[80px] right-4 w-8 h-8 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg z-[110] active:scale-90 transition-transform"
       >
-        ?
+        <HelpIcon size={16} />
       </button>
 
       <div className="sanctuary-content">
@@ -87,7 +101,10 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
         </div>
 
         {/* CHICKEN & PET */}
-        <div className={`home-chicken-wrap ${bounce ? 'bounce-up' : 'bounce-down'} ${isGolden ? 'golden-mascot' : ''} my-2`}>
+        <div 
+          className={`home-chicken-wrap ${bounce ? 'bounce-up' : 'bounce-down'} ${isGolden ? 'golden-mascot' : ''} my-2`}
+          onClick={handleChickenClick}
+        >
           <ChickenSVG skinId={isGolden ? 'classic' : equippedSkin} size={140} focus={focus} />
           {equippedPet && (
             <div 
@@ -101,14 +118,14 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
 
         {/* SEEDS CHIP */}
         <div className="home-chip home-chip-seeds">
-          <span className="home-chip-icon">🌾</span>
+          <SeedIcon size={18} className="home-chip-icon text-gold" />
           <span className="home-chip-val">{seeds}</span>
         </div>
 
         {/* NAVIGATION GRID */}
         <div className="sanctuary-nav">
           <button className="sanctuary-btn-main" onClick={() => { audio.init(); onPlay(); }}>
-            <span>🎮</span> PLAY
+            <PlayIcon size={24} className="mr-2 text-emerald-900" /> PLAY
           </button>
 
           <div className="flex gap-2 w-full">
@@ -122,6 +139,7 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
                   {new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                 </span>
                 <div className="flex items-center gap-2">
+                  <DailyIcon size={18} className="mr-1" />
                   DAILY
                 </div>
               </div>
@@ -132,7 +150,8 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
               style={{ background: 'linear-gradient(135deg, #f59e0b, #b45309)' }} 
               onClick={() => { audio.init(); onEndless(); }}
             >
-              <span>🌀</span> ENDLESS
+              <EndlessIcon size={18} className="mr-1" />
+              ENDLESS
             </button>
           </div>
           
@@ -140,21 +159,22 @@ export default function SanctuaryScreen({ onPlay, onEndless, onShop, onLeaderboa
             style={{ background: 'linear-gradient(135deg, #22c55e, #166534)' }} 
             onClick={onHubUpgrades}
           >
-            <span>🏙️</span> MY HUB & HATCHERY
+            <HubIcon size={18} className="mr-1" />
+            MY HUB & HATCHERY
             {hasReadyEggs && <div className="egg-indicator-dot" />}
           </button>
           
           <div className="flex gap-2 w-full">
             <button className="sanctuary-btn-sq flex-1" onClick={onShop}>
-              <span className="text-xl">🛒</span>
+              <ShopIcon size={20} className="text-secondary" />
               <span className="sanctuary-btn-sq-label">SHOP</span>
             </button>
             <button className="sanctuary-btn-sq flex-1" onClick={onSkillTree}>
-              <span className="text-xl">🌳</span>
+              <SkillIcon size={20} className="text-secondary" />
               <span className="sanctuary-btn-sq-label">SKILLS</span>
             </button>
             <button className="sanctuary-btn-sq flex-1" onClick={onAchievements}>
-              <span className="text-xl">🏆</span>
+              <FeatIcon size={20} className="text-secondary" />
               <span className="sanctuary-btn-sq-label">FEATS</span>
             </button>
           </div>

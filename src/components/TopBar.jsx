@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { gameStore } from '../store/gameStore';
 import PetSVG from './PetSVG';
+import { BackIcon, SeedIcon } from './Icons';
 
 const TITLE_PALETTES = {
   SHOP:     ['#FFFFFF'],
@@ -40,7 +41,7 @@ export default function TopBar({ title, onBack, showSeeds = true, mood = 'normal
         onClick={(e) => { e.stopPropagation(); onBack && onBack(); }}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        <span className="topbar-back-arrow">‹</span>
+        <BackIcon size={16} className="mr-1" />
         <span className="topbar-back-text">Back</span>
       </button>
 
@@ -49,7 +50,7 @@ export default function TopBar({ title, onBack, showSeeds = true, mood = 'normal
       <div className="flex items-center gap-3">
         {showSeeds && (
           <div className="topbar-seeds">
-            <span className="topbar-seeds-icon">🌾</span>
+            <SeedIcon size={16} className="topbar-seeds-icon text-gold" />
             <span className="topbar-seeds-val">{seeds}</span>
           </div>
         )}

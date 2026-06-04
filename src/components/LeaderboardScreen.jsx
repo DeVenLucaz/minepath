@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { gameStore } from '../store/gameStore';
 import TopBar from './TopBar';
 import ChickenSVG from './ChickenSVG';
+import { CrownIcon, FeatIcon, SeedIcon } from './Icons';
 
 // ── Seeded fake global players (deterministic, always same list) ──
 const GLOBAL_PLAYERS = [
@@ -18,9 +19,9 @@ const GLOBAL_PLAYERS = [
 ];
 
 const PODIUM_COLORS = {
-  0: { bg: '#FFD700', shadow: '#B8860B', crown: '👑', label: '1' },
-  1: { bg: '#C0C0C0', shadow: '#808080', crown: '🥈', label: '2' },
-  2: { bg: '#CD7F32', shadow: '#8B4513', crown: '🥉', label: '3' },
+  0: { bg: '#FFD700', shadow: '#B8860B', label: '1' },
+  1: { bg: '#C0C0C0', shadow: '#808080', label: '2' },
+  2: { bg: '#CD7F32', shadow: '#8B4513', label: '3' },
 };
 
 // Podium heights
@@ -76,7 +77,10 @@ export default function LeaderboardScreen({ onBack }) {
       <TopBar title="SCORES" onBack={onBack} />
 
       {/* Big title */}
-      <div className="lb-big-title">🐔 TOP CHICKENS</div>
+      <div className="lb-big-title flex items-center justify-center gap-1.5">
+        <CrownIcon size={24} className="text-gold" />
+        <span>TOP CHICKENS</span>
+      </div>
 
       {/* Tab toggle */}
       <div className="lb-tabs">
@@ -103,7 +107,9 @@ export default function LeaderboardScreen({ onBack }) {
               return (
                 <div key={rank} className="lb-podium-slot">
                   {/* Crown */}
-                  <div className="lb-podium-crown">{pc.crown}</div>
+                  <div className="lb-podium-crown">
+                    <CrownIcon size={rank === 0 ? 28 : 22} style={{ color: pc.bg, filter: `drop-shadow(0 0 6px ${pc.bg}88)` }} />
+                  </div>
                   {/* Chicken avatar */}
                   <div className="lb-podium-chicken">
                     <ChickenSVG skinId={player.skin} mood="happy" size={rank === 0 ? 72 : 58} focus={rank === 0 ? null : (rank === 1 ? 'right' : 'left')}/>
@@ -167,7 +173,9 @@ export default function LeaderboardScreen({ onBack }) {
             <>
               {/* Personal best banner */}
               <div className="lb-pb-banner">
-                <span className="lb-pb-label">🏆 Personal Best</span>
+                <span className="lb-pb-label flex items-center gap-1.5">
+                  <FeatIcon size={16} className="text-gold" /> Personal Best
+                </span>
                 <span className="lb-pb-val">Level {bestLevel}</span>
               </div>
               {/* Runs list */}
@@ -182,7 +190,9 @@ export default function LeaderboardScreen({ onBack }) {
                   <div key={i} className={`lb-run-row ${i === 0 ? 'lb-run-row--best' : ''}`}>
                     <span className="lb-run-rank">#{i + 1}</span>
                     <span className="lb-run-level">Lv.{run.level}</span>
-                    <span className="lb-run-seeds">{(run.seeds || 0).toLocaleString()} 🌾</span>
+                    <span className="lb-run-seeds flex items-center gap-1">
+                      {(run.seeds || 0).toLocaleString()} <SeedIcon size={14} className="text-gold inline-block" />
+                    </span>
                     <span className="lb-run-date">{run.date}</span>
                   </div>
                 ))}

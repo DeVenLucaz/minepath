@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { gameStore } from '../store/gameStore';
 import { audio } from '../audio/engine';
 import ChickenSVG from './ChickenSVG';
+import { FeatIcon, SeedIcon, ReloadIcon, HomeIcon } from './Icons';
 
 // Confetti particles — pre-seeded so no rerender flicker
 const CONFETTI = Array.from({ length: 28 }, (_, i) => ({
@@ -64,7 +65,9 @@ export default function GameOverModal({ level, seeds, onRetry, onHome, skinId = 
           <div className="mo-art-bg"/>
           <ChickenSVG skinId={skinId} mood="sad" size={130} className="mo-chicken"/>
           {isRecord && (
-            <div className="mo-record-badge">🏆 NEW RECORD!</div>
+            <div className="mo-record-badge">
+              <FeatIcon size={12} className="inline mr-1 text-black" /> NEW RECORD!
+            </div>
           )}
         </div>
 
@@ -78,7 +81,9 @@ export default function GameOverModal({ level, seeds, onRetry, onHome, skinId = 
             <div className="h-px bg-white/10 my-1" />
             <div className="flex justify-between items-center text-sm">
               <span className="text-secondary">SEEDS COLLECTED</span>
-              <span className="font-bold text-gold">{seeds} 🌾</span>
+              <span className="font-bold text-gold flex items-center gap-1">
+                {seeds} <SeedIcon size={14} className="text-gold inline-block" />
+              </span>
             </div>
           </div>
         </div>
@@ -88,14 +93,14 @@ export default function GameOverModal({ level, seeds, onRetry, onHome, skinId = 
           className="mo-btn mo-btn--retry"
           onClick={onRetry}
         >
-          <span>🔄</span>
+          <ReloadIcon size={18} className="text-black" />
           <span>RETRY</span>
         </button>
         <button
           className="mo-btn mo-btn--home"
           onClick={() => onHome()}
         >
-          <span>🏠</span>
+          <HomeIcon size={18} className="text-primary" />
           <span>HOME</span>
         </button>
 

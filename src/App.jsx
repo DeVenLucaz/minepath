@@ -5,8 +5,6 @@ import HubUpgradesScreen from './components/HubUpgradesScreen';
 import SkillTreeScreen from './components/SkillTreeScreen';
 import GameplayScreen from './components/GameplayScreen';
 import EndlessTileScreen from './components/EndlessTileScreen';
-import GameOverModal from './components/GameOverModal';
-import LevelClearModal from './components/LevelClearModal';
 import ShopScreen from './components/ShopScreen';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import SettingsScreen from './components/SettingsScreen';
@@ -136,11 +134,7 @@ export default function App() {
 
   return (
     <div className="app-root">
-      {/* Global TopBar and ChickenSVG for requirement — hidden if not needed */}
-      <div className="app-global-ui" style={{ display: 'none' }}>
-        <TopBar title="MINEPATH" onBack={goHome} />
-        <ChickenSVG skinId="classic" />
-      </div>
+
 
       <AnimatePresence mode="wait">
         {/* ── SANCTUARY (HOME) ── */}

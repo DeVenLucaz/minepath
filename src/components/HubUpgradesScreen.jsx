@@ -6,6 +6,8 @@ import { PETS } from '../data/pets';
 import TopBar from './TopBar';
 import HelpModal from './HelpModal';
 import RewardModal from './RewardModal';
+import PetSVG from './PetSVG';
+import { SeedIcon, HubIcon, CarouselIcon, EggIcon, GemIcon, GiftIcon, CheckIcon, StarIcon } from './Icons';
 
 const STARS = Array.from({ length: 20 }, (_, i) => ({
   id: i,
@@ -16,13 +18,20 @@ const STARS = Array.from({ length: 20 }, (_, i) => ({
   dur:   `${2 + (i % 4) * 0.4}s`,
 }));
 
+const getEggIcon = (eggType) => {
+  if (eggType === 'golden_egg') return <EggIcon size={44} className="text-gold mx-auto" style={{ filter: 'drop-shadow(0 0 8px rgba(251,191,36,0.6))' }} />;
+  if (eggType === 'blue_egg') return <EggIcon size={44} className="text-accent-blue mx-auto" style={{ filter: 'drop-shadow(0 0 8px rgba(59,130,246,0.6))' }} />;
+  return <EggIcon size={44} className="text-amber-800 mx-auto" style={{ filter: 'drop-shadow(0 0 8px rgba(139,92,26,0.4))' }} />;
+};
+
+
 export default function HubUpgradesScreen({ onBack }) {
   const [seeds, setSeeds] = useState(0);
   const [buildings, setBuildings] = useState({ silo: 0, nest: 0, playground: 0 });
   const [eggs, setEggs] = useState([]);
   const [hatchState, setHatchState] = useState({ index: null, stage: null, reward: null });
   const [showHelp, setShowHelp] = useState(false);
-  const [rewardModal, setRewardModal] = useState({ open: false, title: '', message: '', emoji: '' });
+  const [rewardModal, setRewardModal] = useState({ open: false, title: '', message: '', emoji: null });
   const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
@@ -83,7 +92,7 @@ export default function HubUpgradesScreen({ onBack }) {
       const playgroundLvl = buildings.playground || 0;
       const abilityPower = 1 + (playgroundLvl * 0.25);
       let resultMsg = '';
-      let rewardEmoji = '🎁';
+      let rewardEmoji = <GiftIcon size={64} className="text-primary mx-auto" />;
       let title = 'EGG HATCHED!';
 
       if (egg.eggType === 'golden_egg') {
@@ -100,18 +109,18 @@ export default function HubUpgradesScreen({ onBack }) {
         if (pool.length > 0) {
           const reward = pool[Math.floor(Math.random() * pool.length)];
           gameStore.unlockPet(reward.id);
-          rewardEmoji = reward.emoji;
+          rewardEmoji = <div className="flex justify-center"><PetSVG petId={reward.id} size={96} mood="happy" /></div>;
           resultMsg = `Hatched a ${reward.rarity} friend: ${reward.name}! Check your Shop.`;
           title = 'NEW PET UNLOCKED!';
         } else {
           const seedsReward = Math.floor(1000 * abilityPower);
           gameStore.addSeeds(seedsReward);
-          rewardEmoji = '🌾';
+          rewardEmoji = <SeedIcon size={64} className="text-gold mx-auto" />;
           resultMsg = `All pets unlocked! You gained ${seedsReward} Seeds instead.`;
         }
       } else if (egg.eggType === 'blue_egg') {
         const unlocked = gameStore.getUnlockedPets();
-        rewardEmoji = '💎';
+        rewardEmoji = <GemIcon size={64} className="text-accent-blue mx-auto" />;
         if (unlocked.length > 0) {
           const target = unlocked[Math.floor(Math.random() * unlocked.length)];
           const petObj = PETS.find(p => p.id === target);
@@ -127,19 +136,19 @@ export default function HubUpgradesScreen({ onBack }) {
           const fAmt = Math.floor(Math.random() * 3) + 2;
           playerStore.addFeathers(fAmt);
           audio.featherEarned();
-          resultMsg += ` Also found ${fAmt} 🪶 Feathers!`;
+          resultMsg += ` Also found ${fAmt} Feathers!`;
         }
       } else {
         const seedsReward = Math.floor((100 + Math.random() * 200) * abilityPower);
         gameStore.addSeeds(seedsReward);
-        rewardEmoji = '🌾';
+        rewardEmoji = <SeedIcon size={64} className="text-gold mx-auto" />;
         resultMsg = `Found ${seedsReward} Seeds inside!`;
         title = 'BROWN EGG BURST!';
         if (Math.random() < 0.20) {
           const fAmt = Math.floor(Math.random() * 2) + 1;
           playerStore.addFeathers(fAmt);
           audio.featherEarned();
-          resultMsg += ` Also found ${fAmt} 🪶 Feathers!`;
+          resultMsg += ` Also found ${fAmt} Feathers!`;
         }
       }
 
@@ -169,17 +178,17 @@ export default function HubUpgradesScreen({ onBack }) {
 
   const getBuildingInfo = (id) => {
     switch(id) {
-      case 'silo': return { name: 'Seed Silo', icon: '🌾', desc: 'Passively gathers seeds while you are away.' };
-      case 'nest': return { name: 'Hatchery Nest', icon: '🪺', desc: 'Warm nests that speed up egg hatching.' };
-      case 'playground': return { name: 'Pet Playground', icon: '🎠', desc: 'Increases the power of pet abilities.' };
-      default: return { name: '', icon: '', desc: '' };
+      case 'silo': return { name: 'Seed Silo', icon: SeedIcon, desc: 'Passively gathers seeds while you are away.' };
+      case 'nest': return { name: 'Hatchery Nest', icon: EggIcon, desc: 'Warm nests that speed up egg hatching and boost clear XP by +20%/lvl.' };
+      case 'playground': return { name: 'Pet Playground', icon: CarouselIcon, desc: 'Increases the power of pet abilities.' };
+      default: return { name: '', icon: null, desc: '' };
     }
   };
 
   const getBuildingStat = (id, lvl) => {
     switch(id) {
-      case 'silo': return `+${10 + lvl * 10} seeds/hr`;
-      case 'nest': return `-${lvl * 10}% hatch time`;
+      case 'silo': return `+${lvl * 10} seeds/hr`;
+      case 'nest': return `-${lvl * 15}% hatch time`;
       case 'playground': return `+${lvl * 25}% power`;
       default: return '';
     }
@@ -214,20 +223,26 @@ export default function HubUpgradesScreen({ onBack }) {
           {Object.entries(buildings).map(([id, lvl]) => {
             const info = getBuildingInfo(id);
             const cost = (lvl + 1) * 500;
+            const Icon = info.icon;
             return (
               <div key={id} className="building-card">
-                <div className="building-icon">{info.icon}</div>
+                <div className="building-icon">
+                  {Icon && <Icon size={40} className="text-secondary mx-auto" />}
+                </div>
                 <div className="building-name">{info.name}</div>
                 <div className="building-desc">{info.desc}</div>
                 <div className="building-lvl">Level {lvl}</div>
                 <div className="building-stat">{getBuildingStat(id, lvl)}</div>
                 <button 
-                  className="building-upgrade-btn"
+                  className="building-upgrade-btn flex items-center justify-center gap-1.5"
                   onClick={() => handleUpgrade(id)}
                   disabled={seeds < cost}
                 >
                   <span>UPGRADE</span>
-                  <span>{cost}🌾</span>
+                  <span className="flex items-center gap-0.5">
+                    {cost}
+                    <SeedIcon size={12} className="text-gold" />
+                  </span>
                 </button>
               </div>
             );
@@ -248,8 +263,8 @@ export default function HubUpgradesScreen({ onBack }) {
                   
                   <div className="egg-name">{egg.eggType.replace('_', ' ')}</div>
                   
-                  <div className={`egg-icon ${isHatching ? `hatch-${hatchState.stage}` : ''}`}>
-                    {isHatching && hatchState.stage === 'reward' ? hatchState.reward : egg.icon}
+                  <div className={`egg-icon flex items-center justify-center ${isHatching ? `hatch-${hatchState.stage}` : ''}`} style={{ minHeight: '60px' }}>
+                    {isHatching && hatchState.stage === 'reward' ? hatchState.reward : getEggIcon(egg.eggType)}
                   </div>
 
                   {egg.status === 'incubating' ? (

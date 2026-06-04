@@ -1,5 +1,25 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SeedIcon, GiftIcon, GemIcon } from './Icons';
+
+function RewardIcon({ emoji, size = 64 }) {
+  if (!emoji) {
+    return <GiftIcon size={size} className="text-primary mx-auto" />;
+  }
+  if (React.isValidElement(emoji)) {
+    return emoji;
+  }
+  if (emoji === '🌾') {
+    return <SeedIcon size={size} className="text-gold mx-auto" />;
+  }
+  if (emoji === '🎁') {
+    return <GiftIcon size={size} className="text-primary mx-auto" />;
+  }
+  if (emoji === '💎') {
+    return <GemIcon size={size} className="text-accent-blue mx-auto" />;
+  }
+  return <span style={{ fontSize: size }}>{emoji}</span>;
+}
 
 export default function RewardModal({ isOpen, title, message, rewardEmoji, onConfirm }) {
   return (
@@ -12,7 +32,9 @@ export default function RewardModal({ isOpen, title, message, rewardEmoji, onCon
             exit={{ scale: 0.5, opacity: 0, y: 40 }}
             className="modal-card p-6 text-center gap-4"
           >
-            <div className="text-6xl mb-2">{rewardEmoji || '🎁'}</div>
+            <div className="flex justify-center mb-2">
+              <RewardIcon emoji={rewardEmoji} size={64} />
+            </div>
             <h2 className="text-2xl font-black text-primary uppercase tracking-tight m-0" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.4)' }}>
               {title || 'REWARD!'}
             </h2>

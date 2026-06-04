@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  font-family: var(--font-body);
 }
 
 .hub-content {
@@ -23,24 +24,12 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.sanctuary-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 16px 20px 32px;
-  width: 100%;
-  max-width: 400px;
-  gap: 12px;
-  z-index: 2;
-}
-
 /* ── BUILDINGS ── */
 .sanctuary-section-title {
   width: 100%;
-  font-size: 13px;
-  font-weight: 800;
+  font-family: var(--font-header);
+  font-size: 11px;
+  font-weight: 900;
   color: var(--text-muted);
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -53,7 +42,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .sanctuary-grid {
@@ -75,15 +64,16 @@
   text-align: center;
   transition: all 0.2s;
 }
-.building-card:active { transform: scale(0.98); }
+.building-card:active { transform: scale(0.99); }
 
 .building-icon {
-  font-size: 36px;
+  font-size: 32px;
   margin-bottom: 10px;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
 }
 
 .building-name {
+  font-family: var(--font-header);
   font-size: 14px;
   font-weight: 800;
   color: var(--text-primary);
@@ -98,18 +88,20 @@
 }
 
 .building-stat {
+  font-family: var(--font-header);
   font-size: 10px;
   font-weight: 800;
   color: var(--gold);
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(251, 191, 36, 0.08);
   padding: 4px 10px;
   border-radius: 20px;
   margin-bottom: 12px;
-  border: 1px solid rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.15);
 }
 
 .building-lvl {
-  font-size: 11px;
+  font-family: var(--font-header);
+  font-size: 10px;
   font-weight: 800;
   color: var(--text-muted);
   margin-bottom: 10px;
@@ -119,15 +111,15 @@
 
 .building-upgrade-btn {
   width: 100%;
-  background: linear-gradient(135deg, #22C55E, #166534);
+  background: linear-gradient(135deg, #10B981, #047857);
   border: none;
   border-radius: var(--btn-radius);
   padding: 10px 4px;
-  color: #052e16;
+  color: #022c22;
+  font-family: var(--font-header);
   font-weight: 900;
-  font-size: 11px;
+  font-size: 12px;
   box-shadow: var(--btn-shadow-green);
-  text-shadow: var(--text-stroke-white);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -136,9 +128,9 @@
 }
 .building-upgrade-btn:active { transform: translateY(2px); }
 .building-upgrade-btn:disabled {
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.04);
   box-shadow: none;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.04);
   color: var(--text-muted);
   cursor: not-allowed;
 }
@@ -146,13 +138,13 @@
 /* ── HATCHERY ── */
 .hatchery-container {
   width: 100%;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(3, 7, 18, 0.25);
   border-radius: 24px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .hatchery-list {
@@ -165,7 +157,7 @@
 .hatchery-list::-webkit-scrollbar { display: none; }
 
 .egg-card {
-  min-width: 110px;
+  min-width: 112px;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   backdrop-filter: blur(8px);
@@ -180,54 +172,57 @@
 }
 
 .egg-type-golden_egg {
-  background: linear-gradient(135deg, rgba(250, 204, 21, 0.1), rgba(250, 204, 21, 0.05));
-  border-color: rgba(250, 204, 21, 0.3);
-  box-shadow: 0 0 20px rgba(250, 204, 21, 0.1);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(251, 191, 36, 0.02));
+  border-color: rgba(251, 191, 36, 0.25);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.08);
 }
 
 .egg-type-blue_egg {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
-  border-color: rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.02));
+  border-color: rgba(59, 130, 246, 0.25);
 }
 
 .egg-type-brown_egg {
-  background: linear-gradient(135deg, rgba(161, 98, 7, 0.1), rgba(161, 98, 7, 0.05));
-  border-color: rgba(161, 98, 7, 0.3);
+  background: linear-gradient(135deg, rgba(180, 83, 9, 0.08), rgba(180, 83, 9, 0.02));
+  border-color: rgba(180, 83, 9, 0.25);
 }
 
 .egg-name {
-  font-size: 10px;
+  font-family: var(--font-header);
+  font-size: 9px;
   font-weight: 800;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
 }
 
 .egg-icon {
-  font-size: 40px;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+  font-size: 36px;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.25));
   margin: 4px 0;
 }
 
 .egg-timer {
-  font-size: 12px;
+  font-family: var(--font-header);
+  font-size: 11px;
   font-weight: 800;
   color: var(--accent-blue);
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(59, 130, 246, 0.08);
   padding: 4px 10px;
   border-radius: 20px;
+  border: 1px solid rgba(59, 130, 246, 0.15);
 }
 
 .egg-ready-btn {
   background: linear-gradient(135deg, var(--gold), #CA8A04);
-  color: #000;
+  color: #030712;
   border: none;
   border-radius: 12px;
   padding: 6px 12px;
+  font-family: var(--font-header);
   font-size: 11px;
   font-weight: 800;
   box-shadow: var(--btn-shadow-gold);
-  text-shadow: var(--text-stroke-white);
   cursor: pointer;
   animation: readyPulse 1s infinite alternate;
 }
@@ -242,74 +237,16 @@
   letter-spacing: 0.5px;
 }
 
+
 .egg-indicator-dot {
   position: absolute;
   top: -4px;
   right: -4px;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   background: var(--accent-red);
-  border: 2px solid var(--text-primary);
+  border: 2px solid #030712;
   border-radius: 50%;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
   z-index: 5;
-}
-
-/* ── SANCTUARY NAV ── */
-.sanctuary-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-  margin-top: 12px;
-}
-
-.sanctuary-btn-main {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 18px 24px;
-  border-radius: var(--btn-radius);
-  border: 1px solid rgba(255,255,255,0.15);
-  background: linear-gradient(135deg, #4ade80, #16a34a);
-  color: #052e16;
-  font-weight: 900;
-  font-size: 24px;
-  letter-spacing: 1px;
-  box-shadow: var(--btn-shadow-green);
-  text-shadow: var(--text-stroke-white);
-  transition: all 0.2s;
-  cursor: pointer;
-}
-.sanctuary-btn-main:active { transform: translateY(3px); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-.sanctuary-btn-main:disabled { opacity: 0.5; filter: grayscale(0.5); cursor: not-allowed; }
-
-.sanctuary-btn-sq {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 14px 8px;
-  border-radius: var(--btn-radius);
-  border: 1px solid rgba(255,255,255,0.1);
-  background: var(--card-bg);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: var(--text-primary);
-  font-weight: 800;
-  transition: all 0.2s;
-  cursor: pointer;
-}
-.sanctuary-btn-sq:active { transform: scale(0.95); background: var(--card-bg-hover); }
-
-.sanctuary-btn-sq-label {
-  font-size: 11px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-secondary);
 }

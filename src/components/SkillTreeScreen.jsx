@@ -5,6 +5,33 @@ import { SKILLS } from '../data/skills';
 import TopBar from './TopBar';
 import { audio } from '../audio/engine';
 import HelpModal from './HelpModal';
+import { ShieldIcon, ClockIcon, RevealIcon, AlertIcon, MineIcon, ShopIcon, StarIcon, EndlessIcon, SeedIcon, SkullIcon, LockIcon, FeatherIcon, CrownIcon, SmokeIcon } from './Icons';
+
+function SkillIconComponent({ icon, size = 20 }) {
+  const map = {
+    '👁️': RevealIcon,
+    '🔭': RevealIcon,
+    '⚠️': AlertIcon,
+    '🛡️': ShieldIcon,
+    '💥': MineIcon,
+    '🔍': RevealIcon,
+    '🏷️': ShopIcon,
+    '✨': StarIcon,
+    '🌌': EndlessIcon,
+    '⚡': ClockIcon,
+    '💨': ClockIcon,
+    '💰': SeedIcon,
+    '💀': SkullIcon,
+    '🪶': FeatherIcon,
+    '🥷': SmokeIcon,
+    '👑': CrownIcon,
+    '👻': RevealIcon,
+    '🔮': RevealIcon,
+  };
+  const Icon = map[icon];
+  if (Icon) return <Icon size={size} className="text-gold mx-auto" />;
+  return <span style={{ fontSize: size }}>{icon}</span>;
+}
 
 const STARS = Array.from({ length: 20 }, (_, i) => ({
   id: i,
@@ -102,10 +129,12 @@ export default function SkillTreeScreen({ onBack }) {
         <div className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border w-fit mb-1 tracking-wider ${rarityClasses[skill.rarity]}`}>
           {skill.rarity} • {rarityTiers[skill.rarity]}
         </div>
-        <div className="st-node-icon">{skill.icon}</div>
-        <div className="st-node-name">
-          {isLocked && !isUnlocked && <span className="mr-1">🔒</span>}
-          {skill.name}
+        <div className="st-node-icon">
+          <SkillIconComponent icon={skill.icon} size={24} />
+        </div>
+        <div className="st-node-name flex items-center justify-center gap-1">
+          {isLocked && !isUnlocked && <LockIcon size={12} className="text-slate-500" />}
+          <span>{skill.name}</span>
         </div>
         <div className="text-[11px] text-secondary mt-1 mb-2 min-h-[32px] leading-tight">
           {skill.description}
@@ -119,7 +148,12 @@ export default function SkillTreeScreen({ onBack }) {
             onClick={() => handleUnlock(skill)}
             disabled={isLocked || !canAfford}
           >
-            {isLocked ? `Locked` : `Unlock (${skill.cost}🪶)`}
+            {isLocked ? `Locked` : (
+              <span className="flex items-center justify-center gap-1">
+                Unlock ({skill.cost}
+                <FeatherIcon size={12} className="text-black" />)
+              </span>
+            )}
           </button>
         )}
       </div>

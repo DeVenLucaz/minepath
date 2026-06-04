@@ -53,7 +53,7 @@ export const hubStore = {
     }
 
     const hours = Math.min(24, (now - last) / (1000 * 60 * 60)); // Cap at 24h to prevent extreme exploits
-    const amount = Math.floor(hours * siloLvl * 5); // 5 seeds per hour per level
+    const amount = Math.floor(hours * siloLvl * 10); // 10 seeds per hour per level
     
     if (amount > 0) {
       safeSet(STORAGE_KEYS.LAST_COLLECT, now);

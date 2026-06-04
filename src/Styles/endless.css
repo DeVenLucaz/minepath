@@ -5,6 +5,7 @@
   overflow: hidden;
   position: relative;
   transition: background-color 1s ease;
+  font-family: var(--font-body);
 }
 
 /* ── HUD ── */
@@ -26,6 +27,7 @@
 }
 
 .hud-label {
+  font-family: var(--font-header);
   font-size: 10px;
   font-weight: 800;
   color: var(--text-muted);
@@ -34,6 +36,7 @@
 }
 
 .hud-val {
+  font-family: var(--font-header);
   font-size: 16px;
   font-weight: 900;
   color: var(--text-primary);
@@ -43,7 +46,7 @@
   grid-column: span 3;
   height: 4px;
   background: rgba(255,255,255,0.05);
-  border-radius: 2px;
+  border-radius: 100px;
   overflow: hidden;
   margin-top: 4px;
 }
@@ -51,7 +54,7 @@
 .hud-progress-bar {
   height: 100%;
   background: linear-gradient(90deg, var(--gold), #CA8A04);
-  box-shadow: 0 0 8px rgba(250, 204, 21, 0.4);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -62,9 +65,9 @@
   margin: 16px;
   border: 1px solid var(--card-border);
   border-radius: 20px;
-  background: rgba(0,0,0,0.2);
+  background: rgba(3, 7, 18, 0.3);
   overflow: hidden;
-  box-shadow: inset 0 0 32px rgba(0,0,0,0.4);
+  box-shadow: inset 0 0 32px rgba(0,0,0,0.5);
 }
 
 .endless-grid {
@@ -85,14 +88,15 @@
 }
 
 .endless-tile.fog {
-  filter: blur(10px);
-  opacity: 0.3;
+  filter: blur(8px) opacity(0.3);
+  pointer-events: none;
 }
 
 .tile-check {
+  font-family: var(--font-header);
   font-weight: 900;
-  color: rgba(255,255,255,0.2);
-  font-size: 18px;
+  color: rgba(255,255,255,0.15);
+  font-size: 16px;
 }
 
 .chicken-wrap {
@@ -109,7 +113,7 @@
   width: 44px;
   height: 5px;
   background: rgba(0,0,0,0.4);
-  border-radius: 3px;
+  border-radius: 100px;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.1);
 }
@@ -126,7 +130,7 @@
   right: 0;
   height: 4px;
   background: linear-gradient(to top, var(--accent-red), transparent);
-  box-shadow: 0 -4px 16px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 -4px 16px rgba(244, 63, 94, 0.4);
   z-index: 5;
   animation: pulse 1s infinite alternate;
 }
@@ -138,19 +142,20 @@
 
 /* ── CONTROLS ── */
 .endless-controls {
-  padding: 24px;
+  padding: 20px;
   display: flex;
   justify-content: center;
   gap: 16px;
 }
 
 .btn-pause, .btn-end {
-  padding: 14px 48px;
-  border: 1px solid rgba(255,255,255,0.1);
+  padding: 12px 36px;
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: var(--btn-radius);
+  font-family: var(--font-header);
   font-weight: 800;
-  font-size: 16px;
-  letter-spacing: 1px;
+  font-size: 15px;
+  letter-spacing: 0.5px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -163,18 +168,18 @@
 .btn-pause:active { transform: scale(0.95); background: var(--card-bg-hover); }
 
 .btn-end {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(244, 63, 94, 0.08);
   color: var(--accent-red);
-  border-color: rgba(239, 68, 68, 0.4);
+  border-color: rgba(244, 63, 94, 0.3);
 }
-.btn-end:active { transform: scale(0.95); background: rgba(239, 68, 68, 0.2); }
+.btn-end:active { transform: scale(0.95); background: rgba(244, 63, 94, 0.15); }
 
 /* ── OVERLAYS ── */
 .pause-overlay, .gameover-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(2, 6, 23, 0.85);
-  backdrop-filter: blur(12px);
+  background: rgba(3, 7, 18, 0.85);
+  backdrop-filter: blur(16px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -184,20 +189,19 @@
 }
 
 .gameover-overlay h2 {
-  font-size: clamp(40px, 12vw, 56px);
+  font-family: var(--font-header);
+  font-size: clamp(36px, 11vw, 52px);
   font-weight: 900;
   color: #FFFFFF;
   background: linear-gradient(to bottom, #FFFFFF 30%, var(--accent-red) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.4));
+  filter: drop-shadow(0 4px 12px rgba(244, 63, 94, 0.4));
   margin-bottom: 8px;
 }
 
 .gameover-stats {
-  margin: 24px 0;
-  font-size: 16px;
-  color: var(--text-secondary);
+  margin: 20px 0;
   text-align: center;
   background: var(--card-bg);
   padding: 16px 32px;
@@ -212,10 +216,11 @@
   margin: 8px;
   width: 100%;
   max-width: 240px;
-  padding: 16px;
-  font-size: 17px;
+  padding: 14px;
+  font-family: var(--font-header);
+  font-size: 16px;
   font-weight: 800;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: var(--btn-radius);
   cursor: pointer;
   transition: all 0.2s;
@@ -223,7 +228,7 @@
 
 .btn-retry {
   background: linear-gradient(135deg, var(--gold), #CA8A04);
-  color: #000;
+  color: #030712;
   box-shadow: var(--btn-shadow-gold);
   border: none !important;
 }
@@ -234,3 +239,4 @@
   color: var(--text-primary);
 }
 .btn-exit:active { transform: scale(0.98); background: var(--card-bg-hover); }
+

@@ -3,6 +3,7 @@ import { gameStore } from '../store/gameStore';
 import { FEATS } from '../data/achievements';
 import TopBar from './TopBar';
 import HelpModal from './HelpModal';
+import { SeedIcon, PlayIcon, DailyIcon, EndlessIcon, HubIcon, ShopIcon, SkillIcon, FeatIcon, ShieldIcon, SlowMoIcon, LockIcon, ClockIcon, PawIcon, StarIcon, FlameIcon, FeatherIcon } from './Icons';
 
 // Pre-generate stars
 const STARS = Array.from({ length: 20 }, (_, i) => ({
@@ -14,11 +15,33 @@ const STARS = Array.from({ length: 20 }, (_, i) => ({
   dur:   `${1.8 + (i % 4) * 0.35}s`,
 }));
 
+// Map feat keys to sleek vector SVGs
+const FEAT_ICONS = {
+  firstSteps:    PlayIcon,
+  seedSnatcher:  SeedIcon,
+  bigHarvest:    SeedIcon,
+  earlyBird:     ClockIcon,
+  mineMaster:    HubIcon,
+  deepDigger:    EndlessIcon,
+  speedyClucker: SlowMoIcon,
+  survivor:      ShieldIcon,
+  roadRunner:    PlayIcon,
+  dailyDevotee:  DailyIcon,
+  shopOpener:    ShopIcon,
+  petLover:      PawIcon,
+  fashionista:   StarIcon,
+  trailBlazer:   StarIcon,
+  comboKing:     FlameIcon,
+  fearless:      ShieldIcon,
+};
+
 // Badge component — scalloped circle with icon
 function FeatBadge({ feat, done, progress, target }) {
   const pct = typeof target === 'number'
     ? Math.min(1, progress / target)
     : done ? 1 : 0;
+
+  const IconComponent = FEAT_ICONS[feat.key] || FeatIcon;
 
   return (
     <div
@@ -32,8 +55,8 @@ function FeatBadge({ feat, done, progress, target }) {
       <div className="af-badge-ring"/>
       <div className="af-badge-inner">
         {done
-          ? <span className="af-badge-icon">{feat.icon}</span>
-          : <span className="af-badge-lock">🔒</span>
+          ? <IconComponent size={22} className="af-badge-icon" />
+          : <LockIcon size={16} className="af-badge-lock text-slate-500" />
         }
       </div>
       {/* Progress arc overlay when in-progress */}
@@ -121,7 +144,10 @@ export default function AchievementsScreen({ onBack }) {
       </button>
 
       {/* Big title */}
-      <div className="af-title">🐔 CHICKEN FEATS</div>
+      <div className="af-title flex items-center justify-center gap-1.5">
+        <FeatIcon size={24} className="text-gold" />
+        <span>CHICKEN FEATS</span>
+      </div>
 
       {/* Summary card */}
       <div className="af-summary">
@@ -194,12 +220,14 @@ export default function AchievementsScreen({ onBack }) {
                     onClick={() => handleClaim(feat)}
                   >
                     <span>CLAIM</span>
-                    <span className="af-claim-reward">
-                      +{feat.reward}🌾 {feat.featherReward ? `+${feat.featherReward}🪶` : ''}
+                    <span className="af-claim-reward flex items-center justify-center gap-0.5 text-black">
+                      +{feat.reward}<SeedIcon size={10} className="text-black" /> {feat.featherReward ? <span className="flex items-center gap-0.5">+{feat.featherReward}<FeatherIcon size={10} className="text-black" /></span> : ''}
                     </span>
                   </button>
                 ) : (
-                  <div className="af-lock">🔒</div>
+                  <div className="af-lock">
+                    <LockIcon size={20} className="text-slate-600 opacity-60" />
+                  </div>
                 )}
               </div>
             </div>
@@ -222,3 +250,4 @@ export default function AchievementsScreen({ onBack }) {
     </div>
   );
 }
+

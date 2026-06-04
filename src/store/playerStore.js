@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   XP: 'minepath_xp',
   LEVEL: 'minepath_level',
   FEATHERS: 'minepath_feathers',
+  SKILLS: 'minepath_skills',
 };
 
 function safeGet(key, defaultVal) {

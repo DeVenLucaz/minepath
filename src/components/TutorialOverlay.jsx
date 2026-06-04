@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gameStore } from '../store/gameStore';
+import ChickenSVG from './ChickenSVG';
+import { PlayIcon, RevealIcon, ClockIcon } from './Icons';
 
 export default function TutorialOverlay({ onComplete }) {
   const [step, setStep] = useState(0);
@@ -9,22 +11,22 @@ export default function TutorialOverlay({ onComplete }) {
     {
       title: "Welcome, Chicken!",
       text: "Step carefully! The field is full of hidden mines. Your goal is the golden checkpoint.",
-      icon: "🐔"
+      icon: <ChickenSVG skinId="classic" size={72} />
     },
     {
       title: "Tap to Move",
       text: "Tap adjacent tiles to move. Numbers show how many mines are nearby.",
-      icon: "👆"
+      icon: <PlayIcon size={64} className="text-gold mx-auto" />
     },
     {
       title: "Peek Carefully",
       text: "Long-press a tile to peek! It's safer but takes time.",
-      icon: "👁️"
+      icon: <RevealIcon size={64} className="text-gold mx-auto" />
     },
     {
       title: "Watch the Clock",
       text: "The sun is setting! Reach the checkpoint before time runs out.",
-      icon: "⏰"
+      icon: <ClockIcon size={64} className="text-gold mx-auto" />
     }
   ];
 
@@ -47,7 +49,7 @@ export default function TutorialOverlay({ onComplete }) {
           exit={{ opacity: 0, scale: 0.9, y: -20 }}
           className="tutorial-card"
         >
-          <div className="tutorial-icon">{steps[step].icon}</div>
+          <div className="tutorial-icon flex items-center justify-center" style={{ minHeight: '80px' }}>{steps[step].icon}</div>
           <div className="tutorial-title">{steps[step].title}</div>
           <div className="tutorial-text">{steps[step].text}</div>
           
