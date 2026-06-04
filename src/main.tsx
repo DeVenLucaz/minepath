@@ -5,7 +5,7 @@ import App from "./App.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 // Global error handler for non-React crashes (module init, etc)
-window.onerror = function(message, source, lineno, colno, error) {
+window.onerror = function(message, source, lineno, colno) {
   const root = document.getElementById("root");
   if (root) {
     root.innerHTML = `

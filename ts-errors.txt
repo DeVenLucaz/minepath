@@ -1,0 +1,303 @@
+src/audio/engine.js:15:48 - error TS2551: Property 'msHidden' does not exist on
+type 'Document'. Did you mean 'hidden'?
+
+--
+
+src/audio/engine.js:15:69 - error TS2339: Property 'webkitHidden' does not exist
+ on type 'Document'.
+
+--
+
+src/audio/engine.js:49:46 - error TS2551: Property 'webkitAudioContext' does not
+ exist on type 'Window & typeof globalThis'. Did you mean 'AudioContext'?
+
+--
+    'AudioContext' is declared here.
+src/components/AchievementsScreen.jsx:50:9 - error TS2353: Object literal may on
+ly specify known properties, and ''--badge-color'' does not exist in type 'Prope
+rties<string | number, string & {}>'.
+--
+
+src/components/EndlessTileScreen.jsx:73:21 - error TS2554: Expected 1 arguments,
+ but got 0.
+
+--
+
+src/components/GameplayScreen.jsx:341:13 - error TS2353: Object literal may only
+ specify known properties, and ''--dx'' does not exist in type 'Properties<strin
+g | number, string & {}>'.
+--
+
+src/components/GameplayScreen.jsx:378:29 - error TS2322: Type 'string' is not as
+signable to type 'number'.
+
+--
+
+src/components/GameplayScreen.jsx:1836:15 - error TS2322: Type '{ skin: any; tra
+il: any; animState: string; position: { r: number; c: number; }; gridCols: numbe
+r; gridRows: number; cellW: number; cellH: number; isMagnetActive: boolean; skin
+--
+
+src/components/HubUpgradesScreen.jsx:22:89 - error TS2322: Type '{ size: number;
+ className: string; style: { filter: string; }; }' is not assignable to type 'In
+trinsicAttributes & { className?: string; size?: number; }'.
+--
+
+src/components/HubUpgradesScreen.jsx:23:94 - error TS2322: Type '{ size: number;
+ className: string; style: { filter: string; }; }' is not assignable to type 'In
+trinsicAttributes & { className?: string; size?: number; }'.
+--
+
+src/components/HubUpgradesScreen.jsx:24:64 - error TS2322: Type '{ size: number;
+ className: string; style: { filte
+ className: string; style: { filter: string; }; }' is not assignable to type 'In
+--
+
+src/components/HubUpgradesScreen.jsx:217:46 - error TS2322: Type '{ title: strin
+g; onBack: any; seeds: number; }' is not assignable to type 'IntrinsicAttributes
+ & { title: any; onBack: any; showSeeds?: boolean; mood?: string; }'.
+--
+
+src/components/Icons.jsx:16:4 - error TS2322: Type '{ children: Element[]; class
+Name: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+ string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: strin
+--
+
+src/components/Icons.jsx:27:4 - error TS2322: Type '{ children: Element[]; class
+Name: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+ string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: strin
+--
+
+src/components/Icons.jsx:34:4 - error TS2322: Type '{ children: Element; classNa
+me: string; style: { width: number; height: number; }; xmlns: string; viewBox: s
+tring; fill: string; stroke: string; strokeWidth: string; strokeLinecap: string;
+--
+
+src/components/Icons.jsx:40:4 - error TS2322: Type '{ children: Element[]; class
+Name: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+ string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: strin
+--
+
+src/components/Icons.jsx:55:4 - error TS2322: Type '{ children: Element[]; class
+Name: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+ string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: strin
+--
+
+src/components/Icons.jsx:63:4 - error TS2322: Type '{ children: Element[]; class
+Name: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+ string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: strin
+--
+
+src/components/Icons.jsx:73:4 - error TS2322: Type '{ children: Element[]; class
+Name: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+ string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: strin
+--
+
+src/components/Icons.jsx:81:4 - error TS2322: Type '{ children: Element[]; class
+Name: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+ string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: strin
+--
+
+src/components/Icons.jsx:90:4 - error TS2322: Type '{ children: Element[]; class
+Name: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+ string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: strin
+--
+
+src/components/Icons.jsx:97:4 - error TS2322: Type '{ children: Element[]; class
+Name: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+ string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: strin
+--
+
+src/components/Icons.jsx:104:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:111:4 - error TS2322: Type '{ children: Element; classN
+ame: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: string
+--
+
+src/components/Icons.jsx:117:4 - error TS2322: Type '{ children: Element; classN
+ame: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: string
+--
+
+src/components/Icons.jsx:123:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:132:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:140:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:147:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:154:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:162:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:169:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:176:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:183:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:198:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+       ~~~
+src/components/Icons.jsx:205:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:214:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:222:4 - error TS2322: Type '{ children: Element; classN
+ame: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: string
+--
+
+src/components/Icons.jsx:228:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:236:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:243:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+src/components/Icons.jsx:250:4 - error
+src/components/Icons.jsx:250:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:259:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:267:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:275:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:282:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:290:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:297:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style:
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+--
+
+src/components/Icons.jsx:306:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:316:4 - error TS2322: Type '{ children: Element; classN
+ame: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: string
+--
+
+src/components/Icons.jsx:322:4 - error TS2322: Type '{ children: Element; classN
+ame: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: string
+--
+
+src/components/Icons.jsx:328:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:337:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:346:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: stri
+--
+
+src/components/Icons.jsx:355:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/Icons.jsx:363:4 - error TS2322: Type '{ children: Element; classN
+ame: string; style: { width: number; height: number; }; xmlns: string; viewBox:
+string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: string
+--
+
+src/components/Icons.jsx:369:4 - error TS2322: Type '{ children: Element[]; clas
+sName: string; style: { width: number; height: number; }; xmlns: string; viewBox
+: string; fill: string; stroke: string; strokeWidth: string; strokeLinecap: stri
+--
+
+src/components/LeaderboardScreen.jsx:111:60 - error TS2322: Type '{ size: number
+; style: { color: any; filter: string; }; }' is not assignable to type 'Intrinsi
+cAttributes & { className?: string; size?: number; }'.
+--
+
+src/components/LevelClearModal.jsx:166:32 - error TS2322: Type '{ size: number;
+style: { color: any; filter: string; }; className: string; }' is not assignable
+to type 'IntrinsicAttributes & { className?: string; size?: number; }'.
+--
+
+src/components/SanctuaryScreen.jsx:114:43 - error TS2322: Type 'string' is not a
+ssignable to type 'number'.
+
+--
+src/components/ShopScreen.jsx:314:44 - error
+src/components/ShopScreen.jsx:314:44 - error TS2322: Type '{ title: string; onBa
+ck: any; seeds: any; }' is not assignable to type 'IntrinsicAttributes & { title
+: any; onBack: any; showSeeds?: boolean; mood?: string; }'.
