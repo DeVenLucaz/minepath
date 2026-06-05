@@ -106,13 +106,44 @@ function generateGrid(rows, cols, mineRate, level, isDaily, biome, activeMutator
     }
   }
 
-  const candidates = tiles.filter(t => !t.isCheckpoint && !t.isStart);
+  const pathTiles = new Set();
+  let currR = startR, currC = startC;
+  pathTiles.add(`${currR},${currC}`);
+  // Random walk path generation
+  while (currR !== checkpointR || currC !== checkpointC) {
+    const moves = [];
+    if (currR > 0) moves.push([-1, 0]);
+    if (currC < cols - 1) moves.push([0, 1]);
+    if (currR < rows - 1) moves.push([1, 0]);
+    if (currC > 0) moves.push([0, -1]);
+
+    const biasedMoves = [];
+    moves.forEach(m => {
+      const nr = currR + m[0];
+      const nc = currC + m[1];
+      const distPrev = Math.abs(currR - checkpointR) + Math.abs(currC - checkpointC);
+      const distNext = Math.abs(nr - checkpointR) + Math.abs(nc - checkpointC);
+      if (distNext < distPrev) {
+        biasedMoves.push(m, m, m);
+      } else {
+        if (!pathTiles.has(`${nr},${nc}`)) biasedMoves.push(m);
+      }
+    });
+
+    const move = biasedMoves.length > 0 ? biasedMoves[Math.floor(sRandom() * biasedMoves.length)] : moves[Math.floor(sRandom() * moves.length)];
+    currR = Math.max(0, Math.min(rows - 1, currR + move[0]));
+    currC = Math.max(0, Math.min(cols - 1, currC + move[1]));
+    pathTiles.add(`${currR},${currC}`);
+  }
+
+  const candidates = tiles.filter(t => !t.isCheckpoint && !t.isStart && !pathTiles.has(`${t.r},${t.c}`));
   const shuffled = [...candidates].sort(() => sRandom() - 0.5);
-  const mineCount = Math.floor((rows * cols - 2) * mineRate);
+  const maxMines = candidates.length;
+  const mineCount = Math.min(maxMines, Math.floor((rows * cols - 2) * mineRate));
   
   shuffled.slice(0, mineCount).forEach(t => {
     const tile = tiles.find(x => x.r === t.r && x.c === t.c);
-    if (tile && !tile.isCheckpoint && !tile.isStart) {
+    if (tile) {
       tile.isMine = true;
       tile.isSafe = false;
     }
@@ -435,9 +466,10 @@ function Tile({ tile, tileStyle, isAdjacent, onTap, onLongPress, cellW, cellH, s
     content = <SkullIcon size={20} className="text-white mx-auto" />;
     extraClass = 'tile-mine tile-shake';
   } else if (tile.state === 'peeked') {
-    bg = tile.isMine ? '#ff6b6b' : '#90EE90';
-    content = tile.isMine ? <MineIcon size={18} className="text-white mx-auto" /> : <CheckIcon size={16} className="text-white/80 mx-auto" />;
-    extraClass = 'tile-peeked tile-3d-flip';
+    const looksLikeMine = tile.isMine && !tile.isFakeSafe;
+    bg = looksLikeMine ? '#ff6b6b' : '#90EE90';
+    content = looksLikeMine ? <MineIcon size={18} className="text-white mx-auto" /> : <CheckIcon size={16} className={`text-white/80 mx-auto ${tile.isFakeSafe ? 'opacity-80' : ''}`} />;
+    extraClass = `tile-peeked tile-3d-flip ${tile.isFakeSafe ? 'fake-safe-flicker' : ''}`;
   }
 
   return (
@@ -1093,16 +1125,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       return;
     }
 
-    if (tile.state === 'peeked') {
-      if (tile.isMine) {
-        handleMineHit(tile);
-      } else {
-        moveChicken(tile.r, tile.c);
-      }
-      return;
-    }
-
-    if (tile.state !== 'hidden') return;
+    if (tile.state !== 'hidden' && tile.state !== 'peeked') return;
 
     // --- SKILL: Shadow Step ---
     if (tile.state === 'hidden' && hasSkinSkill('ninja_shadow_step', 'ninja') && !shadowStepUsed) {
@@ -1410,6 +1433,12 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     
     timerVal.current = Math.max(0, timerVal.current - cost);
     setTimer(timerVal.current);
+    
+    if (timerVal.current <= 0) {
+      triggerGameOver('timeout');
+      return;
+    }
+
     audio.peek();
     setCombo(0);
     setComboMultiplier(1);
@@ -1550,16 +1579,33 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
           transition: 'opacity 0.4s ease-out',
         }}
       />
+      <div 
+        className="tension-overlay"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'radial-gradient(circle, transparent 50%, rgba(255,0,0,0.5) 100%)',
+          zIndex: 998,
+          pointerEvents: 'none',
+          opacity: timerPct <= 25 && gamePhase === 'playing' ? 1 : 0,
+          animation: timerPct <= 25 && gamePhase === 'playing' ? 'tension-pulse 0.8s infinite' : 'none',
+          transition: 'opacity 0.5s ease-out',
+        }}
+      />
       <style>{`
         @keyframes anim-idle-breathe {
           0%, 100% { transform: scaleY(1); }
           50% { transform: scaleY(1.04); }
         }
         @keyframes anim-moving {
-          0% { transform: scaleY(1); }
-          30% { transform: scaleY(0.8); }
-          70% { transform: scaleY(1.15); }
-          100% { transform: scaleY(1); }
+          0% { transform: scaleY(1) translateY(0); }
+          30% { transform: scaleY(0.8) translateY(2px); }
+          70% { transform: scaleY(1.15) translateY(-10px); }
+          100% { transform: scaleY(1) translateY(0); }
+        }
+        @keyframes tension-pulse {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.8; }
         }
         @keyframes anim-death {
           0% { transform: scale(1) rotate(0) translateY(0); opacity: 1; filter: none; }
