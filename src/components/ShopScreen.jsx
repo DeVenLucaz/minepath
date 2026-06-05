@@ -481,9 +481,16 @@ export default function ShopScreen({ onBack }) {
                 <div className="sp-bonus-label flex items-center gap-1 text-[11px] font-bold text-accent-blue mt-1">
                   <StarIcon size={12} className="text-accent-blue" />
                   <span>
-                    {pet.bonus === 'seed_bonus' ? `+${Math.round(pet.bonusVal * abilityPower * 100)}% seeds` :
-                     pet.bonus === 'time_bonus' ? `+${Math.round(pet.bonusVal * abilityPower)}s time` :
-                     pet.bonusLabel}
+                    {(() => {
+                      const petLvl = gameStore.getPetLevels()[pet.id] || 1;
+                      const pPower = (1 + (playgroundLvl * 0.25)) * (1 + ((petLvl - 1) * 0.2));
+                      if (pet.bonus === 'seed_bonus') return `+${Math.round(pet.bonusVal * pPower * 100)}% seeds`;
+                      if (pet.bonus === 'time_bonus') return `+${Math.round(pet.bonusVal * pPower)}s time`;
+                      if (pet.bonus === 'reveal_bonus') return `${Math.round(pet.bonusVal * pPower * 100)}% chance to reveal adjacent`;
+                      if (pet.bonus === 'safe_reveal') return `Reveals ${Math.floor(pet.bonusVal * pPower)} safe tile(s) at start`;
+                      if (pet.bonus === 'mine_skip') return `1 free mine hit per ${Math.max(1, Math.round(pet.bonusVal / Math.max(1, pPower)))} levels`;
+                      return pet.bonusLabel;
+                    })()}
                   </span>
                 </div>
                 {equipped && (

@@ -111,6 +111,7 @@
 
 .building-upgrade-btn {
   width: 100%;
+  margin-top: auto;
   background: linear-gradient(135deg, #10B981, #047857);
   border: none;
   border-radius: var(--btn-radius);

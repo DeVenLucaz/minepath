@@ -60,13 +60,20 @@ export const gameStore = {
 
   // Daily Challenge
   getDailyChallenge() { return playerStore.getDailyChallenge(); },
-  setDailyPlayed(score) { playerStore.setDailyPlayed(score); },
+  setDailyPlayed(score) { 
+    playerStore.setDailyPlayed(score);
+    this.incrementAchievement('dailyDevotee', 1);
+  },
 
   // Pets
   getUnlockedPets() { return inventoryStore.getUnlockedPets(); },
   getPetLevels() { return inventoryStore.getPetLevels(); },
   upgradePet(id) { return inventoryStore.upgradePet(id); },
-  unlockPet(id) { inventoryStore.unlockPet(id); },
+  unlockPet(id) { 
+    inventoryStore.unlockPet(id);
+    this.updateAchievement('shopOpener', true);
+    if (this.getUnlockedPets().length >= 2) this.updateAchievement('petLover', true);
+  },
   getEquippedPet() { return inventoryStore.getEquippedPet(); },
   setEquippedPet(id) { inventoryStore.setEquippedPet(id); },
 
@@ -82,19 +89,30 @@ export const gameStore = {
 
   // Skins
   getUnlockedSkins() { return inventoryStore.getUnlockedSkins(); },
-  unlockSkin(id) { inventoryStore.unlockSkin(id); },
+  unlockSkin(id) { 
+    inventoryStore.unlockSkin(id);
+    this.updateAchievement('shopOpener', true);
+    if (this.getUnlockedSkins().length >= 3) this.updateAchievement('fashionista', true);
+  },
   getEquippedSkin() { return inventoryStore.getEquippedSkin(); },
   setEquippedSkin(id) { inventoryStore.setEquippedSkin(id); },
 
   // Tiles
   getUnlockedTiles() { return inventoryStore.getUnlockedTiles(); },
-  unlockTile(id) { inventoryStore.unlockTile(id); },
+  unlockTile(id) { 
+    inventoryStore.unlockTile(id);
+    this.updateAchievement('shopOpener', true);
+  },
   getEquippedTile() { return inventoryStore.getEquippedTile(); },
   setEquippedTile(id) { inventoryStore.setEquippedTile(id); },
 
   // Trails
   getUnlockedTrails() { return inventoryStore.getUnlockedTrails(); },
-  unlockTrail(id) { inventoryStore.unlockTrail(id); },
+  unlockTrail(id) { 
+    inventoryStore.unlockTrail(id);
+    this.updateAchievement('shopOpener', true);
+    if (this.getUnlockedTrails().length >= 2) this.updateAchievement('trailBlazer', true);
+  },
   getEquippedTrail() { return inventoryStore.getEquippedTrail(); },
   setEquippedTrail(id) { inventoryStore.setEquippedTrail(id); },
 
@@ -109,7 +127,6 @@ export const gameStore = {
   getLeaderboard() { return playerStore.getLeaderboard(); },
   addLeaderboardEntry(entry) {
     const board = playerStore.addLeaderboardEntry(entry);
-    this.updateAchievement('survivor', 1);
     return board;
   },
 

@@ -34,20 +34,24 @@ export default function TopBar({ title, onBack, showSeeds = true, mood = 'normal
   const equippedPet = useMemo(() => gameStore.getEquippedPet(), []);
 
   return (
-    <div className="topbar" style={{ zIndex: 100 }}>
-      <button 
-        type="button"
-        className="topbar-back" 
-        onClick={(e) => { e.stopPropagation(); onBack && onBack(); }}
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        <BackIcon size={16} className="mr-1" />
-        <span className="topbar-back-text">Back</span>
-      </button>
+    <div className="topbar w-full flex items-center justify-between" style={{ zIndex: 100 }}>
+      <div className="flex-1 flex justify-start min-w-0">
+        <button 
+          type="button"
+          className="topbar-back shrink-0" 
+          onClick={(e) => { e.stopPropagation(); onBack && onBack(); }}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <BackIcon size={16} className="mr-1" />
+          <span className="topbar-back-text">Back</span>
+        </button>
+      </div>
 
-      <BubblyTitle text={title} palette={palette} />
+      <div className="flex-[2] flex justify-center min-w-0 px-2">
+        <BubblyTitle text={title} palette={palette} />
+      </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex-1 flex items-center justify-end gap-3 min-w-0">
         {showSeeds && (
           <div className="topbar-seeds">
             <SeedIcon size={16} className="topbar-seeds-icon text-gold" />

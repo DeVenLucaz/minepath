@@ -896,6 +896,7 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     if (type === 'shield') {
       setHasShield(true);
       setActivePowerup('shield');
+      gameStore.incrementAchievement('fearless', 1);
       // --- SKILL: Shield Master ---
       setShieldHits(has('shield_master') ? 2 : 1);
     } else if (type === 'slowmo') {
@@ -992,7 +993,9 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     const siloLvl = buildings.silo || 0;
     const siloMult = 1 + (siloLvl * 0.1); 
     const playgroundLvl = buildings.playground || 0;
-    const abilityPower = 1 + (playgroundLvl * 0.25);
+    const petLevels = gameStore.getPetLevels();
+    const petLevel = pet ? (petLevels[pet.id] || 1) : 1;
+    const abilityPower = (1 + (playgroundLvl * 0.25)) * (1 + ((petLevel - 1) * 0.2));
 
     // Multipliers (Combo, Silo, Double Score)
     const activeMult = (doubleScore ? 2 : 1) * comboMultiplier * siloMult;
@@ -1199,7 +1202,9 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       const pet = PETS.find(p => p.id === equippedPetId);
       const buildings = gameStore.getBuildings();
       const playgroundLvl = buildings.playground || 0;
-      const abilityPower = 1 + (playgroundLvl * 0.25);
+      const petLevels = gameStore.getPetLevels();
+      const petLevel = pet ? (petLevels[pet.id] || 1) : 1;
+      const abilityPower = (1 + (playgroundLvl * 0.25)) * (1 + ((petLevel - 1) * 0.2));
 
       if (!isBlind && pet?.bonus === 'reveal_bonus' && Math.random() < (pet.bonusVal * abilityPower)) {
         if (equippedPetId === 'chick_ninja') triggerPetAnim('pet-bonus-shadow', 300);
@@ -1212,7 +1217,11 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       }
 
       let mult = newCombo >= 10 ? 2 : newCombo >= 6 ? 1.5 : newCombo >= 3 ? 1.2 : 1;
+      if (mult === 2 && comboMultiplier < 2) {
+        gameStore.incrementAchievement('comboKing', 1);
+      }
       setComboMultiplier(mult);
+
 
       if (magnetActive) {
         let attractedSeeds = 0;
@@ -1291,7 +1300,9 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
     const buildings = gameStore.getBuildings();
     const pet = PETS.find(p => p.id === gameStore.getEquippedPet());
     const playgroundLvl = buildings.playground || 0;
-    const abilityPower = 1 + (playgroundLvl * 0.25);
+    const petLevels = gameStore.getPetLevels();
+    const petLevel = pet ? (petLevels[pet.id] || 1) : 1;
+    const abilityPower = (1 + (playgroundLvl * 0.25)) * (1 + ((petLevel - 1) * 0.2));
 
     let startTime = diff.timerMax;
     if (pet?.bonus === 'time_bonus') {
@@ -1299,11 +1310,31 @@ export default function GameplayScreen({ startLevel = 1, onGameOver, onLevelComp
       triggerPetAnim('pet-bonus-bluey', 300);
     }
 
+    if (pet?.bonus === 'mine_skip') {
+      const freq = Math.max(1, Math.round(pet.bonusVal / Math.max(1, abilityPower)));
+      if (lvl > 0 && lvl % freq === 0) {
+        setMineSkipCharges(prev => prev + 1);
+        triggerPetAnim('pet-bonus-bunn', 400);
+      }
+    }
+
+    if (pet?.bonus === 'safe_reveal') {
+      const numReveals = Math.floor(pet.bonusVal * abilityPower);
+      const safeHiddenTiles = newTiles.filter(t => !t.isMine && !t.isCheckpoint && !t.isStart && t.state === 'hidden');
+      let revealedAny = false;
+      for (let i = 0; i < numReveals && safeHiddenTiles.length > 0; i++) {
+        const randIdx = Math.floor(Math.random() * safeHiddenTiles.length);
+        safeHiddenTiles[randIdx].state = 'revealed';
+        safeHiddenTiles.splice(randIdx, 1);
+        revealedAny = true;
+      }
+      if (revealedAny) triggerPetAnim('pet-bonus-sparky', 400);
+    }
+
     if (playgroundLvl > 0 && Math.random() < (0.1 * playgroundLvl)) {
       const startPowerups = ['shield', 'slowmo', 'magnet'];
       const randomPower = startPowerups[Math.floor(Math.random() * startPowerups.length)];
       setTimeout(() => collectPowerup(randomPower), 500);
-      if (gameStore.getEquippedPet() === 'sparky') triggerPetAnim('pet-bonus-sparky', 400);
     }
 
     setRows(diff.rows);

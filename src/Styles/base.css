@@ -108,15 +108,15 @@ html, body {
 .topbar-title {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1px;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  flex-wrap: wrap;
+  text-align: center;
 }
 
 .topbar-title-letter {
   font-family: var(--font-header);
-  font-size: clamp(24px, 7vw, 32px);
+  font-size: clamp(12px, 4.5vw, 22px);
   font-weight: 900;
   letter-spacing: -0.5px;
   background: linear-gradient(to bottom, #FFFFFF 30%, var(--gold) 100%);
